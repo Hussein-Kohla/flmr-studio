@@ -47,6 +47,11 @@ export default function ClientsPage() {
     paginationOpts: { numItems: 1000, cursor: null }
   } : 'skip');
 
+  const transactionsData = useQuery(api.transactions.getTransactions, token ? {
+    token,
+    paginationOpts: { numItems: 5000, cursor: null }
+  } : 'skip');
+
   const deleteClient = useMutation(api.clients.deleteClient)
 
   const FILTERS = [
@@ -57,6 +62,14 @@ export default function ClientsPage() {
 
   const clients = clientsData?.page || [];
   const projects = projectsData?.page || [];
+  const allTransactions = transactionsData?.page || [];
+
+  // حساب مجموع الحسابات المالية لكل عميل (نفس المنطق في ClientDetailsModal)
+  const getClientTotal = (clientId: string) => {
+    return allTransactions
+      .filter(t => t.clientId === clientId && (t.status === 'paid' || t.status === 'posted'))
+      .reduce((acc, t) => acc + (t.amountCents || 0), 0);
+  };
 
   // Filter and Sort Clients
   const filtered = clients.filter((c) => {
@@ -323,7 +336,7 @@ export default function ClientsPage() {
                       <div className="flex flex-col">
                         <span className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1">Revenue</span>
                         <span className="text-xl font-black text-white">
-                          {formatCurrency(client.revenueCents || 0)}
+                          {formatCurrency(getClientTotal(client._id))}
                         </span>
                         <span className="text-[8px] text-[var(--text-muted)] uppercase font-bold tracking-tighter mt-0.5">Total Collected</span>
                       </div>
@@ -384,7 +397,7 @@ export default function ClientsPage() {
                     <td className="p-4">
                       <div className="flex flex-col">
                         <span className="font-black text-white text-sm">
-                          {formatCurrency(client.revenueCents || 0)}
+                          {formatCurrency(getClientTotal(client._id))}
                         </span>
                         <span className="text-[8px] text-emerald-400/70 font-bold uppercase tracking-tighter">Total Collected</span>
                       </div>
