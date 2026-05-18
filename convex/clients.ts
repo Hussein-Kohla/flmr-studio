@@ -6,7 +6,7 @@ import { ClientStatus, LifecycleStage } from "./domain/constants";
 import { AuditService } from "./services/events";
 
 export const getClients = query({
-  args: { 
+  args: {
     token: v.string(),
     paginationOpts: paginationOptsValidator,
   },
@@ -21,16 +21,16 @@ export const getClients = query({
     // Patch revenue on the fly for old records (UI only)
     const enrichedPage = await Promise.all(clientsPage.page.map(async (client) => {
       if (client.revenueCents !== undefined) return client;
-      
+
       const txs = await ctx.db
         .query("transactions")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
         .collect();
-      
+
       const revenue = txs
         .filter(t => t.clientId === client._id && t.type === 'income' && (t.status === 'posted' || t.status === 'paid'))
         .reduce((sum, t) => sum + (t.amountCents || 0), 0);
-      
+
       return { ...client, revenueCents: revenue };
     }));
 
@@ -51,7 +51,7 @@ export const createClient = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
     const now = Date.now();
-    
+
     const clientId = await ctx.db.insert("clients", {
       userId: user._id,
       name: args.name,
@@ -102,9 +102,9 @@ export const updateClient = mutation({
     if (!client || client.userId !== user._id) throw new Error("Unauthorized");
 
     const { token, clientId, ...updates } = args;
-    const patchData: any = { 
-      ...updates, 
-      updatedAt: Date.now() 
+    const patchData: any = {
+      ...updates,
+      updatedAt: Date.now()
     };
 
     if (args.avatarId) {
@@ -127,14 +127,14 @@ export const deleteClient = mutation({
     const user = await requireUser(ctx, args.token);
     const client = await ctx.db.get(args.clientId);
     if (!client || client.userId !== user._id) throw new Error("Unauthorized");
-    
+
     // CASCADE DELETE: Using specialized indexes
     // 1. Projects
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
       .collect();
-    
+
     for (const project of projects) {
       // Tasks for project
       const tasks = await ctx.db
@@ -142,7 +142,7 @@ export const deleteClient = mutation({
         .withIndex("by_projectId", (q) => q.eq("projectId", project._id))
         .collect();
       for (const task of tasks) await ctx.db.delete(task._id);
-      
+
       await ctx.db.delete(project._id);
     }
 
@@ -151,7 +151,7 @@ export const deleteClient = mutation({
       .query("payments")
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
       .collect();
-    
+
     for (const payment of payments) {
       const txs = await ctx.db
         .query("transactions")
@@ -195,15 +195,15 @@ export const migrateRevenue = mutation({
         .query("transactions")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
         .collect();
-      
-      const clientTxs = transactions.filter(t => 
-        t.clientId === client._id && 
-        t.type === 'income' && 
+
+      const clientTxs = transactions.filter(t =>
+        t.clientId === client._id &&
+        t.type === 'income' &&
         (t.status === 'posted' || t.status === 'paid')
       );
 
       const totalRevenue = clientTxs.reduce((sum, tx) => sum + (tx.amountCents || 0), 0);
-      
+
       await ctx.db.patch(client._id, {
         revenueCents: totalRevenue
       });

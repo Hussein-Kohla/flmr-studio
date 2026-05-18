@@ -33,20 +33,20 @@ export default function ClientsPage() {
   const debouncedSearch = useDebounce(search, 300)
   const { token } = useAuth()
   const { toast } = useToast()
-  
+
   // Pagination State
   const [paginationCursor, setPaginationCursor] = useState<string | null>(null);
-  
-  const clientsData = useQuery(api.clients.getClients, token ? { 
-    token, 
-    paginationOpts: { numItems: ITEMS_PER_PAGE, cursor: paginationCursor } 
+
+  const clientsData = useQuery(api.clients.getClients, token ? {
+    token,
+    paginationOpts: { numItems: ITEMS_PER_PAGE, cursor: paginationCursor }
   } : 'skip');
-  
-  const projectsData = useQuery(api.projects.getProjects, token ? { 
-    token, 
-    paginationOpts: { numItems: 1000, cursor: null } 
+
+  const projectsData = useQuery(api.projects.getProjects, token ? {
+    token,
+    paginationOpts: { numItems: 1000, cursor: null }
   } : 'skip');
-  
+
   const deleteClient = useMutation(api.clients.deleteClient)
 
   const FILTERS = [
@@ -54,10 +54,10 @@ export default function ClientsPage() {
     { id: 'فيس', label: 'فيس', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
     { id: 'مميزين', label: 'مميزين', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
   ];
-  
+
   const clients = clientsData?.page || [];
   const projects = projectsData?.page || [];
-  
+
   // Filter and Sort Clients
   const filtered = clients.filter((c) => {
     const matchesSearch = [c.name, c.email, c.company].some((v) =>
@@ -108,7 +108,7 @@ export default function ClientsPage() {
             <TrendingUp size={16} className="mr-2" /> Analytics
           </Button>
           <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]">
-            <button 
+            <button
               onClick={() => setViewMode('grid')}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -117,7 +117,7 @@ export default function ClientsPage() {
             >
               <LayoutGrid size={18} />
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('list')}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -143,10 +143,10 @@ export default function ClientsPage() {
             leftIcon={<Search size={18} className="text-[var(--text-muted)]" />}
           />
         </div>
-        
+
         <div className="flex gap-2 items-center flex-wrap">
           <div className="w-[1px] h-6 bg-white/10 mx-2 hidden md:block" />
-          
+
           {/* Sort Dropdown */}
           <select
             value={sortBy}
@@ -166,8 +166,8 @@ export default function ClientsPage() {
               onClick={() => setActiveFilter(activeFilter === filter.id ? null : filter.id)}
               className={cn(
                 "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-all h-10",
-                activeFilter === filter.id 
-                  ? filter.color 
+                activeFilter === filter.id
+                  ? filter.color
                   : "bg-white/5 text-white/40 border-white/5 hover:text-white/60"
               )}
             >
@@ -228,7 +228,7 @@ export default function ClientsPage() {
           {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="flex flex-col items-center justify-center py-24 text-center"
@@ -243,7 +243,7 @@ export default function ClientsPage() {
           </Button>
         </motion.div>
       ) : viewMode === 'grid' ? (
-        <motion.div 
+        <motion.div
           layout
           className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
         >
@@ -259,8 +259,8 @@ export default function ClientsPage() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: i * 0.03 }}
                 >
-                  <Card 
-                    glass 
+                  <Card
+                    glass
                     className={cn(
                       "flex flex-col gap-4 group relative overflow-hidden transition-all duration-500 cursor-pointer",
                       "hover:bg-white/[0.04] hover:border-brand/30 hover:shadow-2xl hover:shadow-brand/5 hover:-translate-y-1"
@@ -269,11 +269,11 @@ export default function ClientsPage() {
                   >
                     {/* Header */}
                     <div className="flex items-center gap-3">
-                      <Avatar 
-                        name={client.name} 
-                        src={client.avatarUrl} 
-                        size="lg" 
-                        className="ring-2 ring-white/10 group-hover:ring-brand/30 transition-all" 
+                      <Avatar
+                        name={client.name}
+                        src={client.avatarUrl}
+                        size="lg"
+                        className="ring-2 ring-white/10 group-hover:ring-brand/30 transition-all"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-black text-[var(--text-primary)] text-sm truncate group-hover:text-brand transition-colors">
@@ -283,14 +283,14 @@ export default function ClientsPage() {
                           {client.company || 'Personal'}
                         </p>
                       </div>
-                      <button 
+                      <button
                         onClick={(e) => handleDeleteClient(client._id, e)}
                         className="opacity-0 group-hover:opacity-100 p-2 text-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    
+
                     {/* Contact Info */}
                     <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
                       {client.email && (
@@ -306,7 +306,7 @@ export default function ClientsPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Tags */}
                     {client.tags && client.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
@@ -317,7 +317,7 @@ export default function ClientsPage() {
                         ))}
                       </div>
                     )}
-                    
+
                     {/* Stats */}
                     <div className="h-px bg-white/5 w-full" />
                     <div className="flex justify-between items-center bg-white/[0.02] p-3 rounded-2xl border border-white/5">
@@ -340,7 +340,7 @@ export default function ClientsPage() {
         </motion.div>
       ) : (
         /* List View */
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-subtle)] overflow-hidden"
@@ -359,8 +359,8 @@ export default function ClientsPage() {
               {filtered.map((client) => {
                 const stats = getClientStats(client._id)
                 return (
-                  <tr 
-                    key={client._id} 
+                  <tr
+                    key={client._id}
                     className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
                     onClick={() => setSelectedClient(client)}
                   >
@@ -393,8 +393,8 @@ export default function ClientsPage() {
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedClient(client)}>Details</Button>
-                        <button 
-                          onClick={(e) => handleDeleteClient(client._id, e)} 
+                        <button
+                          onClick={(e) => handleDeleteClient(client._id, e)}
                           className="p-2 text-rose-500/50 hover:text-rose-500 rounded-xl transition-all"
                         >
                           <Trash2 size={16} />
@@ -412,18 +412,18 @@ export default function ClientsPage() {
       {/* Pagination Controls */}
       {clientsData && (
         <div className="flex items-center justify-center gap-4 mt-8">
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            disabled={!paginationCursor} 
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!paginationCursor}
             onClick={() => setPaginationCursor(null)}
           >
             First Page
           </Button>
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            disabled={clientsData.isDone} 
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={clientsData.isDone}
             onClick={() => setPaginationCursor(clientsData.continueCursor)}
           >
             Next Page
@@ -433,10 +433,10 @@ export default function ClientsPage() {
 
       <NewClientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       {selectedClient && (
-        <ClientDetailsModal 
-          isOpen={!!selectedClient} 
-          onClose={() => setSelectedClient(null)} 
-          client={clients.find(c => c._id === selectedClient._id) || selectedClient} 
+        <ClientDetailsModal
+          isOpen={!!selectedClient}
+          onClose={() => setSelectedClient(null)}
+          client={clients.find(c => c._id === selectedClient._id) || selectedClient}
         />
       )}
 

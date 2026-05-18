@@ -24,7 +24,7 @@ export default function RecurringCollectionsView() {
   const [paymentMonth, setPaymentMonth] = useState(new Date().getMonth())
   const [paymentYear, setPaymentYear] = useState(new Date().getFullYear())
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  
+
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
   const createPayment = useMutation(api.transactions.createTransaction)
@@ -40,14 +40,14 @@ export default function RecurringCollectionsView() {
   const clients = clientsData.page || []
   const transactions = transactionsData?.page || []
   const monthName = MONTHS[selectedMonth]
-  
+
   // Filter clients who have a subscription set up or are tagged with 'تحصيل'
-  const subscriptionClients = clients.filter(c => 
-    (c.subscription && (c.subscription.amountCents ?? 0) > 0) || 
+  const subscriptionClients = clients.filter(c =>
+    (c.subscription && (c.subscription.amountCents ?? 0) > 0) ||
     c.tags?.includes('تحصيل')
   )
-  
-  const filteredClients = subscriptionClients.filter(c => 
+
+  const filteredClients = subscriptionClients.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.company?.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -55,9 +55,9 @@ export default function RecurringCollectionsView() {
   // Check if a client has paid for the selected month (using transactions only)
   const hasPaidForMonth = (client: any, month: number, year: number) => {
     // Check in transactions for this specific client/month/year
-    const hasTransaction = transactions.find(t => 
-      t.clientId === client._id && 
-      t.subscriptionMonth === month && 
+    const hasTransaction = transactions.find(t =>
+      t.clientId === client._id &&
+      t.subscriptionMonth === month &&
       t.subscriptionYear === year &&
       (t.status === 'posted' || t.status === 'paid')
     )
@@ -66,9 +66,9 @@ export default function RecurringCollectionsView() {
 
   // Get payment details for a client/month/year
   const getPaymentDetails = (client: any, month: number, year: number) => {
-    return transactions.find(t => 
-      t.clientId === client._id && 
-      t.subscriptionMonth === month && 
+    return transactions.find(t =>
+      t.clientId === client._id &&
+      t.subscriptionMonth === month &&
       t.subscriptionYear === year &&
       (t.status === 'posted' || t.status === 'paid')
     )
@@ -76,7 +76,7 @@ export default function RecurringCollectionsView() {
 
   // Calculate total expected for selected month (all subscription clients)
   const totalExpected = subscriptionClients.reduce((acc, c) => acc + (c.subscription?.amountCents || 0), 0)
-  
+
   // Calculate total collected for selected month (only clients who paid based on transactions)
   const totalCollected = subscriptionClients
     .filter(c => hasPaidForMonth(c, selectedMonth, selectedYear))
@@ -96,9 +96,9 @@ export default function RecurringCollectionsView() {
   // Check if payment already exists for this client/month/year
   const getPaymentStatus = (client: any, month: number, year: number) => {
     const paidMonths = client.subscription?.paidMonths || []
-    const hasTransaction = transactions.find(t => 
-      t.clientId === client._id && 
-      t.subscriptionMonth === month && 
+    const hasTransaction = transactions.find(t =>
+      t.clientId === client._id &&
+      t.subscriptionMonth === month &&
       t.subscriptionYear === year &&
       (t.status === 'posted' || t.status === 'paid')
     )
@@ -111,9 +111,9 @@ export default function RecurringCollectionsView() {
 
   // Check if payment exists for a specific month
   const checkPaymentExists = (client: any, month: number, year: number) => {
-    return transactions.find(t => 
-      t.clientId === client._id && 
-      t.subscriptionMonth === month && 
+    return transactions.find(t =>
+      t.clientId === client._id &&
+      t.subscriptionMonth === month &&
       t.subscriptionYear === year &&
       (t.status === 'posted' || t.status === 'paid')
     )
@@ -121,7 +121,7 @@ export default function RecurringCollectionsView() {
 
   const handleConfirmPayment = async () => {
     if (!token || !selectedClientForPayment) return
-    
+
     // Check if payment already exists
     const existingPayment = checkPaymentExists(selectedClientForPayment, paymentMonth, paymentYear)
     if (existingPayment) {
@@ -129,11 +129,11 @@ export default function RecurringCollectionsView() {
       setShowPaymentModal(false)
       return
     }
-    
+
     try {
       const amount = (selectedClientForPayment.subscription?.amountCents || 0) / 100
       const subscriptionRefId = `sub_${selectedClientForPayment._id}_${paymentYear}_${paymentMonth}`
-      
+
       await createPayment({
         token,
         clientId: selectedClientForPayment._id,
@@ -199,38 +199,38 @@ export default function RecurringCollectionsView() {
             <p className="text-[var(--text-muted)] max-w-md font-medium">
               Overview of recurring monthly income. Select a month to view and record payments.
             </p>
-            
+
             {/* Month Selector */}
             <div className="flex items-center gap-4 mt-6 mb-8">
-              <button 
+              <button
                 onClick={handlePrevMonth}
                 className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10"
               >
                 <ChevronLeft size={20} className="text-white" />
               </button>
-              
+
               <div className="flex items-center gap-3 px-6 py-3 bg-brand/20 rounded-xl border border-brand/30">
                 <Calendar size={20} className="text-brand" />
                 <span className="text-xl font-black text-white">
                   {monthName} {selectedYear}
                 </span>
               </div>
-              
-              <button 
+
+              <button
                 onClick={handleNextMonth}
                 className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10"
               >
                 <ChevronRight size={20} className="text-white" />
               </button>
 
-              <button 
+              <button
                 onClick={handleGoToToday}
                 className="px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10 text-sm font-bold"
               >
                 Today
               </button>
             </div>
-            
+
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Total Expected</span>
@@ -272,9 +272,9 @@ export default function RecurringCollectionsView() {
       {/* Search Bar */}
       <div className="relative group max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--color-brand)] transition-colors" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search clients..." 
+        <input
+          type="text"
+          placeholder="Search clients..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-[var(--color-brand)] transition-all shadow-sm"
@@ -288,7 +288,7 @@ export default function RecurringCollectionsView() {
             const isPaid = hasPaidForMonth(client, selectedMonth, selectedYear)
             const dueDay = client.subscription?.dueDay || 1
             const amountCents = client.subscription?.amountCents || 0
-      
+
             return (
               <motion.div
                 key={client._id}
@@ -303,7 +303,7 @@ export default function RecurringCollectionsView() {
                   isPaid && "opacity-60"
                 )}>
                   <div className="absolute inset-y-0 left-0 w-1 bg-brand scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
-                  
+
                   <div className="flex items-center gap-5 min-w-0 flex-1">
                     <div className="w-14 h-14 rounded-2xl bg-black/40 flex items-center justify-center text-brand group-hover:bg-brand/10 group-hover:rotate-3 transition-all shrink-0 shadow-inner">
                       <User size={28} />
@@ -347,7 +347,7 @@ export default function RecurringCollectionsView() {
                       </div>
                     ) : (
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Button 
+                        <Button
                           size="sm"
                           className="h-11 px-8 rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] bg-brand text-white shadow-lg shadow-brand/20 border-none"
                           onClick={() => handleOpenPaymentModal(client)}

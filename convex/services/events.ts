@@ -42,11 +42,11 @@ export const EventService = {
         // Update client lifetime value precomputed aggregate
         await this.updatePrecomputed(ctx, userId, `clv:${payload.clientId}`, payload.amountCents);
         break;
-      
+
       case "PROJECT_COMPLETED":
         // Log to profitability aggregate
         break;
-      
+
       default:
         break;
     }
@@ -57,7 +57,7 @@ export const EventService = {
       .query("aggregates")
       .withIndex("by_userId_key", (q) => q.eq("userId", userId).eq("key", key))
       .unique();
-    
+
     if (existing) {
       await ctx.db.patch(existing._id, { valueCents: existing.valueCents + change, lastUpdated: Date.now() });
     } else {
@@ -90,7 +90,7 @@ export const AuditService = {
       timestamp: Date.now(),
       // In a real environment, we'd add a HMAC or Hash based on the previous log entry
       // to ensure no tampering has occurred in the database.
-      hash: "v1-" + Math.random().toString(36).substring(2), 
+      hash: "v1-" + Math.random().toString(36).substring(2),
     });
 
     return logId;

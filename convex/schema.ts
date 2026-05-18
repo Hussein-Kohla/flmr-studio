@@ -101,6 +101,7 @@ export default defineSchema({
     clientId: v.id("clients"),
     status: v.string(), 
     budgetCents: v.optional(v.number()),
+    revenueCents: v.optional(v.number()),
     steps: v.optional(v.array(v.object({
       id: v.string(),
       title: v.string(),

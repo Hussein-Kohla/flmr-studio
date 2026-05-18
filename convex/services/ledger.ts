@@ -54,7 +54,7 @@ export const LedgerService = {
         .query("ledger_accounts")
         .withIndex("by_code", (q) => q.eq("code", entry.accountCode))
         .unique();
-      
+
       if (!account) throw new Error(`Accounting Error: Account code ${entry.accountCode} not found.`);
 
       await ctx.db.insert("ledger_entries", {
@@ -71,7 +71,7 @@ export const LedgerService = {
       const balanceChange = account.type === 'asset' || account.type === 'expense'
         ? entry.debitCents - entry.creditCents
         : entry.creditCents - entry.debitCents;
-      
+
       await this.updateAggregate(ctx, userId, `account_balance:${account.code}`, balanceChange);
     }
 

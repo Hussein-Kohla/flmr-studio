@@ -9,12 +9,12 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
 import { motion } from 'framer-motion'
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
 } from 'recharts'
-import { 
-  Users, Briefcase, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight, 
+import {
+  Users, Briefcase, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight,
   Plus, Calendar as CalendarIcon, ExternalLink, Activity, DollarSign, Clock,
   Target, Zap, ChevronRight, TrendingDown
 } from 'lucide-react'
@@ -36,7 +36,7 @@ function StatCard({ label, value, change, positive, icon: Icon, colorClass, onCl
     >
       {/* Background Glow */}
       <div className={cn("absolute top-0 right-0 w-32 h-32 blur-3xl opacity-20 -mr-12 -mt-12 rounded-full", colorClass)} />
-      
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4 relative z-10">
         <div className={cn("p-3 rounded-2xl bg-black/20 backdrop-blur-sm", colorClass)}>
@@ -50,13 +50,13 @@ function StatCard({ label, value, change, positive, icon: Icon, colorClass, onCl
           {change}
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="relative z-10">
         <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-2">{label}</p>
         <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">{value}</h3>
       </div>
-      
+
       {/* Hover Effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
     </motion.div>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
   const projects = useQuery(api.projects.getProjects, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')?.page || []
   const payments = useQuery(api.payments.getPayments, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')?.page || []
   const transactions = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')?.page || []
-  
+
   const stages = useQuery(api.stages.getStages, token ? { token } : 'skip') || []
 
   // Date Calculations
@@ -84,33 +84,33 @@ export default function DashboardPage() {
   // 1. Revenue Calculations (Cents-aware)
   const incomeTransactions = transactions.filter(t => t.type === 'income')
   const totalRevenueCents = incomeTransactions.reduce((a, b) => a + (b.amountCents || 0), 0)
-  
+
   const revenueThisMonthCents = incomeTransactions
     .filter(t => t.date >= startOfThisMonth)
     .reduce((a, b) => a + (b.amountCents || 0), 0)
-    
+
   const revenueLastMonthCents = incomeTransactions
     .filter(t => t.date >= startOfLastMonth && t.date < startOfThisMonth)
     .reduce((a, b) => a + (b.amountCents || 0), 0)
-  
-  const revChange = revenueLastMonthCents === 0 
-    ? (revenueThisMonthCents > 0 ? 100 : 0) 
+
+  const revChange = revenueLastMonthCents === 0
+    ? (revenueThisMonthCents > 0 ? 100 : 0)
     : Math.round(((revenueThisMonthCents - revenueLastMonthCents) / revenueLastMonthCents) * 100)
 
   // 2. Expense Calculations
   const expenseTransactions = transactions.filter(t => t.type === 'expense')
   const totalExpensesCents = expenseTransactions.reduce((a, b) => a + (b.amountCents || 0), 0)
-  
+
   const expensesThisMonthCents = expenseTransactions
     .filter(t => t.date >= startOfThisMonth)
     .reduce((a, b) => a + (b.amountCents || 0), 0)
-    
+
   const expensesLastMonthCents = expenseTransactions
     .filter(t => t.date >= startOfLastMonth && t.date < startOfThisMonth)
     .reduce((a, b) => a + (b.amountCents || 0), 0)
-  
-  const expenseChange = expensesLastMonthCents === 0 
-    ? (expensesThisMonthCents > 0 ? 100 : 0) 
+
+  const expenseChange = expensesLastMonthCents === 0
+    ? (expensesThisMonthCents > 0 ? 100 : 0)
     : Math.round(((expensesThisMonthCents - expensesLastMonthCents) / expensesLastMonthCents) * 100)
 
   // 3. Net Profit
@@ -137,7 +137,7 @@ export default function DashboardPage() {
   const chartData = useMemo(() => {
     const data = []
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
+
     if (timeRange === 'year' || timeRange === '6months') {
       const monthsCount = timeRange === 'year' ? 12 : 6
       for (let i = monthsCount - 1; i >= 0; i--) {
@@ -154,9 +154,9 @@ export default function DashboardPage() {
             return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear()
           })
           .reduce((a, b) => a + ((b.amountCents || 0) / 100), 0)
-        data.push({ 
-          name: months[d.getMonth()], 
-          revenue: monthIncome, 
+        data.push({
+          name: months[d.getMonth()],
+          revenue: monthIncome,
           expenses: monthExpense,
           profit: monthIncome - monthExpense
         })
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         const weekExpense = expenseTransactions
           .filter(t => t.date >= start.getTime() && t.date < end.getTime())
           .reduce((a, b) => a + ((b.amountCents || 0) / 100), 0)
-        data.push({ name: `W${4-i}`, revenue: weekIncome, expenses: weekExpense, profit: weekIncome - weekExpense })
+        data.push({ name: `W${4 - i}`, revenue: weekIncome, expenses: weekExpense, profit: weekIncome - weekExpense })
       }
     } else if (timeRange === 'week') {
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -200,10 +200,10 @@ export default function DashboardPage() {
     const dynamicStatuses = stages.map(s => ({
       id: s.slug,
       label: s.name,
-      color: s.slug === 'done' ? '#10b981' : 
-             s.slug === 'approved' ? '#a855f7' :
-             s.slug === 'in_review' ? '#3b82f6' :
-             s.slug === 'revision' ? '#f59e0b' : '#94a3b8'
+      color: s.slug === 'done' ? '#10b981' :
+        s.slug === 'approved' ? '#a855f7' :
+          s.slug === 'in_review' ? '#3b82f6' :
+            s.slug === 'revision' ? '#f59e0b' : '#94a3b8'
     }));
 
     const statuses = dynamicStatuses.length > 0 ? dynamicStatuses : [
@@ -265,43 +265,43 @@ export default function DashboardPage() {
     >
       {/* Stats Grid - Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        <StatCard 
-          label="Total Revenue" 
-          value={formatCurrency(totalRevenueCents)} 
-          change={`${Math.abs(revChange)}%`} 
-          positive={revChange >= 0} 
-          icon={TrendingUp} 
-          colorClass="bg-gradient-to-br from-emerald-500 to-emerald-600" 
+        <StatCard
+          label="Total Revenue"
+          value={formatCurrency(totalRevenueCents)}
+          change={`${Math.abs(revChange)}%`}
+          positive={revChange >= 0}
+          icon={TrendingUp}
+          colorClass="bg-gradient-to-br from-emerald-500 to-emerald-600"
           onClick={() => navigate('/payments')}
           delay={0}
         />
-        <StatCard 
-          label="Total Expenses" 
-          value={formatCurrency(totalExpensesCents)} 
-          change={`${Math.abs(expenseChange)}%`} 
-          positive={expenseChange <= 0} 
-          icon={CreditCard} 
-          colorClass="bg-gradient-to-br from-rose-500 to-rose-600" 
+        <StatCard
+          label="Total Expenses"
+          value={formatCurrency(totalExpensesCents)}
+          change={`${Math.abs(expenseChange)}%`}
+          positive={expenseChange <= 0}
+          icon={CreditCard}
+          colorClass="bg-gradient-to-br from-rose-500 to-rose-600"
           onClick={() => navigate('/payments')}
           delay={0.1}
         />
-        <StatCard 
-          label="Net Profit" 
-          value={formatCurrency(netProfitCents)} 
-          change={`${Math.abs(profitChange)}%`} 
-          positive={netProfitThisMonth >= 0} 
-          icon={DollarSign} 
-          colorClass="bg-gradient-to-br from-purple-500 to-purple-600" 
+        <StatCard
+          label="Net Profit"
+          value={formatCurrency(netProfitCents)}
+          change={`${Math.abs(profitChange)}%`}
+          positive={netProfitThisMonth >= 0}
+          icon={DollarSign}
+          colorClass="bg-gradient-to-br from-purple-500 to-purple-600"
           onClick={() => navigate('/payments')}
           delay={0.2}
         />
-        <StatCard 
-          label="Active Projects" 
-          value={activeProjects} 
-          change={`${newProjectsThisMonth} new`} 
-          positive={newProjectsThisMonth > 0} 
-          icon={Briefcase} 
-          colorClass="bg-gradient-to-br from-blue-500 to-blue-600" 
+        <StatCard
+          label="Active Projects"
+          value={activeProjects}
+          change={`${newProjectsThisMonth} new`}
+          positive={newProjectsThisMonth > 0}
+          icon={Briefcase}
+          colorClass="bg-gradient-to-br from-blue-500 to-blue-600"
           onClick={() => navigate('/projects')}
           delay={0.3}
         />
@@ -382,8 +382,8 @@ export default function DashboardPage() {
                   onClick={() => setTimeRange(r)}
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                    timeRange === r 
-                      ? "bg-brand text-white shadow-md" 
+                    timeRange === r
+                      ? "bg-brand text-white shadow-md"
                       : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                   )}
                 >
@@ -397,17 +397,17 @@ export default function DashboardPage() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4d4d" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#ef4d4d" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ef4d4d" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#ef4d4d" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} tickFormatter={val => `${val/1000}k`} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} tickFormatter={val => `${val / 1000}k`} />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                 <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#ef4d4d" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
@@ -478,8 +478,8 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y divide-[var(--border-subtle)]">
                 {recentTransactions.map((trx, i) => (
-                  <motion.div 
-                    key={trx._id} 
+                  <motion.div
+                    key={trx._id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
@@ -524,8 +524,8 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y divide-[var(--border-subtle)]">
                 {topClients.map((client, i) => (
-                  <motion.div 
-                    key={client._id} 
+                  <motion.div
+                    key={client._id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}

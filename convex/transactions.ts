@@ -5,7 +5,7 @@ import { requireUser, toCents, logAction } from "./helpers";
 import { paginationOptsValidator } from "convex/server";
 
 export const getTransactions = query({
-  args: { 
+  args: {
     token: v.string(),
     paginationOpts: paginationOptsValidator,
   },
@@ -21,7 +21,7 @@ export const getTransactions = query({
 
 // Query to get transactions for a specific client (including subscription payments)
 export const getTransactionsByClient = query({
-  args: { 
+  args: {
     token: v.string(),
     clientId: v.string(),
   },
@@ -31,7 +31,7 @@ export const getTransactionsByClient = query({
       .query("transactions")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .collect();
-    
+
     return allTransactions.filter(t => t.clientId === args.clientId);
   },
 });
@@ -53,26 +53,26 @@ export const createTransaction = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
-    
+
     // Check for duplicate subscription payment
     if (args.subscriptionRefId && args.clientId && args.subscriptionMonth !== undefined && args.subscriptionYear !== undefined) {
       const existing = await ctx.db
         .query("transactions")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
         .collect();
-      
-      const duplicate = existing.find(t => 
-        t.clientId === args.clientId && 
-        t.subscriptionMonth === args.subscriptionMonth && 
+
+      const duplicate = existing.find(t =>
+        t.clientId === args.clientId &&
+        t.subscriptionMonth === args.subscriptionMonth &&
         t.subscriptionYear === args.subscriptionYear &&
         t.status !== 'voided'
       );
-      
+
       if (duplicate) {
         throw new Error(`Payment already exists for ${args.clientId} - ${args.subscriptionMonth}/${args.subscriptionYear}`);
       }
     }
-    
+
     const amountCents = toCents(args.amount);
 
     const transactionId = await ctx.db.insert("transactions", {
@@ -154,7 +154,7 @@ export const updateTransaction = mutation({
     if (args.amount !== undefined) {
       const newAmountCents = toCents(args.amount);
       updates.amountCents = newAmountCents;
-      
+
       // Update balance & revenue if amount changed and it's a client transaction
       if (tx.clientId && (tx.status === 'posted' || tx.status === 'paid')) {
         const diff = newAmountCents - (tx.amountCents || 0);
@@ -169,14 +169,14 @@ export const updateTransaction = mutation({
         }
       }
     }
-    
+
     if (args.status !== undefined) {
       updates.status = args.status;
       // Handle status toggling impact on balance & revenue
       if (tx.clientId) {
         const wasActive = tx.status === 'posted' || tx.status === 'paid';
         const nowActive = args.status === 'posted' || args.status === 'paid';
-        
+
         if (wasActive !== nowActive) {
           const client = await ctx.db.get(tx.clientId as Id<"clients">);
           if (client) {

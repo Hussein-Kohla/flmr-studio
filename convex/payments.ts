@@ -5,7 +5,7 @@ import { paginationOptsValidator } from "convex/server";
 import { recordPayment } from "./financials";
 
 export const getPayments = query({
-  args: { 
+  args: {
     token: v.string(),
     paginationOpts: paginationOptsValidator,
   },
@@ -44,7 +44,7 @@ export const createPayment = mutation({
     const recentDuplicate = await ctx.db
       .query("payments")
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("amountCents"), amountCents),
           q.gt(q.field("createdAt"), Date.now() - 30000) // 30 seconds
@@ -62,14 +62,14 @@ export const createPayment = mutation({
           paymentId: recentDuplicate._id,
         });
       }
-      return recentDuplicate._id; 
+      return recentDuplicate._id;
     }
 
     if (args.status === 'paid') {
       const client = await ctx.db.get(args.clientId);
       const project = args.projectId ? await ctx.db.get(args.projectId) : null;
 
-      const desc = args.description || (args.subscriptionMonth !== undefined 
+      const desc = args.description || (args.subscriptionMonth !== undefined
         ? `Subscription: ${client?.name} - ${args.subscriptionMonth + 1}/${args.subscriptionYear}`
         : `Payment: ${project?.title || 'Project'}`);
 
@@ -194,7 +194,7 @@ export const updatePayment = mutation({
     if (args.amount !== undefined) {
       const newAmountCents = toCents(args.amount);
       updates.amountCents = newAmountCents;
-      
+
       // If payment is already paid, update client balance by the difference
       if (payment.status === 'paid') {
         const diff = newAmountCents - (payment.amountCents || 0);
@@ -227,13 +227,13 @@ export const deletePayment = mutation({
     const user = await requireUser(ctx, args.token);
     const payment = await ctx.db.get(args.paymentId);
     if (!payment || payment.userId !== user._id) throw new Error("Unauthorized");
-    
+
     // Deleting a payment should ideally void the linked transaction or deduct from client balance
     const tx = await ctx.db
       .query("transactions")
       .withIndex("by_referenceId", (q) => q.eq("referenceId", args.paymentId))
       .unique();
-    
+
     if (tx) {
       // Reverse balance propagation
       const client = await ctx.db.get(payment.clientId);

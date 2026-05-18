@@ -21,11 +21,11 @@ import { useDebounce } from '@/hooks/useDebounce'
 const ITEMS_PER_PAGE = 20;
 
 const STATUS_META: Record<string, { label: string; color: string; icon: React.ElementType; bgColor: string }> = {
-  draft:     { label: 'Draft',      color: 'text-slate-400',   icon: Clock,       bgColor: 'bg-slate-500/10' },
-  in_review: { label: 'In Review',  color: 'text-blue-400',   icon: AlertCircle, bgColor: 'bg-blue-500/10' },
-  revision:  { label: 'Revision',   color: 'text-amber-400', icon: AlertCircle, bgColor: 'bg-amber-500/10' },
-  approved:  { label: 'Approved',   color: 'text-purple-400', icon: CheckCircle2, bgColor: 'bg-purple-500/10' },
-  done:      { label: 'Completed',  color: 'text-emerald-400', icon: CheckCircle2, bgColor: 'bg-emerald-500/10' },
+  draft: { label: 'Draft', color: 'text-slate-400', icon: Clock, bgColor: 'bg-slate-500/10' },
+  in_review: { label: 'In Review', color: 'text-blue-400', icon: AlertCircle, bgColor: 'bg-blue-500/10' },
+  revision: { label: 'Revision', color: 'text-amber-400', icon: AlertCircle, bgColor: 'bg-amber-500/10' },
+  approved: { label: 'Approved', color: 'text-purple-400', icon: CheckCircle2, bgColor: 'bg-purple-500/10' },
+  done: { label: 'Completed', color: 'text-emerald-400', icon: CheckCircle2, bgColor: 'bg-emerald-500/10' },
 }
 
 export default function ProjectsPage() {
@@ -33,28 +33,28 @@ export default function ProjectsPage() {
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
-  
+
   // Pagination State
   const [paginationCursor, setPaginationCursor] = useState<string | null>(null);
-  
-  const projectsData = useQuery(api.projects.getProjects, token ? { 
-    token, 
-    paginationOpts: { numItems: ITEMS_PER_PAGE, cursor: paginationCursor } 
+
+  const projectsData = useQuery(api.projects.getProjects, token ? {
+    token,
+    paginationOpts: { numItems: ITEMS_PER_PAGE, cursor: paginationCursor }
   } : 'skip')
-  
-  const clients = useQuery(api.clients.getClients, token ? { 
-    token, 
-    paginationOpts: { numItems: 100, cursor: null } 
+
+  const clients = useQuery(api.clients.getClients, token ? {
+    token,
+    paginationOpts: { numItems: 100, cursor: null }
   } : 'skip')?.page || []
 
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus)
   const deleteProject = useMutation(api.projects.deleteProject)
   const updateProject = useMutation(api.projects.updateProject)
-  
+
   const stages = useQuery(api.stages.getStages, token ? { token } : 'skip')
   const initializeStages = useMutation(api.stages.initializeDefaultStages)
   const addStage = useMutation(api.stages.addStage)
-  
+
   useEffect(() => {
     if (token && stages && stages.length === 0) {
       initializeStages({ token }).catch(console.error)
@@ -71,7 +71,7 @@ export default function ProjectsPage() {
 
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
-      const matchesSearch = !debouncedSearch || 
+      const matchesSearch = !debouncedSearch ||
         p.title?.toLowerCase().includes(debouncedSearch.toLowerCase())
       const matchesFilter = filterStatus === 'all' || p.status === filterStatus
       return matchesSearch && matchesFilter
@@ -85,20 +85,20 @@ export default function ProjectsPage() {
       active: projects.filter(p => p.status !== 'done').length,
       completed: projects.filter(p => p.status === 'done').length,
       totalBudget: projects.reduce((a, p) => a + (p.budgetCents || 0), 0),
-      totalRevenue: projects.reduce((a, p) => a + (p.paidCents || 0), 0),
+      totalRevenue: projects.reduce((a, p) => a + (p.revenueCents || 0), 0),
     }
   }, [projects])
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination || !token) return
     const { draggableId, destination } = result
-    
+
     const project = projects.find(p => p._id.toString() === draggableId)
     if (project && project.status !== destination.droppableId) {
-      updateProjectStatus({ 
-        token, 
-        projectId: project._id, 
-        status: destination.droppableId 
+      updateProjectStatus({
+        token,
+        projectId: project._id,
+        status: destination.droppableId
       }).catch(console.error)
     }
   }
@@ -128,7 +128,7 @@ export default function ProjectsPage() {
       actions={
         <div className="flex gap-3">
           <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]">
-            <button 
+            <button
               onClick={() => setViewMode('kanban')}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -137,7 +137,7 @@ export default function ProjectsPage() {
             >
               <LayoutGrid size={18} />
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('list')}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -249,10 +249,10 @@ export default function ProjectsPage() {
               const meta = STATUS_META[stage.slug] || { label: stage.name, color: 'text-slate-400', icon: Clock, bgColor: 'bg-slate-500/10' }
               const Icon = meta.icon
               const columnProjects = filteredProjects.filter(p => p.status === stage.slug)
-              
+
               return (
-                <motion.div 
-                  key={stage._id} 
+                <motion.div
+                  key={stage._id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: stageIndex * 0.1 }}
@@ -300,8 +300,8 @@ export default function ProjectsPage() {
                                       initial={{ opacity: 0, scale: 0.95 }}
                                       animate={{ opacity: 1, scale: 1 }}
                                     >
-                                      <Card 
-                                        glass 
+                                      <Card
+                                        glass
                                         className={cn(
                                           "p-4 transition-all duration-300 cursor-grab active:cursor-grabbing group",
                                           "hover:bg-white/[0.04] hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5 hover:-translate-y-1",
@@ -314,7 +314,7 @@ export default function ProjectsPage() {
                                         <h4 className="font-bold text-sm text-[var(--text-primary)] mb-3 group-hover:text-brand transition-colors line-clamp-2">
                                           {project.title}
                                         </h4>
-                                        
+
                                         {/* Client */}
                                         {client && (
                                           <div className="flex items-center gap-2 mb-3">
@@ -324,7 +324,7 @@ export default function ProjectsPage() {
                                             </span>
                                           </div>
                                         )}
-                                        
+
                                         {/* Progress */}
                                         <div className="space-y-1.5 mb-3">
                                           <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/30">
@@ -332,14 +332,14 @@ export default function ProjectsPage() {
                                             <span className="group-hover:text-brand transition-colors">{progress}%</span>
                                           </div>
                                           <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div 
+                                            <motion.div
                                               initial={{ width: 0 }}
                                               animate={{ width: `${progress}%` }}
                                               className="h-full bg-gradient-to-r from-brand to-indigo-500 transition-all"
                                             />
                                           </div>
                                         </div>
-                                        
+
                                         {/* Meta */}
                                         <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] pt-2 border-t border-white/5">
                                           <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ export default function ProjectsPage() {
                                             <span>{project.deadline ? formatDate(project.deadline) : 'No deadline'}</span>
                                           </div>
                                           <span className="font-bold text-emerald-400">
-                                            {formatCurrency(project.paidCents || 0)}
+                                            {formatCurrency(project.revenueCents || 0)}
                                           </span>
                                         </div>
                                       </Card>
@@ -362,9 +362,9 @@ export default function ProjectsPage() {
                       </div>
                     )}
                   </Droppable>
-                  
+
                   {/* Add Card Button */}
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => { setIsModalOpen(true); setFilterStatus(stage.slug); }}
@@ -396,8 +396,8 @@ export default function ProjectsPage() {
                 const client = clients.find(c => c._id === project.clientId)
                 const meta = STATUS_META[project.status]
                 return (
-                  <tr 
-                    key={project._id} 
+                  <tr
+                    key={project._id}
                     className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
                     onClick={() => setSelectedProject(project)}
                   >
@@ -421,13 +421,13 @@ export default function ProjectsPage() {
                       </Badge>
                     </td>
                     <td className="p-4 font-bold text-emerald-400">
-                      {formatCurrency(project.paidCents || 0)}
+                      {formatCurrency(project.revenueCents || 0)}
                     </td>
                     <td className="p-4 text-right pr-6">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm">Details</Button>
-                        <button 
-                          onClick={(e) => handleDeleteProject(project._id, e)} 
+                        <button
+                          onClick={(e) => handleDeleteProject(project._id, e)}
                           className="p-2 text-rose-500/50 hover:text-rose-500 rounded-lg"
                         >
                           <Trash2 size={16} />
@@ -456,13 +456,13 @@ export default function ProjectsPage() {
 
       <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       {selectedProject && (
-        <ProjectDetailsModal 
-          isOpen={!!selectedProject} 
-          onClose={() => setSelectedProject(null)} 
-          project={selectedProject} 
+        <ProjectDetailsModal
+          isOpen={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          project={selectedProject}
         />
       )}
-      
+
       <ConfirmDialog
         isOpen={!!deleteConfirmId}
         onClose={() => setDeleteConfirmId(null)}

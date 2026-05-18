@@ -96,23 +96,23 @@ export default function PaymentsPage() {
     >
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-8 bg-black/20 p-1.5 rounded-2xl w-fit border border-white/5">
-        <button 
+        <button
           onClick={() => setActiveTab('overview')}
           className={cn(
             "px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-300",
-            activeTab === 'overview' 
-              ? "bg-gradient-to-r from-brand to-indigo-600 text-white shadow-lg shadow-brand/30" 
+            activeTab === 'overview'
+              ? "bg-gradient-to-r from-brand to-indigo-600 text-white shadow-lg shadow-brand/30"
               : "text-[var(--text-muted)] hover:text-white"
           )}
         >
           Overview
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('monthly')}
           className={cn(
             "px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-300",
-            activeTab === 'monthly' 
-              ? "bg-gradient-to-r from-brand to-indigo-600 text-white shadow-lg shadow-brand/30" 
+            activeTab === 'monthly'
+              ? "bg-gradient-to-r from-brand to-indigo-600 text-white shadow-lg shadow-brand/30"
               : "text-[var(--text-muted)] hover:text-white"
           )}
         >
@@ -129,7 +129,7 @@ export default function PaymentsPage() {
               <div className="absolute top-0 right-0 w-96 h-96 bg-brand rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
             </div>
-            
+
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div>
@@ -138,7 +138,7 @@ export default function PaymentsPage() {
                     <h2 className="text-5xl lg:text-6xl font-black text-[var(--text-primary)] tracking-tight">
                       {isBalanceHidden ? '••••••••' : formatCurrency(totalBalance)}
                     </h2>
-                    <button 
+                    <button
                       onClick={() => setIsBalanceHidden(!isBalanceHidden)}
                       className="p-4 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-2xl transition-all border border-white/10"
                     >
@@ -146,9 +146,9 @@ export default function PaymentsPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-3">
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => openModal('income')}
@@ -156,7 +156,7 @@ export default function PaymentsPage() {
                   >
                     <Plus size={20} /> Add Income
                   </motion.button>
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => openModal('expense')}
@@ -180,7 +180,7 @@ export default function PaymentsPage() {
                   <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Income (This Month)</p>
                   <p className="text-2xl font-black text-emerald-400">{formatCurrency(incomeThisMonth)}</p>
                 </div>
-                
+
                 <div className="bg-black/20 backdrop-blur-md rounded-2xl p-5 border border-white/5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-rose-400"><TrendingDown size={20} /></span>
@@ -188,7 +188,7 @@ export default function PaymentsPage() {
                   <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Expenses (This Month)</p>
                   <p className="text-2xl font-black text-rose-400">{formatCurrency(expenseThisMonth)}</p>
                 </div>
-                
+
                 <div className="bg-black/20 backdrop-blur-md rounded-2xl p-5 border border-white/5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-brand"><CreditCard size={20} /></span>
@@ -196,7 +196,7 @@ export default function PaymentsPage() {
                   <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Fixed Income/Month</p>
                   <p className="text-2xl font-black text-[var(--text-primary)]">{formatCurrency(recurringIncome)}</p>
                 </div>
-                
+
                 <div className="bg-black/20 backdrop-blur-md rounded-2xl p-5 border border-white/5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-amber-400"><PieChart size={20} /></span>
@@ -260,8 +260,8 @@ export default function PaymentsPage() {
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                     {filteredTransactions.map((trx, i) => (
-                      <motion.tr 
-                        key={trx._id} 
+                      <motion.tr
+                        key={trx._id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
@@ -291,7 +291,7 @@ export default function PaymentsPage() {
                           {trx.type === 'income' ? '+' : '-'}{formatCurrency(trx.amountCents || 0)}
                         </td>
                         <td className="p-4 pr-6 text-right">
-                          <button 
+                          <button
                             onClick={() => setDeleteConfirmId(trx._id)}
                             className="p-2 text-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                           >
@@ -306,9 +306,9 @@ export default function PaymentsPage() {
             </CardBody>
           </Card>
 
-          <TransactionModal 
-            isOpen={modalOpen} 
-            onClose={() => setModalOpen(false)} 
+          <TransactionModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
             type={modalType}
           />
 
@@ -324,7 +324,7 @@ export default function PaymentsPage() {
           />
         </>
       ) : (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="animate-in fade-in slide-in-from-bottom-4 duration-500"
