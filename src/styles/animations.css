@@ -1,0 +1,68 @@
+/* ==========================================================================
+   FLMR Studio — Animations
+   ========================================================================== */
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Fade up (entrance) */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade down */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scale in */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Shimmer (skeleton) */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* Pulse glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 16px var(--color-brand-glow); }
+  50%       { box-shadow: 0 0 36px var(--color-brand-glow); }
+}
+
+/* Floating orb drift */
+@keyframes orbDrift {
+  0%   { transform: translate(0, 0)    scale(1); }
+  33%  { transform: translate(40px, -30px) scale(1.06); }
+  66%  { transform: translate(-20px, 20px) scale(0.96); }
+  100% { transform: translate(0, 0)    scale(1); }
+}
+
+/* Spin */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Utility classes */
+.animate-fade-in    { animation: fadeIn    var(--transition-normal) var(--ease-out) both; }
+.animate-fade-up    { animation: fadeUp    var(--transition-slow)   var(--ease-out) both; }
+.animate-fade-down  { animation: fadeDown  var(--transition-slow)   var(--ease-out) both; }
+.animate-scale-in   { animation: scaleIn   var(--transition-normal) var(--ease-out) both; }
+.animate-slide-left { animation: slideInLeft var(--transition-normal) var(--ease-out) both; }
+.animate-spin       { animation: spin 1s linear infinite; }
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
