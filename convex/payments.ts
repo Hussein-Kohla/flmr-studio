@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { requireUser, toCents, fromCents, logAction } from "./helpers";
+import { requireUser, toCents, logAction } from "./helpers";
 import { paginationOptsValidator } from "convex/server";
 import { recordPayment } from "./financials";
 

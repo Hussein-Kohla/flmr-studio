@@ -43,7 +43,6 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [monthEditData, setMonthEditData] = useState({ amount: '' as string | number, status: 'pending', updateGlobal: false, year: new Date().getFullYear() });
   const [isAddingPayment, setIsAddingPayment] = useState(false);
-  const [loadingPaymentId, setLoadingPaymentId] = useState<string | null>(null);
   
   // Use transactions instead of payments for subscription tracking
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip');
@@ -52,7 +51,6 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   const updateClient = useMutation(api.clients.updateClient);
   const generateUploadUrl = useMutation(api.clients.generateUploadUrl);
   const createPayment = useMutation(api.transactions.createTransaction);
-  const updatePaymentStatus = useMutation(api.transactions.updateTransactionStatus);
   const updatePayment = useMutation(api.transactions.updateTransaction);
   const deletePayment = useMutation(api.transactions.deleteTransaction);
 
@@ -158,7 +156,7 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     }
   };
 
-  const handleToggleStatus = async (paymentId: any, currentStatus: string) => {
+  const handleToggleStatus = async (_paymentId: any, _currentStatus: string) => {
     // Function disabled per user request to make statuses read-only
     return;
   };
@@ -270,7 +268,7 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     const currentAmountCents = monthOverride ? monthOverride.amountCents : formData.subscription.amountCents;
     
     // Check if this month/year is paid based on payments (status is 'posted')
-    const isPaidForYear = clientPayments.some(p => 
+    clientPayments.some(p => 
       p.subscriptionMonth === index && 
       p.subscriptionYear === selectedYear && 
                       (p.status === 'posted' || p.status === 'paid')

@@ -35,7 +35,6 @@ export default function AnalyticsPage() {
   const projects = projectsData?.page || []
   const payments = paymentsData?.page || []
   const transactions = transactionsData?.page || []
-  const stages = stagesData || []
 
   const incomeTransactions = transactions.filter(t => t.type === 'income')
   const expenseTransactions = transactions.filter(t => t.type === 'expense')

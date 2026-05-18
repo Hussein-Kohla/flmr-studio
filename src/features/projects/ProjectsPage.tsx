@@ -12,7 +12,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import { NewProjectModal } from './NewProjectModal'
 import { ProjectDetailsModal } from './ProjectDetailsModal'
-import { Layers, CheckCircle2, Clock, AlertCircle, LayoutGrid, List as ListIcon, Plus, Trash2, Search, Filter, ChevronLeft, ChevronRight, Briefcase, Calendar, DollarSign, Users } from 'lucide-react'
+import { Layers, CheckCircle2, Clock, AlertCircle, LayoutGrid, List as ListIcon, Plus, Trash2, Search, ChevronLeft, ChevronRight, Briefcase, Calendar, DollarSign, Users } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Input } from '@/components/ui/Input'
@@ -49,11 +49,8 @@ export default function ProjectsPage() {
 
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus)
   const deleteProject = useMutation(api.projects.deleteProject)
-  const updateProject = useMutation(api.projects.updateProject)
-
   const stages = useQuery(api.stages.getStages, token ? { token } : 'skip')
   const initializeStages = useMutation(api.stages.initializeDefaultStages)
-  const addStage = useMutation(api.stages.addStage)
 
   useEffect(() => {
     if (token && stages && stages.length === 0) {

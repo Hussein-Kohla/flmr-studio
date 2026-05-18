@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import { useQuery, useMutation } from 'convex/react'
@@ -14,7 +14,7 @@ import { formatDate, cn } from '@/lib/utils'
 import { NewTaskModal } from './NewTaskModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/components/ui/Toast'
-import { Plus, Calendar, Tag, User, CheckCircle2, Trash2, MoreHorizontal, Search, Filter, Clock, AlertCircle, CheckSquare, ListTodo } from 'lucide-react'
+import { Plus, Calendar, Tag, User, CheckCircle2, Trash2, MoreHorizontal, Search, Clock, AlertCircle, CheckSquare, ListTodo } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 
 const PRIORITY_COLORS = {

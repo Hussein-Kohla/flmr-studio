@@ -15,7 +15,7 @@ interface SidebarProps {
   userSection?: React.ReactNode
 }
 
-export function Sidebar({ navItems, logo, userSection }: SidebarProps) {
+export function Sidebar({ navItems, logo }: SidebarProps) {
   const { isOpen, toggle } = useDisclosure(true)
 
   return (

@@ -4,11 +4,10 @@ import { useAuth } from '../../hooks/useAuth'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Wallet, Plus, Minus, PieChart, CreditCard, Trash2, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Calendar, Filter, Download, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, Wallet, Plus, Minus, PieChart, CreditCard, Trash2, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Calendar, Download } from 'lucide-react'
 import { TransactionModal } from './TransactionModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/components/ui/Toast'
@@ -23,7 +22,6 @@ export default function PaymentsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalType, setModalType] = useState<'income' | 'expense'>('income')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
-  const [searchQuery, setSearchQuery] = useState('')
 
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip')
@@ -60,7 +58,6 @@ export default function PaymentsPage() {
 
   // Recurring calculations from clients
   const recurringIncome = clients.reduce((acc, c) => acc + (c.subscription?.amountCents || 0), 0)
-  const recurringExpense = 0 // Currently not tracking recurring expenses on clients
 
   // Changes
   const incomeChange = incomeLastMonth === 0 ? 100 : Math.round(((incomeThisMonth - incomeLastMonth) / incomeLastMonth) * 100)

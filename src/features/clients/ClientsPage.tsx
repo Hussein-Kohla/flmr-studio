@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { LayoutGrid, List, TrendingUp, Trash2, Search, Filter, Plus, MoreVertical, Mail, Phone, MapPin, Briefcase, CheckCircle2 } from 'lucide-react'
+import { LayoutGrid, List, TrendingUp, Trash2, Search, Plus, Mail, Phone, CheckCircle2 } from 'lucide-react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
@@ -249,7 +249,6 @@ export default function ClientsPage() {
         >
           <AnimatePresence mode="popLayout">
             {filtered.map((client, i) => {
-              const stats = getClientStats(client._id)
               return (
                 <motion.div
                   key={client._id}

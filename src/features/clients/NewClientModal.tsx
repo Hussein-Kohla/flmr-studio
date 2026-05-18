@@ -116,7 +116,7 @@ export function NewClientModal({ isOpen, onClose }: NewClientModalProps) {
                 </div>
              </div>
              <div className="flex flex-wrap justify-center gap-2">
-                {PRESET_AVATARS.map((url, i) => (
+                {PRESET_AVATARS.map((url, _i) => (
                   <button 
                     key={url} 
                     type="button"

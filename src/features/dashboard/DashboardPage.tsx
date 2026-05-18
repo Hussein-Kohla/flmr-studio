@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn, formatCurrency } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
@@ -10,12 +9,12 @@ import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
 import { motion } from 'framer-motion'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Area, AreaChart
 } from 'recharts'
 import {
   Users, Briefcase, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight,
-  Plus, Calendar as CalendarIcon, ExternalLink, Activity, DollarSign, Clock,
+  Plus, Activity, DollarSign, Clock,
   Target, Zap, ChevronRight, TrendingDown
 } from 'lucide-react'
 

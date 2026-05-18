@@ -93,22 +93,6 @@ export default function RecurringCollectionsView() {
     setShowPaymentModal(true)
   }
 
-  // Check if payment already exists for this client/month/year
-  const getPaymentStatus = (client: any, month: number, year: number) => {
-    const paidMonths = client.subscription?.paidMonths || []
-    const hasTransaction = transactions.find(t =>
-      t.clientId === client._id &&
-      t.subscriptionMonth === month &&
-      t.subscriptionYear === year &&
-      (t.status === 'posted' || t.status === 'paid')
-    )
-    return {
-      isPaid: paidMonths.includes(month) || !!hasTransaction,
-      transactionId: hasTransaction?._id || null,
-      isPending: !paidMonths.includes(month) && hasTransaction?.status === 'posted'
-    }
-  }
-
   // Check if payment exists for a specific month
   const checkPaymentExists = (client: any, month: number, year: number) => {
     return transactions.find(t =>

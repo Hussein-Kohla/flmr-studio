@@ -1,6 +1,5 @@
-import { v } from "convex/values";
-import { QueryCtx, MutationCtx } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import type { QueryCtx, MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 /**
  * SECURITY: Password Hashing using PBKDF2 (Web Crypto API)

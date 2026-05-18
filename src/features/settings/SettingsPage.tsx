@@ -1,17 +1,12 @@
-import { useState, useEffect } from 'react'
-import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { useToast } from '@/components/ui/Toast'
 
 export default function SettingsPage() {
   const { user, logout } = useAuth()
-  const { toast } = useToast()
 
   return (
     <PageWrapper title="Account Settings" subtitle="Manage your studio account and security.">
