@@ -35,8 +35,7 @@ export default function PaymentsPage() {
   // Calculate Financial Stats
   const filteredTransactions = transactions.filter(t => {
     const matchesType = filterType === 'all' || t.type === filterType
-    const matchesSearch = !searchQuery || t.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesType && matchesSearch
+    return matchesType
   })
 
   const incomeTransactions = filteredTransactions.filter(t => t.type === 'income')

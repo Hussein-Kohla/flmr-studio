@@ -897,17 +897,16 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
                                 ) : (
                                   <button 
                                     onClick={() => handleToggleStatus(p._id, p.status || 'posted')}
-                                    disabled={loadingPaymentId === p._id}
+                                    disabled={false}
                                   >
                                     <Badge 
                                       variant={(p.status === 'paid' || p.status === 'posted') ? 'success' : 'warning'} 
                                       className={cn(
                                         "uppercase text-[10px] font-black px-4 py-1 rounded-xl border-none transition-all",
-                                        (p.status !== 'paid' && p.status !== 'posted') && "cursor-pointer hover:scale-105 active:scale-95",
-                                        loadingPaymentId === p._id && "opacity-50 animate-pulse cursor-wait"
+                                        (p.status !== 'paid' && p.status !== 'posted') && "cursor-pointer hover:scale-105 active:scale-95"
                                       )}
                                     >
-                                      {loadingPaymentId === p._id ? 'UPDATING...' : ((p.status === 'paid' || p.status === 'posted') ? 'PAID' : 'PENDING')}
+                                      {(p.status === 'paid' || p.status === 'posted') ? 'PAID' : 'PENDING'}
                                     </Badge>
                                   </button>
                                 )}

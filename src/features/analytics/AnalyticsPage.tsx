@@ -29,7 +29,6 @@ export default function AnalyticsPage() {
   const projectsData = useQuery(api.projects.getProjects, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
   const paymentsData = useQuery(api.payments.getPayments, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
-  const stagesData = useQuery(api.stages.getStages, token ? { token } : 'skip')
 
   const clients = clientsData?.page || []
   const projects = projectsData?.page || []
