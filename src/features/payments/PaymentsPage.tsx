@@ -1,3 +1,4 @@
+import { useSettings } from '@/hooks/useSettings'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '../../hooks/useAuth'
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/Button'
 
 export default function PaymentsPage() {
   const { token } = useAuth()
+  const { t } = useSettings()
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<'overview' | 'monthly'>('overview')
   const [isBalanceHidden, setIsBalanceHidden] = useState(false)
@@ -80,8 +82,8 @@ export default function PaymentsPage() {
 
   return (
     <PageWrapper
-      title="Financial Overview"
-      subtitle="Track your income, expenses, and budget with precision"
+      title={t("financialOverview")}
+      subtitle={t("financialSubtitle")}
       actions={
         <div className="flex gap-3">
           <Button variant="secondary" size="sm">
@@ -129,7 +131,7 @@ export default function PaymentsPage() {
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div>
-                  <p className="text-brand font-bold text-xs uppercase tracking-widest mb-2">Total Net Balance</p>
+                  <p className="text-brand font-bold text-xs uppercase tracking-widest mb-2">{t('totalNetBalance')}</p>
                   <div className="flex items-center gap-6">
                     <h2 className="text-5xl lg:text-6xl font-black text-[var(--text-primary)] tracking-tight">
                       {isBalanceHidden ? '••••••••' : formatCurrency(totalBalance)}
@@ -173,7 +175,7 @@ export default function PaymentsPage() {
                       {Math.abs(incomeChange)}%
                     </span>
                   </div>
-                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Income (This Month)</p>
+                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t("incomeThisMonth")}</p>
                   <p className="text-2xl font-black text-emerald-400">{formatCurrency(incomeThisMonth)}</p>
                 </div>
 
@@ -181,7 +183,7 @@ export default function PaymentsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-rose-400"><TrendingDown size={20} /></span>
                   </div>
-                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Expenses (This Month)</p>
+                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t("expensesThisMonth")}</p>
                   <p className="text-2xl font-black text-rose-400">{formatCurrency(expenseThisMonth)}</p>
                 </div>
 
@@ -189,7 +191,7 @@ export default function PaymentsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-brand"><CreditCard size={20} /></span>
                   </div>
-                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Fixed Income/Month</p>
+                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t("fixedIncomeMonth")}</p>
                   <p className="text-2xl font-black text-[var(--text-primary)]">{formatCurrency(recurringIncome)}</p>
                 </div>
 
@@ -197,7 +199,7 @@ export default function PaymentsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-amber-400"><PieChart size={20} /></span>
                   </div>
-                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Profit Ratio</p>
+                  <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t("profitRatio")}</p>
                   <p className="text-2xl font-black text-brand">
                     {totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0}%
                   </p>
@@ -218,9 +220,9 @@ export default function PaymentsPage() {
                   onChange={(e) => setFilterType(e.target.value as any)}
                   className="h-9 px-3 bg-[var(--bg-muted)] border border-[var(--border-subtle)] rounded-xl text-xs font-bold focus:outline-none"
                 >
-                  <option value="all">All Types</option>
-                  <option value="income">Income Only</option>
-                  <option value="expense">Expenses Only</option>
+                  <option value="all">{t("allTypes")}</option>
+                  <option value="income">{t("incomeOnly")}</option>
+                  <option value="expense">{t("expensesOnly")}</option>
                 </select>
               </div>
             </CardHeader>
@@ -230,8 +232,8 @@ export default function PaymentsPage() {
                   <div className="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center mx-auto mb-4">
                     <Wallet size={24} className="text-[var(--text-muted)]" />
                   </div>
-                  <p className="text-lg font-bold text-[var(--text-primary)] mb-2">No transactions yet</p>
-                  <p className="text-sm text-[var(--text-muted)] mb-4">Start by adding your first income or expense</p>
+                  <p className="text-lg font-bold text-[var(--text-primary)] mb-2">{t("noTransactionsYet")}</p>
+                  <p className="text-sm text-[var(--text-muted)] mb-4">{t("startByAddingTx")}</p>
                   <div className="flex gap-3 justify-center">
                     <Button variant="secondary" onClick={() => openModal('income')}>
                       <Plus size={16} className="mr-2" /> Add Income
@@ -246,12 +248,12 @@ export default function PaymentsPage() {
                   <thead>
                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 text-[var(--text-muted)] text-[10px] uppercase tracking-wider font-bold">
                       <th className="p-4 pl-6">Description</th>
-                      <th className="p-4">Category</th>
+                      <th className="p-4">{t("categoryHeader")}</th>
                       <th className="p-4">Date</th>
-                      <th className="p-4">Type</th>
-                      <th className="p-4">Source</th>
+                      <th className="p-4">{t("typeHeader")}</th>
+                      <th className="p-4">{t("sourceHeader")}</th>
                       <th className="p-4 text-right pr-6">Amount</th>
-                      <th className="p-4 text-right pr-6">Actions</th>
+                      <th className="p-4 text-right pr-6">{t("actionsHeader")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">

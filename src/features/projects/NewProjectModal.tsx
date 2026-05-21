@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { NewClientModal } from '../clients/NewClientModal';
+import { SmartDropdown } from '@/components/ui/SmartDropdown';
 
 interface NewProjectModalProps {
   isOpen: boolean;
@@ -17,11 +23,12 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip');
   const createProject = useMutation(api.projects.createProject);
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [clientId, setClientId] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [title, setTitle] = useLocalStorage('draft-project-title', '');
+  const [description, setDescription] = useLocalStorage('draft-project-description', '');
+  const [clientId, setClientId] = useLocalStorage('draft-project-clientId', '');
+  const [deadline, setDeadline] = useLocalStorage('draft-project-deadline', '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -63,56 +70,81 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="form-label">Title *</label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="input-field"
-              placeholder="Project Title"
-            />
-          </div>
-          <div>
-            <label className="form-label">Client *</label>
-            <select
+          <Input
+            label="Title *"
+            type="text"
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Project Title"
+          />
+
+          <div className="relative">
+            <div className="absolute right-3 top-1.5 z-10">
+              <button 
+                type="button" 
+                onClick={() => setIsNewClientModalOpen(true)}
+                className="text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1"
+              >
+                <Plus size={10} /> جديد
+              </button>
+            </div>
+            <Select
+              label="Client *"
               required
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="input-field select-field"
+              onChange={(e) => {
+                if (e.target.value === 'NEW_CLIENT') {
+                  setIsNewClientModalOpen(true);
+                  // Reset select value to empty string so 'Create New Client...' isn't actually selected
+                  setClientId('');
+                } else {
+                  setClientId(e.target.value);
+                }
+              }}
             >
               <option value="" disabled>Select a client...</option>
+              <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
+                + Create New Client...
+              </option>
               {clients?.map((client) => (
                 <option key={client._id} value={client._id}>{client.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
-          <div>
-            <label className="form-label">Description</label>
-            <textarea
+
+          <SmartDropdown label="Advanced Options (Description & Deadline)">
+            <Textarea
+              label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="input-field h-24 resize-none"
               placeholder="Brief details about the project..."
             />
-          </div>
-          <div>
+
             <DatePicker
               label="Deadline"
               value={deadline}
               onChange={setDeadline}
             />
-          </div>
+          </SmartDropdown>
 
-          <div className="pt-4 flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting || !clientId}>
+          <div className="pt-4 flex justify-end gap-3 border-t border-[var(--border-subtle)]">
+            <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl h-12 px-6 font-black uppercase tracking-widest text-[10px]">Cancel</Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting || !clientId} className="rounded-xl h-12 px-8 font-black uppercase tracking-widest text-[10px] bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white shadow-lg shadow-[var(--color-brand-glow)]">
               {isSubmitting ? 'Creating...' : 'Create Project'}
             </Button>
           </div>
         </form>
       </Card>
+
+      <NewClientModal 
+        isOpen={isNewClientModalOpen} 
+        onClose={() => setIsNewClientModalOpen(false)} 
+        onSuccess={(newClientId) => {
+          setClientId(newClientId);
+          setIsNewClientModalOpen(false);
+        }}
+      />
     </div>
   );
 }

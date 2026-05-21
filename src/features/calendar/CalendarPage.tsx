@@ -1,12 +1,13 @@
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NewEventModal } from './NewEventModal'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ListTodo, Clock, Check, X as XIcon, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -23,6 +24,8 @@ const TYPE_VARIANT: Record<string, "muted" | "brand" | "warning" | "danger" | "s
   fb_image:   'brand',
   collection: 'success',
   send_money: 'success',
+  task:       'info',
+  publishing: 'warning',
   other:      'muted',
 }
 
@@ -37,7 +40,8 @@ function buildCells(year: number, month: number) {
 
 export default function CalendarPage() {
   const { token } = useAuth()
-  const events = useQuery(api.calendar.getEvents, token ? { token } : 'skip')
+  const { language, t } = useSettings()
+  const eventsData = useQuery(api.calendar.getUniversalEvents, token ? { token } : 'skip')
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [view, setView] = useState<'month' | 'day'>('month')
@@ -46,6 +50,90 @@ export default function CalendarPage() {
   const [editingEvent, setEditingEvent] = useState<any | null>(null)
 
   const updateStatus = useMutation(api.calendar.updateEventStatus)
+  const updateTask = useMutation(api.tasks.updateTask)
+  const updateProjectStatus = useMutation(api.projects.updateProjectStatus)
+
+  const events = useMemo(() => {
+    if (!eventsData) return null
+    const all: any[] = []
+
+    // 1. Calendar Events
+    ;(eventsData.calendarEvents || []).forEach((e) => {
+      all.push({
+        ...e,
+        eventSource: 'calendar',
+      })
+    })
+
+    // 2. Projects
+    ;(eventsData.projects || []).forEach((p) => {
+      all.push({
+        _id: p._id,
+        title: p.title,
+        type: 'deadline',
+        startAt: p.deadline!,
+        status: p.status,
+        notes: p.description,
+        clientId: p.clientId,
+        eventSource: 'project',
+      })
+    })
+
+    // 3. Tasks
+    ;(eventsData.tasks || []).forEach((t) => {
+      all.push({
+        _id: t._id,
+        title: t.title,
+        type: 'task',
+        startAt: t.dueDate!,
+        status: t.status,
+        notes: t.description,
+        clientId: t.clientId,
+        projectId: t.projectId,
+        eventSource: 'task',
+      })
+    })
+
+    // 4. Publishing Posts
+    ;(eventsData.publishingPosts || []).forEach((p) => {
+      all.push({
+        _id: p._id,
+        title: `[${p.platform.toUpperCase()}] ${p.title}`,
+        type: 'publishing',
+        startAt: p.publishDate!,
+        status: p.status,
+        clientId: p.clientId,
+        projectId: p.projectId,
+        eventSource: 'publishing',
+      })
+    })
+
+    return all
+  }, [eventsData])
+
+  const upcomingEvents = useMemo(() => {
+    if (!events) return null;
+    const now = new Date().getTime();
+    return events
+      .filter((ev) => ev.startAt >= now && ev.status !== 'done' && ev.status !== 'completed' && ev.status !== 'published')
+      .sort((a, b) => a.startAt - b.startAt);
+  }, [events]);
+
+  const handleUpdateStatus = async (ev: any, newStatus: string) => {
+    if (!token) return
+    try {
+      if (ev.eventSource === 'calendar') {
+        await updateStatus({ token, eventId: ev._id, status: newStatus })
+      } else if (ev.eventSource === 'task') {
+        await updateTask({ token, taskId: ev._id, status: newStatus })
+      } else if (ev.eventSource === 'project') {
+        const projectStatus = newStatus === 'done' ? 'completed' : newStatus === 'cancelled' ? 'suspended' : newStatus
+        await updateProjectStatus({ token, projectId: ev._id, status: projectStatus })
+      }
+    } catch (error) {
+      console.error("Error updating status:", error)
+    }
+  }
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -57,6 +145,7 @@ export default function CalendarPage() {
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
   const handleToday = () => {
+  const { t } = useSettings();
     setCurrentDate(new Date())
     setSelectedDate(new Date())
   }
@@ -98,8 +187,8 @@ export default function CalendarPage() {
 
   return (
     <PageWrapper
-      title="Calendar & Tasks"
-      subtitle="Manage your monthly schedule and daily tasks"
+      title={t("calendarTasks")}
+      subtitle={t("calendarSubtitle")}
       actions={
         <div className="flex items-center gap-3">
           <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]">
@@ -116,7 +205,7 @@ export default function CalendarPage() {
               <ListTodo size={16} /> Day
             </button>
           </div>
-          <Button size="sm" onClick={() => setIsModalOpen(true)}>+ New Task / Event</Button>
+          <Button size="sm" onClick={() => setIsModalOpen(true)}>+ {t('newTaskEvent')}</Button>
         </div>
       }
     >
@@ -131,12 +220,12 @@ export default function CalendarPage() {
               <div className="flex flex-col">
                 <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
                   {view === 'month' 
-                    ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-                    : selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                    ? currentDate.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' })
+                    : selectedDate.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
                   }
                 </h2>
                 <p className="text-[var(--text-muted)] text-sm font-medium mt-1">
-                  {view === 'month' ? "Overview of your monthly schedule" : "Detailed view for the selected day"}
+                  {view === 'month' ? t("monthlyScheduleOverview") : "عرض تفصيلي لليوم المحدد"}
                 </p>
               </div>
               
@@ -167,8 +256,8 @@ export default function CalendarPage() {
               <div className="flex-1 flex flex-col">
                 <div className="grid grid-cols-7 mb-2">
                   {DAYS.map((d) => (
-                    <div key={d} className="text-center text-[var(--text-xs)] font-bold text-[var(--text-muted)] py-2 uppercase tracking-wider">
-                      {d}
+                    <div key={t(d.toLowerCase() as any)} className="text-center text-[var(--text-xs)] font-bold text-[var(--text-muted)] py-2 uppercase tracking-wider">
+                      {t(d.toLowerCase() as any)}
                     </div>
                   ))}
                 </div>
@@ -199,7 +288,7 @@ export default function CalendarPage() {
                                 {day}
                               </span>
                               {dayEvents.length > 0 && (
-                                <span className="text-[10px] font-bold text-[var(--text-muted)]">{dayEvents.length} Tasks</span>
+                                <span className="text-[10px] font-bold text-[var(--text-muted)]">{dayEvents.length} {t('tasksWord')}</span>
                               )}
                             </div>
                             
@@ -237,64 +326,72 @@ export default function CalendarPage() {
                 ) : selectedDayEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)] space-y-4 py-20">
                     <ListTodo size={48} className="opacity-20" />
-                    <p className="font-medium text-lg">No tasks or events scheduled for this day.</p>
+                    <p className="font-medium text-lg">لا توجد مهام أو أحداث مجدولة لهذا اليوم.</p>
                     <Button variant="outline" onClick={() => setIsModalOpen(true)}>Add your first task</Button>
                   </div>
                 ) : (
                   <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[var(--border-subtle)] before:to-transparent">
-                    {selectedDayEvents.map((ev) => (
-                      <div key={ev._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[var(--bg-card)] bg-[var(--bg-surface)] text-[var(--color-brand)] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                          <Clock size={16} />
-                        </div>
-                        
-                        <Card 
-                          glass 
-                          className={cn(
-                            "w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 transition-all relative group/card border-white/5",
-                            ev.status === 'done' ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10" :
-                            ev.status === 'cancelled' ? "bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10" :
-                            "hover:border-[var(--color-brand-subtle)]"
-                          )}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <Badge variant={ev.status === 'done' ? 'success' : ev.status === 'cancelled' ? 'danger' : TYPE_VARIANT[ev.type]}>
-                              {ev.status === 'done' ? 'Completed' : ev.status === 'cancelled' ? 'Cancelled' : ev.type}
-                            </Badge>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-[var(--text-muted)] mr-2">{formatTime(ev.startAt)}</span>
-                              
-                              <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                                <button 
-                                  onClick={() => updateStatus({ token: token!, eventId: ev._id, status: 'done' })}
-                                  className={cn("p-1.5 rounded-lg transition-all", ev.status === 'done' ? "bg-emerald-500 text-white" : "bg-white/5 text-white/40 hover:bg-emerald-500/20 hover:text-emerald-500")}
-                                >
-                                  <Check size={14} />
-                                </button>
-                                <button 
-                                  onClick={() => updateStatus({ token: token!, eventId: ev._id, status: 'cancelled' })}
-                                  className={cn("p-1.5 rounded-lg transition-all", ev.status === 'cancelled' ? "bg-red-500 text-white" : "bg-white/5 text-white/40 hover:bg-red-500/20 hover:text-red-500")}
-                                >
-                                  <XIcon size={14} />
-                                </button>
-                                <button 
-                                  onClick={() => setEditingEvent(ev)}
-                                  className="p-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all"
-                                >
-                                  <Pencil size={14} />
-                                </button>
+                    {selectedDayEvents.map((ev) => {
+                      const isCompleted = ev.status === 'done' || ev.status === 'completed'
+                      const isCancelled = ev.status === 'cancelled' || ev.status === 'suspended'
+                      return (
+                        <div key={ev._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[var(--bg-card)] bg-[var(--bg-surface)] text-[var(--color-brand)] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                            <Clock size={16} />
+                          </div>
+                          
+                          <Card 
+                            glass 
+                            className={cn(
+                              "w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 transition-all relative group/card border-white/5",
+                              isCompleted ? "bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10" :
+                              isCancelled ? "bg-red-500/10 border-red-500/50 shadow-lg shadow-red-500/10" :
+                              "hover:border-[var(--color-brand-subtle)]"
+                            )}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <Badge variant={isCompleted ? 'success' : isCancelled ? 'danger' : TYPE_VARIANT[ev.type]}>
+                                {isCompleted ? 'Completed' : isCancelled ? 'Cancelled' : ev.type}
+                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-[var(--text-muted)] mr-2">{formatTime(ev.startAt)}</span>
+                                
+                                <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                  {ev.eventSource !== 'publishing' && (
+                                    <>
+                                      <button 
+                                        onClick={() => handleUpdateStatus(ev, 'done')}
+                                        className={cn("p-1.5 rounded-lg transition-all", isCompleted ? "bg-emerald-500 text-white" : "bg-white/5 text-white/40 hover:bg-emerald-500/20 hover:text-emerald-500")}
+                                      >
+                                        <Check size={14} />
+                                      </button>
+                                      <button 
+                                        onClick={() => handleUpdateStatus(ev, 'cancelled')}
+                                        className={cn("p-1.5 rounded-lg transition-all", isCancelled ? "bg-red-500 text-white" : "bg-white/5 text-white/40 hover:bg-red-500/20 hover:text-red-500")}
+                                      >
+                                        <XIcon size={14} />
+                                      </button>
+                                    </>
+                                  )}
+                                  <button 
+                                    onClick={() => setEditingEvent(ev)}
+                                    className="p-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <h3 className={cn("font-bold text-lg", ev.status === 'done' ? "text-emerald-400" : ev.status === 'cancelled' ? "text-red-400" : "text-[var(--text-primary)]")}>
-                            {ev.title}
-                          </h3>
-                          {ev.notes && (
-                            <p className="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">{ev.notes}</p>
-                          )}
-                        </Card>
-                      </div>
-                    ))}
+                            <h3 className={cn("font-bold text-lg", isCompleted ? "text-emerald-400" : isCancelled ? "text-red-400" : "text-[var(--text-primary)]")}>
+                              {ev.title}
+                            </h3>
+                            {ev.notes && (
+                              <p className="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">{ev.notes}</p>
+                            )}
+                          </Card>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -310,13 +407,13 @@ export default function CalendarPage() {
                  <ListTodo size={24} />
                </div>
                <div>
-                 <p className="text-white/80 font-medium text-sm">Daily Progress</p>
-                 <h3 className="text-2xl font-bold">{selectedDayEvents.length} Tasks</h3>
+                 <p className="text-white/80 font-medium text-sm">{t("dailyProgress")}</p>
+                 <h3 className="text-2xl font-bold">{selectedDayEvents.length} {t('tasksWord')}</h3>
                </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-medium text-white/80">
-                <span>Completed</span>
+                <span>{t("completed")}</span>
                 <span>0%</span>
               </div>
               <div className="h-2 bg-white/20 rounded-full overflow-hidden">
@@ -327,17 +424,17 @@ export default function CalendarPage() {
 
           <div>
             <h3 className="text-[var(--text-sm)] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex justify-between items-center">
-              <span>Upcoming</span>
-              <Badge variant="brand">{!events ? '...' : events.length}</Badge>
+              <span>{t('upcomingTasks')}</span>
+              <Badge variant="brand">{!upcomingEvents ? '...' : upcomingEvents.length}</Badge>
             </h3>
             
             <div className="space-y-3">
-              {!events ? (
+              {!upcomingEvents ? (
                 Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height="70px" className="w-full rounded-xl" />)
-              ) : events.length === 0 ? (
-                <p className="text-[var(--text-muted)] text-sm">No upcoming events.</p>
+              ) : upcomingEvents.length === 0 ? (
+                <p className="text-[var(--text-muted)] text-sm">{language === 'ar' ? 'لا يوجد مهام قادمة' : 'No upcoming tasks'}</p>
               ) : (
-                events.slice(0, 5).map((ev) => (
+                upcomingEvents.slice(0, 5).map((ev) => (
                   <Card key={ev._id} glass padding="sm" hoverable className="border-[var(--border-subtle)]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">

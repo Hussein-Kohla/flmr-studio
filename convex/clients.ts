@@ -47,6 +47,14 @@ export const createClient = mutation({
     company: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    clientType: v.optional(v.string()),
+    accountManager: v.optional(v.string()),
+    collectionOfficer: v.optional(v.string()),
+    color: v.optional(v.string()),
+    customFields: v.optional(v.array(v.object({
+      key: v.string(),
+      value: v.string(),
+    }))),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -60,6 +68,11 @@ export const createClient = mutation({
       company: args.company,
       avatarUrl: args.avatarUrl,
       tags: args.tags,
+      clientType: args.clientType,
+      accountManager: args.accountManager,
+      collectionOfficer: args.collectionOfficer,
+      color: args.color,
+      customFields: args.customFields,
       status: ClientStatus.LEAD,
       lifecycle_stage: LifecycleStage.DISCOVERY,
       balanceCents: 0,
@@ -83,6 +96,12 @@ export const updateClient = mutation({
     company: v.optional(v.string()),
     address: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    clientType: v.optional(v.string()),
+    accountManager: v.optional(v.string()),
+    collectionOfficer: v.optional(v.string()),
+    color: v.optional(v.string()),
+    customFields: v.optional(v.array(v.object({ key: v.string(), value: v.string() }))),
+    status: v.optional(v.string()),
     subscription: v.optional(v.object({
       amountCents: v.number(),
       dueDay: v.number(),
@@ -211,3 +230,16 @@ export const migrateRevenue = mutation({
     return { success: true, count: clients.length };
   }
 });
+
+export const getAllClients = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    return await ctx.db
+      .query("clients")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .collect();
+  },
+});
+

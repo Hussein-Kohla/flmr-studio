@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { useDisclosure } from '@/hooks/useDisclosure'
+import { ToolHelper } from '../ToolHelper'
 
 interface NavItem {
   to: string
@@ -86,6 +87,9 @@ export function Sidebar({ navItems, logo }: SidebarProps) {
           </NavLink>
         ))}
       </nav>
+
+      {/* Tools Section */}
+      <ToolHelper isSidebarOpen={isOpen} />
 
       {/* User Section / Footer */}
       <div className="p-4 border-t border-[var(--border-subtle)] bg-black/5">

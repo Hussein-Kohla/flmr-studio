@@ -1,474 +1,346 @@
-import { useQuery, useMutation } from 'convex/react'
-import { motion } from 'framer-motion'
-import { api } from '@/../convex/_generated/api'
-import { useAuth } from '@/hooks/useAuth'
-import { PageWrapper } from '@/components/layout/PageWrapper'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Avatar } from '@/components/ui/Avatar'
-import { Badge } from '@/components/ui/Badge'
-import { formatDate, formatCurrency, cn, calculateProjectProgress } from '@/lib/utils'
-import React, { useState, useMemo, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
-import { NewProjectModal } from './NewProjectModal'
-import { ProjectDetailsModal } from './ProjectDetailsModal'
-import { Layers, CheckCircle2, Clock, AlertCircle, LayoutGrid, List as ListIcon, Plus, Trash2, Search, ChevronLeft, ChevronRight, Briefcase, Calendar, DollarSign, Users } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Input } from '@/components/ui/Input'
-import { useDebounce } from '@/hooks/useDebounce'
+import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
+import { api } from '@/../convex/_generated/api';
+import { useAuth } from '@/hooks/useAuth';
+import { useSettings } from '@/hooks/useSettings';
+import { PageWrapper } from '@/components/layout/PageWrapper';
+import { Input } from '@/components/ui/Input';
+import { useDebounce } from '@/hooks/useDebounce';
+import { formatDate, formatCurrency } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { 
+  Folder, Plus, Search, CheckCircle2, Clock, 
+  AlertCircle, LayoutGrid, List as ListIcon, 
+  MoreVertical, Calendar, DollarSign, Users, Target, Activity, CheckSquare, Tag, Monitor
+} from 'lucide-react';
+import { NewProjectStepperModal } from './NewProjectStepperModal';
+import { ProjectDetailsDrawer } from './ProjectDetailsDrawer';
 
 const ITEMS_PER_PAGE = 20;
 
-const STATUS_META: Record<string, { label: string; color: string; icon: React.ElementType; bgColor: string }> = {
-  draft: { label: 'Draft', color: 'text-slate-400', icon: Clock, bgColor: 'bg-slate-500/10' },
-  in_review: { label: 'In Review', color: 'text-blue-400', icon: AlertCircle, bgColor: 'bg-blue-500/10' },
-  revision: { label: 'Revision', color: 'text-amber-400', icon: AlertCircle, bgColor: 'bg-amber-500/10' },
-  approved: { label: 'Approved', color: 'text-purple-400', icon: CheckCircle2, bgColor: 'bg-purple-500/10' },
-  done: { label: 'Completed', color: 'text-emerald-400', icon: CheckCircle2, bgColor: 'bg-emerald-500/10' },
-}
+const STAGE_CONFIG = [
+  { slug: 'draft', name: 'draft', color: 'border-slate-500', icon: Clock },
+  { slug: 'in_review', name: 'inReview', color: 'border-blue-500', icon: AlertCircle },
+  { slug: 'revision', name: 'revision', color: 'border-amber-500', icon: AlertCircle },
+  { slug: 'approved', name: 'approved', color: 'border-purple-500', icon: CheckCircle2 },
+  { slug: 'done', name: 'completed', color: 'border-[var(--color-brand)]', icon: CheckCircle2 },
+];
 
 export default function ProjectsPage() {
-  const { token } = useAuth()
-  const { toast } = useToast()
-  const [search, setSearch] = useState('')
-  const debouncedSearch = useDebounce(search, 300)
+  const { token } = useAuth();
+  const { t } = useSettings();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
 
-  // Pagination State
-  const [paginationCursor, setPaginationCursor] = useState<string | null>(null);
-
-  const projectsData = useQuery(api.projects.getProjects, token ? {
-    token,
-    paginationOpts: { numItems: ITEMS_PER_PAGE, cursor: paginationCursor }
-  } : 'skip')
-
-  const clients = useQuery(api.clients.getClients, token ? {
+  const projectsQuery = useQuery(api.projects.getProjects, token ? {
     token,
     paginationOpts: { numItems: 100, cursor: null }
-  } : 'skip')?.page || []
+  } : 'skip');
+  
+  const clientsQuery = useQuery(api.clients.getClients, token ? {
+    token,
+    paginationOpts: { numItems: 100, cursor: null }
+  } : 'skip');
 
-  const updateProjectStatus = useMutation(api.projects.updateProjectStatus)
-  const deleteProject = useMutation(api.projects.deleteProject)
-  const stages = useQuery(api.stages.getStages, token ? { token } : 'skip')
-  const initializeStages = useMutation(api.stages.initializeDefaultStages)
+  const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
 
-  useEffect(() => {
-    if (token && stages && stages.length === 0) {
-      initializeStages({ token }).catch(console.error)
-    }
-  }, [token, stages, initializeStages])
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [selectedProject, setSelectedProject] = useState<any | null>(null)
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
-  const [filterStatus, setFilterStatus] = useState<string>('all')
-
-  const projects = projectsData?.page || []
+  const projects = projectsQuery?.page || [];
+  const clients = clientsQuery?.page || [];
 
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
-      const matchesSearch = !debouncedSearch ||
-        p.title?.toLowerCase().includes(debouncedSearch.toLowerCase())
-      const matchesFilter = filterStatus === 'all' || p.status === filterStatus
-      return matchesSearch && matchesFilter
-    })
-  }, [projects, debouncedSearch, filterStatus])
+      const matchesSearch = !debouncedSearch || p.title?.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+      const matchesType = filterType === 'all' || p.projectType === filterType;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [projects, debouncedSearch, filterStatus, filterType]);
 
-  // Project Stats
   const stats = useMemo(() => {
-    return {
-      total: projects.length,
-      active: projects.filter(p => p.status !== 'done').length,
-      completed: projects.filter(p => p.status === 'done').length,
-      totalBudget: projects.reduce((a, p) => a + (p.budgetCents || 0), 0),
-      totalRevenue: projects.reduce((a, p) => a + (p.revenueCents || 0), 0),
+    const total = projects.length;
+    const active = projects.filter(p => p.status !== 'done').length;
+    const completed = projects.filter(p => p.status === 'done').length;
+    const totalRevenue = projects.reduce((sum, p) => sum + (p.budgetCents || 0), 0);
+    
+    let totalMonths = 1;
+    if (projects.length > 0) {
+      const oldestProject = [...projects].sort((a, b) => a.createdAt - b.createdAt)[0];
+      const msPerMonth = 1000 * 60 * 60 * 24 * 30;
+      const monthsSinceOldest = (Date.now() - oldestProject.createdAt) / msPerMonth;
+      totalMonths = Math.max(1, Math.ceil(monthsSinceOldest));
     }
-  }, [projects])
+    const averageMonthly = totalRevenue / totalMonths;
+
+    return {
+      total,
+      active,
+      completed,
+      averageMonthly,
+      totalClients: clients.length
+    };
+  }, [projects, clients]);
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination || !token) return
-    const { draggableId, destination } = result
+    if (!result.destination || !token) return;
+    const { draggableId, destination } = result;
 
-    const project = projects.find(p => p._id.toString() === draggableId)
+    const project = projects.find(p => p._id.toString() === draggableId);
     if (project && project.status !== destination.droppableId) {
       updateProjectStatus({
         token,
         projectId: project._id,
         status: destination.droppableId
-      }).catch(console.error)
+      }).catch(console.error);
     }
-  }
-
-  const handleDeleteProject = async (projectId: any, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setDeleteConfirmId(projectId)
-  }
-
-  const performDelete = async () => {
-    if (!token || !deleteConfirmId) return
-    try {
-      await deleteProject({ token, projectId: deleteConfirmId as any })
-      toast("Project deleted successfully.", "success")
-    } catch (err) {
-      console.error(err)
-      toast("Failed to delete project.", "error")
-    } finally {
-      setDeleteConfirmId(null)
-    }
-  }
+  };
 
   return (
     <PageWrapper
-      title="Projects & Pipelines"
-      subtitle="Track your production workflow and creative deliverables"
+      title={
+        <div className="flex items-center gap-3">
+          <Folder className="text-[var(--color-brand)]" size={28} />
+          <div dir="rtl">
+            <h1 className="text-2xl font-black text-white">{t('projects')}</h1>
+            <p className="text-sm text-[var(--text-muted)] font-normal">{t('projectsSubtitle')}</p>
+          </div>
+        </div>
+      }
       actions={
-        <div className="flex gap-3">
-          <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]">
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                viewMode === 'kanban' ? 'bg-brand text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              )}
-            >
+        <div className="flex gap-3 items-center">
+          <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-default)]">
+            <button onClick={() => setViewMode('kanban')} className={cn("p-2 rounded-lg transition-all", viewMode === 'kanban' ? 'bg-[var(--color-brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-white')}>
               <LayoutGrid size={18} />
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                viewMode === 'list' ? 'bg-brand text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              )}
-            >
+            <button onClick={() => setViewMode('list')} className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? 'bg-[var(--color-brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-white')}>
               <ListIcon size={18} />
             </button>
           </div>
-          <Button size="sm" onClick={() => setIsModalOpen(true)}>
-            <Plus size={16} className="mr-2" /> New Project
-          </Button>
+          <button 
+            onClick={() => setIsNewProjectModalOpen(true)}
+            className="flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_var(--color-brand-glow)]"
+          >
+            <Plus size={18} /> {t('newProject')}
+          </button>
         </div>
       }
     >
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Briefcase size={16} className="text-brand" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Total</span>
-          </div>
-          <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.total}</h3>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Layers size={16} className="text-blue-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Active</span>
-          </div>
-          <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.active}</h3>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={16} className="text-emerald-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Done</span>
-          </div>
-          <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.completed}</h3>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign size={16} className="text-emerald-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Revenue</span>
-          </div>
-          <h3 className="text-2xl font-black text-emerald-400">{formatCurrency(stats.totalRevenue)}</h3>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Users size={16} className="text-purple-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Clients</span>
-          </div>
-          <h3 className="text-2xl font-black text-[var(--text-primary)]">{clients.length}</h3>
-        </motion.div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8" dir="rtl">
+        <StatCard title={t('total')} value={stats.total} icon={<Folder size={18} />} color="border-[var(--text-muted)]" />
+        <StatCard title={t('active')} value={stats.active} icon={<Activity size={18} />} color="border-blue-500" valueColor="text-blue-500" />
+        <StatCard title={t('completed')} value={stats.completed} icon={<CheckCircle2 size={18} />} color="border-[var(--color-brand)]" valueColor="text-[var(--color-brand)]" />
+        <StatCard title={t('average')} value={formatCurrency(stats.averageMonthly)} icon={<DollarSign size={18} />} color="border-purple-500" valueColor="text-purple-400" />
+        <StatCard title={t('clientsCount')} value={stats.totalClients} icon={<Users size={18} />} color="border-pink-500" />
       </div>
 
-      {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1 max-w-md">
-          <Input
-            placeholder="Search projects..."
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 border-y border-[var(--border-default)] py-4 bg-black/20" dir="rtl">
+        <div className="flex-1 max-w-md relative">
+          <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <input
+            type="text"
+            placeholder={t('searchProjectsPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            leftIcon={<Search size={18} className="text-[var(--text-muted)]" />}
+            className="w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors"
           />
         </div>
         <div className="flex gap-2 items-center flex-wrap">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-sm text-[var(--text-secondary)] focus:outline-none focus:border-brand"
-          >
-            <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="in_review">In Review</option>
-            <option value="revision">Revision</option>
-            <option value="approved">Approved</option>
-            <option value="done">Completed</option>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
+            <option value="all">{t('allStatuses')} ▼</option>
+            {STAGE_CONFIG.map(s => <option key={s.slug} value={s.slug}>{t(s.name as any)}</option>)}
+          </select>
+          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
+            <option value="all">{t('allClients')} ▼</option>
+          </select>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
+            <option value="all">{t('allTypes')} ▼</option>
+            <option value="web">{t('web')}</option>
+            <option value="mobile">{t('mobile')}</option>
+          </select>
+          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
+            <option value="recent">{t('newest')} ▼</option>
+            <option value="oldest">{t('oldest')}</option>
           </select>
         </div>
       </div>
 
       {viewMode === 'kanban' ? (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-8 items-start scrollbar-hide">
-            {[...(stages || [])].sort((a, b) => a.order - b.order).map((stage, stageIndex) => {
-              const meta = STATUS_META[stage.slug] || { label: stage.name, color: 'text-slate-400', icon: Clock, bgColor: 'bg-slate-500/10' }
-              const Icon = meta.icon
-              const columnProjects = filteredProjects.filter(p => p.status === stage.slug)
-
+          <div className="flex gap-6 overflow-x-auto pb-8 items-start custom-scrollbar min-h-[600px]" dir="ltr">
+            {STAGE_CONFIG.map((stage) => {
+              const columnProjects = filteredProjects.filter(p => p.status === stage.slug);
               return (
-                <motion.div
-                  key={stage._id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: stageIndex * 0.1 }}
-                  className="flex-shrink-0 w-80 flex flex-col gap-4"
-                >
-                  {/* Column Header */}
-                  <div className="flex items-center justify-between px-2">
+                <div key={stage.slug} className="flex flex-col w-[320px] shrink-0 bg-transparent rounded-2xl">
+                  <div className="flex items-center justify-between mb-4 px-1" dir="rtl">
                     <div className="flex items-center gap-2">
-                      <div className={cn("p-1.5 rounded-lg", meta.bgColor)}>
-                        <Icon size={14} className={meta.color} />
-                      </div>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-primary)]">{stage.name}</h3>
+                      <div className={cn("w-3 h-3 rounded-full border-2", stage.color, stage.slug === 'done' ? 'bg-[var(--color-brand)]' : 'bg-transparent')} />
+                      <h3 className="font-bold text-white text-sm uppercase tracking-wider">{t(stage.name as any)}</h3>
                     </div>
-                    <span className="text-[10px] font-bold bg-white/5 px-2 py-1 rounded-full text-[var(--text-muted)]">
+                    <span className="text-xs font-bold bg-[var(--bg-surface)] text-[var(--text-muted)] px-2 py-1 rounded-full border border-[var(--border-default)]">
                       {columnProjects.length}
                     </span>
                   </div>
 
-                  {/* Droppable Area */}
                   <Droppable droppableId={stage.slug}>
                     {(provided, snapshot) => (
                       <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
                         className={cn(
-                          "flex-1 flex flex-col gap-3 p-3 rounded-2xl border-2 border-dashed min-h-[300px] transition-all",
-                          snapshot.isDraggingOver ? "bg-brand/10 border-brand/40" : "bg-white/[0.02] border-transparent"
+                          "flex-1 rounded-2xl min-h-[150px] transition-colors p-2 space-y-3",
+                          snapshot.isDraggingOver ? 'bg-white/5 border border-dashed border-white/20' : 'bg-transparent'
                         )}
+                        dir="rtl"
                       >
-                        <motion.div layout className="flex flex-col gap-3">
-                          {columnProjects.map((project, index) => {
-                            const client = clients.find(c => c._id === project.clientId)
-                            const progress = calculateProjectProgress(project)
-                            return (
-                              <Draggable key={project._id} draggableId={project._id.toString()} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className={cn("outline-none mb-3 last:mb-0", snapshot.isDragging && "z-[999]")}
-                                  >
-                                    <motion.div
-                                      layout
-                                      initial={{ opacity: 0, scale: 0.95 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                    >
-                                      <Card
-                                        glass
-                                        className={cn(
-                                          "p-4 transition-all duration-300 cursor-grab active:cursor-grabbing group",
-                                          "hover:bg-white/[0.04] hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5 hover:-translate-y-1",
-                                          "bg-white/[0.02] border-white/5",
-                                          snapshot.isDragging ? "shadow-2xl ring-2 ring-brand/50 border-brand bg-brand/5" : ""
-                                        )}
-                                        onClick={() => setSelectedProject(project)}
-                                      >
-                                        {/* Project Title */}
-                                        <h4 className="font-bold text-sm text-[var(--text-primary)] mb-3 group-hover:text-brand transition-colors line-clamp-2">
-                                          {project.title}
-                                        </h4>
-
-                                        {/* Client */}
-                                        {client && (
-                                          <div className="flex items-center gap-2 mb-3">
-                                            <Avatar name={client.name} src={client.avatarUrl} size="sm" />
-                                            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-tighter truncate">
-                                              {client.name}
-                                            </span>
-                                          </div>
-                                        )}
-
-                                        {/* Progress */}
-                                        <div className="space-y-1.5 mb-3">
-                                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/30">
-                                            <span>Progress</span>
-                                            <span className="group-hover:text-brand transition-colors">{progress}%</span>
-                                          </div>
-                                          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                              initial={{ width: 0 }}
-                                              animate={{ width: `${progress}%` }}
-                                              className="h-full bg-gradient-to-r from-brand to-indigo-500 transition-all"
-                                            />
-                                          </div>
-                                        </div>
-
-                                        {/* Meta */}
-                                        <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] pt-2 border-t border-white/5">
-                                          <div className="flex items-center gap-2">
-                                            <Calendar size={10} />
-                                            <span>{project.deadline ? formatDate(project.deadline) : 'No deadline'}</span>
-                                          </div>
-                                          <span className="font-bold text-emerald-400">
-                                            {formatCurrency(project.revenueCents || 0)}
-                                          </span>
-                                        </div>
-                                      </Card>
-                                    </motion.div>
-                                  </div>
-                                )}
-                              </Draggable>
-                            )
-                          })}
-                        </motion.div>
+                        {columnProjects.map((project, index) => (
+                          <KanbanCard 
+                            key={project._id.toString()} 
+                            project={project} 
+                            index={index} 
+                            onClick={() => setSelectedProject(project)}
+                          />
+                        ))}
                         {provided.placeholder}
                       </div>
                     )}
                   </Droppable>
-
-                  {/* Add Card Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => { setIsModalOpen(true); setFilterStatus(stage.slug); }}
-                    className="w-full py-3 rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-[var(--text-muted)] hover:text-brand hover:border-brand/50 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
-                  >
-                    <Plus size={14} /> Add Project
-                  </motion.button>
-                </motion.div>
-              )
+                </div>
+              );
             })}
           </div>
         </DragDropContext>
       ) : (
-        /* List View */
-        <Card glass padding="none" className="overflow-hidden border-[var(--border-subtle)]">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[var(--border-subtle)] bg-white/5 text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-black">
-                <th className="p-4 pl-6">Project Details</th>
-                <th className="p-4">Client</th>
-                <th className="p-4">Deadline</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Revenue</th>
-                <th className="p-4 text-right pr-6">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border-subtle)]">
-              {filteredProjects.map((project) => {
-                const client = clients.find(c => c._id === project.clientId)
-                const meta = STATUS_META[project.status]
-                return (
-                  <tr
-                    key={project._id}
-                    className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    <td className="p-4 pl-6">
-                      <span className="font-bold text-[var(--text-primary)]">{project.title}</span>
-                    </td>
-                    <td className="p-4">
-                      {client ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar name={client.name} src={client.avatarUrl} size="sm" />
-                          <span className="text-xs">{client.name}</span>
-                        </div>
-                      ) : '—'}
-                    </td>
-                    <td className="p-4 text-xs text-[var(--text-muted)]">
-                      {project.deadline ? formatDate(project.deadline) : '—'}
-                    </td>
-                    <td className="p-4">
-                      <Badge variant={project.status === 'done' ? 'success' : 'brand'}>
-                        {meta?.label || project.status}
-                      </Badge>
-                    </td>
-                    <td className="p-4 font-bold text-emerald-400">
-                      {formatCurrency(project.revenueCents || 0)}
-                    </td>
-                    <td className="p-4 text-right pr-6">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm">Details</Button>
-                        <button
-                          onClick={(e) => handleDeleteProject(project._id, e)}
-                          className="p-2 text-rose-500/50 hover:text-rose-500 rounded-lg"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </Card>
+        <div className="text-center py-20 text-[var(--text-muted)]">{t("listViewUnderConstruction")}</div>
       )}
 
-      {/* Pagination */}
-      {projectsData && (
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <Button variant="secondary" size="sm" disabled={!paginationCursor} onClick={() => setPaginationCursor(null)}>
-            <ChevronLeft size={16} className="mr-1" /> First Page
-          </Button>
-          <Button variant="secondary" size="sm" disabled={projectsData.isDone} onClick={() => setPaginationCursor(projectsData.continueCursor)}>
-            Next Page <ChevronRight size={16} className="ml-1" />
-          </Button>
-        </div>
-      )}
+      <NewProjectStepperModal 
+        isOpen={isNewProjectModalOpen} 
+        onClose={() => setIsNewProjectModalOpen(false)} 
+      />
 
-      <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      {selectedProject && (
-        <ProjectDetailsModal
-          isOpen={!!selectedProject}
-          onClose={() => setSelectedProject(null)}
-          project={selectedProject}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={!!deleteConfirmId}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={performDelete}
-        title="Delete Project?"
-        description="This will permanently delete the project and all tasks."
-        confirmText="Yes, Delete"
-        variant="danger"
+      <ProjectDetailsDrawer 
+        isOpen={!!selectedProject} 
+        onClose={() => setSelectedProject(null)} 
+        project={selectedProject} 
       />
     </PageWrapper>
-  )
+  );
+}
+
+function StatCard({ title, value, icon, color, valueColor = "text-white" }: { title: string, value: string|number, icon: React.ReactNode, color: string, valueColor?: string }) {
+  return (
+    <div className={cn("bg-[var(--bg-surface)] p-5 rounded-2xl border-b-4 border-x border-t border-[var(--border-default)] relative overflow-hidden group hover:bg-[var(--bg-muted)] transition-colors", color)}>
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <div className="w-10 h-10 rounded-xl bg-black/30 flex items-center justify-center text-[var(--text-muted)] group-hover:text-white transition-colors border border-[var(--border-default)]">
+          {icon}
+        </div>
+      </div>
+      <div className="relative z-10">
+        <h3 className={cn("text-2xl font-black mb-1 font-mono tracking-tight", valueColor)}>{value}</h3>
+        <p className="text-xs font-bold text-[var(--text-muted)] uppercase">{title}</p>
+      </div>
+    </div>
+  );
+}
+
+function KanbanCard({ project, index, onClick }: { project: any, index: number, onClick: () => void }) {
+  const steps = project.steps || [];
+  const completedSteps = steps.filter((s: any) => s.isCompleted).length;
+  const progress = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0;
+  const { t } = useSettings();
+  
+  const priorityColors: Record<string, string> = {
+    low: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+    medium: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    high: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
+    critical: 'text-red-400 bg-red-400/10 border-red-400/20'
+  };
+
+  return (
+    <Draggable draggableId={project._id.toString()} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          onClick={onClick}
+          className={cn(
+            "group bg-[var(--bg-surface)] rounded-xl border border-[var(--border-default)] p-4 cursor-pointer hover:border-[var(--color-brand)]/50 hover:shadow-xl hover:shadow-[var(--color-brand-glow)]/5 transition-all",
+            snapshot.isDragging && "shadow-2xl ring-2 ring-[var(--color-brand)]/50 scale-[1.02] rotate-1"
+          )}
+        >
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2 max-w-[85%]">
+              <div 
+                className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0"
+                style={{ backgroundColor: project.color ? project.color.replace('bg-', '') : 'var(--color-brand)' }}
+              >
+                <Monitor size={12} />
+              </div>
+              <h4 className="text-white font-bold text-sm truncate">{project.title}</h4>
+            </div>
+            <button className="text-[var(--text-muted)] hover:text-white transition-colors p-1" onClick={e => e.stopPropagation()}>
+              <MoreVertical size={14} />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white border-2 border-[var(--bg-surface)] shrink-0" title={project.assignedTo}>
+              {project.assignedTo ? project.assignedTo.charAt(0).toUpperCase() : '?'}
+            </div>
+            <span className="text-[10px] font-medium text-[var(--text-muted)] truncate max-w-[80px]">
+              {project.assignedTo || t('unassigned')}
+            </span>
+            <span className="text-[10px] bg-black px-2 py-0.5 rounded-full border border-[var(--border-default)] text-[var(--text-muted)]">
+              {project.projectType === 'web' ? `🌐 ${t('web')}` : project.projectType === 'mobile' ? `📱 ${t('mobile')}` : `🎨 ${t('design')}`}
+            </span>
+          </div>
+
+          <div className="mb-4">
+            <div className="flex justify-between text-[10px] mb-1">
+              <span className="text-[var(--text-muted)] font-medium tracking-widest">{t("progressUppercase")}</span>
+              <span className="text-white font-bold">{progress}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-black rounded-full overflow-hidden border border-[var(--border-default)]">
+              <div 
+                className="h-full bg-[var(--color-brand)] rounded-full transition-all duration-500" 
+                style={{ width: `${progress}%` }} 
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-[var(--border-default)]">
+            <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)]">
+              <span className="flex items-center gap-1" title={t('deadline')}>
+                <Calendar size={12} />
+                {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--/--'}
+              </span>
+              {project.budgetCents ? (
+                <span className="flex items-center gap-1 font-bold text-[var(--color-brand)]" title={t('budget')}>
+                  <DollarSign size={12} />
+                  {project.budgetCents / 100}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+                <CheckSquare size={12} />
+                {completedSteps}/{steps.length}
+              </span>
+              <span className={cn("text-[9px] px-1.5 py-0.5 rounded border", priorityColors[project.priority || 'medium'])}>
+                {project.priority === 'high' || project.priority === 'critical' ? '🔴' : '🟡'} {t(project.priority as any || 'medium')}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
 }

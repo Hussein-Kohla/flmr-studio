@@ -1,0 +1,2019 @@
+{
+  "total": 356,
+  "items": [
+    "if (user === undefined) return",
+    "// Loading session from Convex\n  \n  return (",
+    "تصدير Excel",
+    "تصدير العميل كـ PDF",
+    "0 ? (\n                transactions.map((t, index) => (",
+    "const AnalyticsIcon = () =>",
+    "const ClientsIcon = () =>",
+    "const ProjectsIcon = () =>",
+    "const CalendarIcon = () =>",
+    "const PaymentsIcon = () =>",
+    "const TasksIcon = () =>",
+    "const SettingsIcon = () =>",
+    ",  tKey: 'settings'   },\n]\n\nconst Logo = () => (",
+    "FLMR",
+    "Hussein Kohla",
+    "Admin",
+    "(null);\n  const [operator, setOperator] = useState",
+    "Calculator",
+    ",\n      btn: \"bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20\",\n      bg: \"bg-blue-500/5\",\n      border: \"border-blue-500/20\"\n    }\n  }\n\n  const theme = themes[variant]\n\n  return (",
+    "(null);\n  \n  // Parse incoming value or default to now\n  const initialDate = value ? new Date(value) : new Date();\n  const [viewMonth, setViewMonth] = useState(initialDate.getMonth());\n  const [viewYear, setViewYear] = useState(initialDate.getFullYear());\n  const [selectedDate, setSelectedDate] = useState",
+    "(null);\n  const containerRef = useRef",
+    "setIsOpen(!isOpen)}\n          className=\"w-full flex items-center justify-between bg-transparent text-left outline-none border-none p-0 h-6\"\n        >",
+    "Set Time",
+    "Set",
+    "Clear",
+    "Today",
+    ",\n        document.body\n      )}",
+    "document.removeEventListener('keydown', handler)\n  }, [onClose])\n\n  return (",
+    "setIsOpen(!isOpen)}\n        className=\"w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors\"\n      >",
+    "Loading",
+    "void\n  dismiss: (id: string) => void\n}\n\nconst ToastContext = createContext",
+    "prev.filter(t => t.id !== id))\n  }, [])\n\n  return (",
+    "dismiss(t.id)} />\n      ))}",
+    "),\n    error: (",
+    "),\n    warning: (",
+    "),\n    info: (",
+    "),\n  }\n\n  return (",
+    ")\n    }\n    return null\n  }\n\n  return (",
+    "Live Data",
+    "Revenue & Profit Trend (Last 6 Months)",
+    "Project Pipeline",
+    "0 ? formatCurrency(totalRevenue / clients.length) : '0'}",
+    ") : topClients.map((client, i) => (",
+    "setName(e.target.value)}\n                  variant=\"minimal\"\n                  autoComplete=\"name\"\n                  className=\"bg-transparent\"\n                />\n              )}",
+    "setEmail(e.target.value)}\n                variant=\"minimal\"\n                autoComplete=\"email\"\n                className=\"bg-transparent\"\n              />",
+    "Full Name",
+    "John Doe",
+    "Email Address",
+    "admin@flmr.studio",
+    "Password",
+    "('month')\n  const [currentDate, setCurrentDate] = useState(new Date())\n  const [selectedDate, setSelectedDate] = useState(new Date())\n  const [editingEvent, setEditingEvent] = useState",
+    "Month",
+    "Day",
+    ") : selectedDayEvents.length === 0 ? (",
+    "setIsModalOpen(true)}>Add your first task",
+    "Completed",
+    ")\n              ) : events.length === 0 ? (",
+    ") : (\n                events.slice(0, 5).map((ev) => (",
+    "Category *",
+    "Title *",
+    "Event Type *",
+    "setType(e.target.value)}\n                  className=\"input-field select-field\"\n                >",
+    "Meeting",
+    "Deadline",
+    "Booking",
+    "Other",
+    "Budget",
+    "Priority",
+    "setPriority(e.target.value)}\n                  className=\"input-field select-field\"\n                >",
+    "Low",
+    "Medium",
+    "High",
+    "Platform *",
+    "setPlatform(e.target.value)}\n                  className=\"input-field select-field\"\n                >",
+    "Facebook",
+    "Instagram",
+    "YouTube",
+    "TikTok",
+    "Twitter",
+    "LinkedIn",
+    "setIsNewClientModalOpen(true)}\n                      className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                    >",
+    "Client Relationship",
+    "No Client Association",
+    "+ Create New Client...",
+    "Associated Project",
+    "No Project Association",
+    "setIsNewClientModalOpen(true)}\n                  className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                >",
+    "Client *",
+    "Select Client...",
+    "Status",
+    "To Do",
+    "In Progress",
+    "Draft",
+    "Active",
+    "Suspended",
+    "Description / Notes",
+    "setNotes(e.target.value)}\n                  className=\"input-field h-24 resize-none\"\n                  placeholder=\"Details...\"\n                />",
+    "Delete",
+    "Cancel",
+    "Budget Amount",
+    "Details...",
+    "}>\n          Back to Clients",
+    "Total Clients",
+    "Total Projects",
+    "Avg. Proj. Value",
+    "Active Rate",
+    "0 ? Math.round((projects.length / clients.length) * 10) / 10 : 0}",
+    "proj/client",
+    "Top 10 Clients by Revenue",
+    "Project Volume vs Completion",
+    "Top 10 Clients by Average Monthly Income",
+    "Top Clients List",
+    "Client Name",
+    "Projects",
+    "Average Monthly Income",
+    "Client Analytics",
+    "Deep dive into client value, project volume, and payment behavior.",
+    "('finance');\n  const [noteSavingStatus, setNoteSavingStatus] = useState",
+    "(null);\n  const [selectedYear, setSelectedYear] = useState",
+    "(null);\n  const [isDeletingRecord, setIsDeletingRecord] = useState(false);\n  const [promptConfig, setPromptConfig] = useState",
+    "p.trim().length > 0);\n\n  return (",
+    "Save Changes",
+    "setIsEditing(true)}\n              >",
+    "Clients",
+    "t.id === tagId);\n                      return (",
+    "General",
+    "Repeated",
+    "isEditing && fileInputRef.current?.click()}\n               >",
+    "fileInputRef.current?.click()}>",
+    "Quick Select Avatar",
+    "SIM 1",
+    "SIM 2",
+    "Email Client",
+    "0 ? phoneNumbers.map((num, i) => (",
+    "p.status === 'pending').reduce((acc, p) => acc + (p.amountCents || 0), 0))}",
+    "p.status === 'pending').length} Pending Transactions`}",
+    "p.status === 'paid' || p.status === 'posted').length))}",
+    "Average Monthly",
+    "Balance",
+    "Net Account Status",
+    "Amount",
+    "Description",
+    "Date",
+    "Paid",
+    "Pending",
+    "Add Record",
+    "No financial records found",
+    ") : (\n                        filteredPayments.map((p) => (",
+    "setDeleteConfirmId(p._id)}\n                                    className=\"p-2 bg-red-500/10 text-red-500/40 hover:bg-red-500 hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100\"\n                                    title=\"Delete\"\n                                  >",
+    "Monthly Subscription",
+    "Collection Day",
+    "th of Month",
+    "Year:",
+    "p.subscriptionMonth === index && \n                      p.subscriptionYear === selectedYear && \n                                      (p.status === 'posted' || p.status === 'paid')\n                    );\n                    const monthOverride = (formData.subscription?.monthAmounts || []).find(ma => ma.month === index);\n                    const monthAmountCents = monthOverride ? monthOverride.amountCents : formData.subscription.amountCents;\n                    const isCurrentMonth = index === new Date().getMonth() && selectedYear === new Date().getFullYear();\n                    \n                    return (",
+    "setSelectedMonthIndex(null)}\n                    className=\"absolute top-6 right-6 text-white/20 hover:text-white\"\n                  >",
+    "Update Payment Record",
+    "Update global subscription amount",
+    "Apply Changes",
+    "FLMR STUDIO",
+    ") : (\n                  filteredPayments.map((p) => (",
+    "Name",
+    "Email",
+    "Primary Phone",
+    "Secondary Phone",
+    "e.g. Logo Design",
+    "Edit",
+    "Delete Record",
+    "('list');\n  const [search, setSearch] = useState('');\n  const debouncedSearch = useDebounce(search, 300);\n  \n  const [isNewClientOpen, setIsNewClientOpen] = useState(false);\n  const [selectedClientForDetails, setSelectedClientForDetails] = useState",
+    "p.status !== 'done').length;\n  const totalAverageMonthly = clients.reduce((sum, c) => sum + getClientFinancials(c._id).avg, 0);\n  const avgMonthlyIncome = clients.length > 0 ? totalAverageMonthly / clients.length : 0;\n\n  return (",
+    "setIsNewClientOpen(true)}\n            className=\"flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[var(--color-brand-glow)]\"\n          >",
+    "setSearch(e.target.value)}\n            className=\"w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors\"\n          />",
+    ") : (\n        viewMode === 'list' ? (",
+    "navigate('/projects')}\n          />\n        ) : (",
+    "navigate('/projects')}\n          />\n        )\n      )}",
+    "sum + (p.steps?.length || 0), 0);\n  const completedTasks = projects.reduce((sum: number, p: any) => sum + (p.steps?.filter((s:any) => s.isCompleted).length || 0), 0);\n  const taskRatio = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;\n  const remainingTasks = totalTasks - completedTasks;\n  const totalBudget = projects.reduce((sum: number, p: any) => sum + (p.budgetCents || 0), 0);\n\n  const healthStatus = taskRatio > 70 ? 'Good' : taskRatio > 30 ? 'At risk' : 'Off track';\n\n  return (",
+    "setIsExpanded(!isExpanded)}>",
+    "e.stopPropagation()}>",
+    "s.isCompleted).length || 0;\n                  const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;\n                  const pRemaining = pTotalTasks - pCompletedTasks;\n                  \n                  const pHealth = pRatio === 100 ? 'Good' : pRatio > 50 ? 'Good' : project.status === 'at_risk' ? 'Off track' : 'At risk';\n\n                  return (",
+    "onProjectClick(project._id)}>",
+    "setIsProjectsExpanded(!isProjectsExpanded)}\n        className=\"flex items-center justify-between w-full py-2 text-sm font-bold text-white hover:text-[var(--color-brand)] transition-colors group\"\n      >",
+    "s.isCompleted).length || 0;\n                    const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;\n\n                    return (",
+    "TOTAL CLIENTS",
+    "ACTIVE PROJECTS",
+    "TOTAL AVERAGE MONTHLY",
+    "AVG. MONTHLY INCOME",
+    "Add New Client",
+    "setClientType(e.target.value)}\n            >",
+    "Facebook Ads (إعلانات فيس بوك)",
+    "Video Editing (مونتاج)",
+    "Photography (تصوير)",
+    "Graphic Design (تصميم)",
+    "Other (أخرى)",
+    "Categories / Tags",
+    "Client Name *",
+    "Company",
+    "Phone (SIM 1)",
+    "Phone (SIM 2)",
+    "Client Type / Service",
+    "Account Manager",
+    "Collection Officer",
+    "t.clientId === clientId);\n    const total = txs.reduce((acc, t) => acc + (t.amountCents || 0), 0);\n    const numMonths = Math.max(1, txs.length);\n    return total / numMonths;\n  };\n\n  const totalAverageCents = clients.reduce((sum, c) => sum + getClientAverage(c._id), 0);\n  const totalRevenueCents = incomeTransactions.reduce((a, b) => a + (b.amountCents || 0), 0);\n\n  const revenueThisMonthCents = incomeTransactions\n    .filter(t => t.date >= startOfThisMonth)\n    .reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const revenueLastMonthCents = incomeTransactions\n    .filter(t => t.date >= startOfLastMonth && t.date",
+    "a + (b.amountCents || 0), 0)\n\n  const revChange = revenueLastMonthCents === 0\n    ? (revenueThisMonthCents > 0 ? 100 : 0)\n    : Math.round(((revenueThisMonthCents - revenueLastMonthCents) / revenueLastMonthCents) * 100)\n\n  // 2. Expense Calculations\n  const expenseTransactions = transactions.filter(t => t.type === 'expense')\n  const totalExpensesCents = expenseTransactions.reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const expensesThisMonthCents = expenseTransactions\n    .filter(t => t.date >= startOfThisMonth)\n    .reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const expensesLastMonthCents = expenseTransactions\n    .filter(t => t.date >= startOfLastMonth && t.date",
+    "t.date >= start.getTime() && t.date",
+    "a + ((b.amountCents || 0) / 100), 0)\n        const weekExpense = expenseTransactions\n          .filter(t => t.date >= start.getTime() && t.date",
+    "navigate('/analytics')}>",
+    "navigate('/projects')}>",
+    "navigate('/clients')}\n        >",
+    "navigate('/tasks')}\n        >",
+    "navigate('/payments')}\n        >",
+    "d.value > 0).map(item => (",
+    "navigate('/clients')}\n                  >",
+    "('overview')\n  const [isBalanceHidden, setIsBalanceHidden] = useState(false)\n  const [modalOpen, setModalOpen] = useState(false)\n  const [modalType, setModalType] = useState",
+    "('income')\n  const [filterType, setFilterType] = useState",
+    "t.type === 'income')\n  const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense')\n\n  const totalIncome = incomeTransactions.reduce((acc, t) => acc + (t.amountCents || 0), 0)\n  const totalExpense = expenseTransactions.reduce((acc, t) => acc + (t.amountCents || 0), 0)\n  const totalBalance = totalIncome - totalExpense\n\n  // Monthly calculations\n  const currentMonth = new Date().getMonth()\n  const currentYear = new Date().getFullYear()\n  const startOfMonth = new Date(currentYear, currentMonth, 1).getTime()\n  const startOfLastMonth = new Date(currentYear, currentMonth - 1, 1).getTime()\n\n  const incomeThisMonth = incomeTransactions.filter(t => t.date >= startOfMonth).reduce((a, b) => a + (b.amountCents || 0), 0)\n  const incomeLastMonth = incomeTransactions.filter(t => t.date >= startOfLastMonth && t.date",
+    "Export",
+    "Overview",
+    "Monthly Collections",
+    "openModal('income')}\n                    className=\"flex items-center gap-3 px-6 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all\"\n                  >",
+    "Add Income",
+    "openModal('expense')}\n                    className=\"flex items-center gap-3 px-6 py-4 bg-rose-500 hover:bg-rose-400 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-rose-500/30 transition-all\"\n                  >",
+    "Add Expense",
+    "Income (This Month)",
+    "Expenses (This Month)",
+    "Fixed Income/Month",
+    "Profit Ratio",
+    "0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0}%",
+    "Recent Transactions",
+    "setFilterType(e.target.value as any)}\n                  className=\"h-9 px-3 bg-[var(--bg-muted)] border border-[var(--border-subtle)] rounded-xl text-xs font-bold focus:outline-none\"\n                >",
+    "Income Only",
+    "Expenses Only",
+    "No transactions yet",
+    "Start by adding your first income or expense",
+    "openModal('income')}>",
+    "openModal('expense')}>",
+    "Category",
+    "Type",
+    "Source",
+    "Actions",
+    "setDeleteConfirmId(trx._id)}\n                            className=\"p-2 text-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all\"\n                          >",
+    "Delete Transaction?",
+    "Overview of recurring monthly income. Select a month to view and record payments.",
+    "Total Expected",
+    "Collected",
+    "Remaining",
+    "Client Count",
+    "Progress",
+    "0 ? Math.round((totalCollected / totalExpected) * 100) : 0}%",
+    "setSearchQuery(e.target.value)}\n          className=\"w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-[var(--color-brand)] transition-all shadow-sm\"\n        />",
+    "Monthly Amount",
+    "0 ? formatCurrency(amountCents) : '0.00'}",
+    "Due Day",
+    "Mark as Paid",
+    "No subscription clients found",
+    "setShowPaymentModal(false)}\n          >",
+    "e.stopPropagation()}\n            >",
+    "setShowPaymentModal(false)}\n                className=\"absolute top-6 right-6 text-white/40 hover:text-white transition-colors\"\n              >",
+    "Select Payment Month",
+    "Year",
+    "setShowPaymentModal(false)}\n                >\n                  Cancel",
+    "Confirm Payment",
+    "Search clients...",
+    "Invoice Image (Optional)",
+    "Attach an image or receipt for this transaction.",
+    "setDescription(e.target.value)}\n                placeholder=\"Income source or notes...\"\n                className=\"flex-1 bg-transparent border-none outline-none py-4 text-[var(--text-primary)] text-sm\"\n              />",
+    "New Category",
+    "Income source or notes...",
+    "New Project",
+    "setTitle(e.target.value)}\n            placeholder=\"Project Title\"\n          />",
+    "setIsNewClientModalOpen(true)}\n                className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n              >",
+    "Select a client...",
+    "setDescription(e.target.value)}\n              placeholder=\"Brief details about the project...\"\n            />",
+    "Project Title",
+    "Advanced Options (Description & Deadline)",
+    "Brief details about the project...",
+    "([]);\n  const [budget, setBudget] = useState('');\n  const [color, setColor] = useState(COLORS[0]);\n  const [priority, setPriority] = useState('medium');\n  const [tags, setTags] = useState",
+    ");\n      case 2:\n        return (",
+    "setDescription(e.target.value)}\n                placeholder=\"...\"\n              />",
+    ");\n      case 3:\n        return (",
+    "handleUpdateTask(task.id, 'title', e.target.value)}\n                      className=\"flex-1 h-8 text-sm\"\n                    />",
+    "handleUpdateTask(task.id, 'assignedTo', e.target.value)}\n                      className=\"h-8 bg-transparent border-none text-xs text-[var(--text-secondary)] w-24 outline-none\"\n                    >",
+    "handleRemoveTask(task.id)} className=\"p-1 text-red-500 hover:bg-red-500/10 rounded\">",
+    ");\n      case 4:\n        return (",
+    "EGP",
+    "setPriority(e.target.value)}\n                  className=\"w-full h-10 px-3 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-lg text-sm focus:outline-none focus:border-brand\"\n                >",
+    "setTags(tags.filter(t => t !== tag))}>",
+    ");\n    }\n  };\n\n  return (",
+    "i ? \"w-4 bg-[var(--color-brand)]/50\" : \"w-4 bg-white/10\"\n                )} />\n              ))}",
+    "void;\n  project: any | null;\n}\n\nconst STATUS_META: Record",
+    "setIsEditing(true)} className=\"p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-colors flex items-center gap-2 px-4\">",
+    "Production Progress",
+    "Project Description",
+    "Project Steps & Progress",
+    "deleteStep(step.id)}\n                          className=\"opacity-0 group-hover/step:opacity-100 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all\"\n                        >",
+    "No steps added yet",
+    "e.key === 'Enter' && handleAddStep()}\n                  placeholder=\"Add a new step...\"\n                  className=\"flex-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-sm outline-none focus:border-[var(--color-brand)] transition-colors\"\n                />",
+    "Timeline & Status",
+    "Current Stage",
+    "In Review",
+    "Revision",
+    "Approved",
+    "Done",
+    "Enter project details, objectives, requirements...",
+    "Add a new step...",
+    "(null);\n  const [viewMode, setViewMode] = useState",
+    "('kanban');\n  const [filterStatus, setFilterStatus] = useState",
+    "('all');\n  const [filterType, setFilterType] = useState",
+    "setIsNewProjectModalOpen(true)}\n            className=\"flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_var(--color-brand-glow)]\"\n          >",
+    "} color=\"border-[var(--text-muted)]\" />",
+    "} color=\"border-blue-500\" valueColor=\"text-blue-500\" />",
+    "} color=\"border-[var(--color-brand)]\" valueColor=\"text-[var(--color-brand)]\" />",
+    "} color=\"border-purple-500\" valueColor=\"text-purple-400\" />",
+    "} color=\"border-pink-500\" />",
+    "setFilterStatus(e.target.value)} className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]\">",
+    "setFilterType(e.target.value)} className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]\">",
+    "p.status === stage.slug);\n              return (",
+    "List view is under construction...",
+    "setIsNewProjectModalOpen(false)} \n      />",
+    "PROGRESS",
+    ") : null}",
+    "setLanguage(e.target.value as any)}\n            >",
+    "setTheme(e.target.value as any)}\n            >",
+    "FLMR Studio v1.0.0 &copy; 2026. All rights reserved.",
+    "Page Not Found",
+    "The page you are looking for doesn't exist or has been moved.",
+    "Go back home",
+    "Task Title",
+    "setIsNewClientModalOpen(true)}\n                    className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                  >",
+    "Assign to Client",
+    "None",
+    "Advanced Options (Description, Priority, Client)",
+    "Add some details...",
+    "Due Date",
+    "| null>(null)\n  const [completeTaskId, setCompleteTaskId] = useState",
+    "| null>(null)\n  const [searchQuery, setSearchQuery] = useState('')\n  const [filterPriority, setFilterPriority] = useState",
+    "handleAddCard('todo')}>",
+    "New Task",
+    "Total",
+    "setFilterPriority(e.target.value)}\n            className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-sm text-[var(--text-secondary)] focus:outline-none\"\n          >",
+    "Urgent",
+    "e.key === 'Enter' && handleRenameStage()}\n                        className=\"text-xs font-bold bg-white/10 border-none outline-none px-2 py-1 rounded w-32\"\n                      />\n                    ) : (",
+    "handleDeleteStage(column._id)}\n                      className=\"p-1.5 text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all\"\n                    >",
+    "setCompleteTaskId(task._id)}\n                                              className=\"p-1.5 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-all\"\n                                            >",
+    "setDeleteTaskId(task._id)}\n                                            className=\"p-1.5 text-rose-500 hover:bg-rose-500/20 rounded-lg transition-all\"\n                                          >",
+    "Task",
+    "handleAddCard(column.slug)}\n                  className=\"w-full py-3 rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-[var(--text-muted)] hover:text-brand hover:border-brand/50 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2\"\n                >",
+    "Add Task",
+    "e.key === 'Enter' && performAddStage()}\n                  className=\"bg-black/20 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand\"\n                />",
+    "Add",
+    "setIsAddingStage(true)}\n                className=\"w-full p-4 rounded-2xl bg-white/5 border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-brand hover:border-brand hover:bg-brand/5 transition-all text-sm font-bold flex items-center gap-2\"\n              >",
+    "List name...",
+    "Delete Task?",
+    "Complete Task?",
+    "Promise",
+    "signup: (email: string, password: string, name?: string) => Promise",
+    "logout: () => void\n}\n\nconst AuthContext = createContext",
+    "void;\n  language: Language;\n  setLanguage: (lang: Language) => void;\n  t: (key: TranslationKey) => string;\n  dir: 'ltr' | 'rtl';\n}\n\nconst SettingsContext = createContext"
+  ],
+  "filesMap": [
+    {
+      "file": "App.tsx",
+      "text": "if (user === undefined) return"
+    },
+    {
+      "file": "App.tsx",
+      "text": "// Loading session from Convex\n  \n  return ("
+    },
+    {
+      "file": "components\\ExportClientExcel.tsx",
+      "text": "تصدير Excel"
+    },
+    {
+      "file": "components\\ExportClientPDF.tsx",
+      "text": "تصدير العميل كـ PDF"
+    },
+    {
+      "file": "components\\ExportClientPDF.tsx",
+      "text": "0 ? (\n                transactions.map((t, index) => ("
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const AnalyticsIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const ClientsIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const ProjectsIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const CalendarIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const PaymentsIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const TasksIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "const SettingsIcon = () =>"
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": ",  tKey: 'settings'   },\n]\n\nconst Logo = () => ("
+    },
+    {
+      "file": "components\\layout\\AppShell.tsx",
+      "text": "FLMR"
+    },
+    {
+      "file": "components\\layout\\Sidebar.tsx",
+      "text": "Hussein Kohla"
+    },
+    {
+      "file": "components\\layout\\Sidebar.tsx",
+      "text": "Admin"
+    },
+    {
+      "file": "components\\ToolHelper.tsx",
+      "text": "(null);\n  const [operator, setOperator] = useState"
+    },
+    {
+      "file": "components\\ToolHelper.tsx",
+      "text": "Calculator"
+    },
+    {
+      "file": "components\\ui\\ConfirmDialog.tsx",
+      "text": ",\n      btn: \"bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20\",\n      bg: \"bg-blue-500/5\",\n      border: \"border-blue-500/20\"\n    }\n  }\n\n  const theme = themes[variant]\n\n  return ("
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "(null);\n  \n  // Parse incoming value or default to now\n  const initialDate = value ? new Date(value) : new Date();\n  const [viewMonth, setViewMonth] = useState(initialDate.getMonth());\n  const [viewYear, setViewYear] = useState(initialDate.getFullYear());\n  const [selectedDate, setSelectedDate] = useState"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "(null);\n  const containerRef = useRef"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "setIsOpen(!isOpen)}\n          className=\"w-full flex items-center justify-between bg-transparent text-left outline-none border-none p-0 h-6\"\n        >"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "Set Time"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "Set"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "Clear"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": "Today"
+    },
+    {
+      "file": "components\\ui\\DatePicker.tsx",
+      "text": ",\n        document.body\n      )}"
+    },
+    {
+      "file": "components\\ui\\Modal.tsx",
+      "text": "document.removeEventListener('keydown', handler)\n  }, [onClose])\n\n  return ("
+    },
+    {
+      "file": "components\\ui\\SmartDropdown.tsx",
+      "text": "setIsOpen(!isOpen)}\n        className=\"w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors\"\n      >"
+    },
+    {
+      "file": "components\\ui\\Spinner.tsx",
+      "text": "Loading"
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "void\n  dismiss: (id: string) => void\n}\n\nconst ToastContext = createContext"
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "prev.filter(t => t.id !== id))\n  }, [])\n\n  return ("
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "dismiss(t.id)} />\n      ))}"
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "),\n    error: ("
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "),\n    warning: ("
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "),\n    info: ("
+    },
+    {
+      "file": "components\\ui\\Toast.tsx",
+      "text": "),\n  }\n\n  return ("
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": ")\n    }\n    return null\n  }\n\n  return ("
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": "Live Data"
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": "Revenue & Profit Trend (Last 6 Months)"
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": "Project Pipeline"
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": "0 ? formatCurrency(totalRevenue / clients.length) : '0'}"
+    },
+    {
+      "file": "features\\analytics\\AnalyticsPage.tsx",
+      "text": ") : topClients.map((client, i) => ("
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "FLMR"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "setName(e.target.value)}\n                  variant=\"minimal\"\n                  autoComplete=\"name\"\n                  className=\"bg-transparent\"\n                />\n              )}"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "setEmail(e.target.value)}\n                variant=\"minimal\"\n                autoComplete=\"email\"\n                className=\"bg-transparent\"\n              />"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "Full Name"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "John Doe"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "Email Address"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "admin@flmr.studio"
+    },
+    {
+      "file": "features\\auth\\LoginPage.tsx",
+      "text": "Password"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "('month')\n  const [currentDate, setCurrentDate] = useState(new Date())\n  const [selectedDate, setSelectedDate] = useState(new Date())\n  const [editingEvent, setEditingEvent] = useState"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "Month"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "Day"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "Today"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": ") : selectedDayEvents.length === 0 ? ("
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "setIsModalOpen(true)}>Add your first task"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": "Completed"
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": ")\n              ) : events.length === 0 ? ("
+    },
+    {
+      "file": "features\\calendar\\CalendarPage.tsx",
+      "text": ") : (\n                events.slice(0, 5).map((ev) => ("
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Category *"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Title *"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Event Type *"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setType(e.target.value)}\n                  className=\"input-field select-field\"\n                >"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Meeting"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Deadline"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Booking"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Other"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Budget"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Priority"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setPriority(e.target.value)}\n                  className=\"input-field select-field\"\n                >"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Low"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Medium"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "High"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Platform *"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setPlatform(e.target.value)}\n                  className=\"input-field select-field\"\n                >"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Facebook"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Instagram"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "YouTube"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "TikTok"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Twitter"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "LinkedIn"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Other"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setIsNewClientModalOpen(true)}\n                      className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                    >"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Client Relationship"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "No Client Association"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "+ Create New Client..."
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Associated Project"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "No Project Association"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setIsNewClientModalOpen(true)}\n                  className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                >"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Client *"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Select Client..."
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "+ Create New Client..."
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Status"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "To Do"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "In Progress"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Completed"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Draft"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Active"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Completed"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Suspended"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Description / Notes"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "setNotes(e.target.value)}\n                  className=\"input-field h-24 resize-none\"\n                  placeholder=\"Details...\"\n                />"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Delete"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Cancel"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Budget Amount"
+    },
+    {
+      "file": "features\\calendar\\NewEventModal.tsx",
+      "text": "Details..."
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "}>\n          Back to Clients"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Total Clients"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Total Projects"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Avg. Proj. Value"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Active Rate"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "0 ? Math.round((projects.length / clients.length) * 10) / 10 : 0}"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "proj/client"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Top 10 Clients by Revenue"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Project Volume vs Completion"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Top 10 Clients by Average Monthly Income"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Top Clients List"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Client Name"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Projects"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Average Monthly Income"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Client Analytics"
+    },
+    {
+      "file": "features\\clients\\ClientAnalyticsPage.tsx",
+      "text": "Deep dive into client value, project volume, and payment behavior."
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "('finance');\n  const [noteSavingStatus, setNoteSavingStatus] = useState"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "(null);\n  const [selectedYear, setSelectedYear] = useState"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "(null);\n  const [isDeletingRecord, setIsDeletingRecord] = useState(false);\n  const [promptConfig, setPromptConfig] = useState"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.trim().length > 0);\n\n  return ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Save Changes"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "setIsEditing(true)}\n              >"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Clients"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "t.id === tagId);\n                      return ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "General"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Repeated"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "isEditing && fileInputRef.current?.click()}\n               >"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "fileInputRef.current?.click()}>"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Quick Select Avatar"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "SIM 1"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "SIM 2"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Email Client"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "0 ? phoneNumbers.map((num, i) => ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.status === 'pending').reduce((acc, p) => acc + (p.amountCents || 0), 0))}"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.status === 'pending').length} Pending Transactions`}"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.status === 'paid' || p.status === 'posted').length))}"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Average Monthly"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Balance"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Net Account Status"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Amount"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Date"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Status"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Paid"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Pending"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Add Record"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Date"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Amount"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Status"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "No financial records found"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": ") : (\n                        filteredPayments.map((p) => ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Paid"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Pending"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "setDeleteConfirmId(p._id)}\n                                    className=\"p-2 bg-red-500/10 text-red-500/40 hover:bg-red-500 hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100\"\n                                    title=\"Delete\"\n                                  >"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Monthly Subscription"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Collection Day"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "th of Month"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Year:"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.subscriptionMonth === index && \n                      p.subscriptionYear === selectedYear && \n                                      (p.status === 'posted' || p.status === 'paid')\n                    );\n                    const monthOverride = (formData.subscription?.monthAmounts || []).find(ma => ma.month === index);\n                    const monthAmountCents = monthOverride ? monthOverride.amountCents : formData.subscription.amountCents;\n                    const isCurrentMonth = index === new Date().getMonth() && selectedYear === new Date().getFullYear();\n                    \n                    return ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "setSelectedMonthIndex(null)}\n                    className=\"absolute top-6 right-6 text-white/20 hover:text-white\"\n                  >"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Update Payment Record"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Year:"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Pending"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Paid"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Update global subscription amount"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Apply Changes"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "FLMR STUDIO"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "p.status === 'pending').reduce((acc, p) => acc + (p.amountCents || 0), 0))}"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": ") : (\n                  filteredPayments.map((p) => ("
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Name"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Email"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Primary Phone"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Secondary Phone"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "e.g. Logo Design"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Edit"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Delete"
+    },
+    {
+      "file": "features\\clients\\ClientDetailsModal.tsx",
+      "text": "Delete Record"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "('list');\n  const [search, setSearch] = useState('');\n  const debouncedSearch = useDebounce(search, 300);\n  \n  const [isNewClientOpen, setIsNewClientOpen] = useState(false);\n  const [selectedClientForDetails, setSelectedClientForDetails] = useState"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "p.status !== 'done').length;\n  const totalAverageMonthly = clients.reduce((sum, c) => sum + getClientFinancials(c._id).avg, 0);\n  const avgMonthlyIncome = clients.length > 0 ? totalAverageMonthly / clients.length : 0;\n\n  return ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "setIsNewClientOpen(true)}\n            className=\"flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[var(--color-brand-glow)]\"\n          >"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "setSearch(e.target.value)}\n            className=\"w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors\"\n          />"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": ") : (\n        viewMode === 'list' ? ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "navigate('/projects')}\n          />\n        ) : ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "navigate('/projects')}\n          />\n        )\n      )}"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "sum + (p.steps?.length || 0), 0);\n  const completedTasks = projects.reduce((sum: number, p: any) => sum + (p.steps?.filter((s:any) => s.isCompleted).length || 0), 0);\n  const taskRatio = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;\n  const remainingTasks = totalTasks - completedTasks;\n  const totalBudget = projects.reduce((sum: number, p: any) => sum + (p.budgetCents || 0), 0);\n\n  const healthStatus = taskRatio > 70 ? 'Good' : taskRatio > 30 ? 'At risk' : 'Off track';\n\n  return ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "setIsExpanded(!isExpanded)}>"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "e.stopPropagation()}>"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "s.isCompleted).length || 0;\n                  const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;\n                  const pRemaining = pTotalTasks - pCompletedTasks;\n                  \n                  const pHealth = pRatio === 100 ? 'Good' : pRatio > 50 ? 'Good' : project.status === 'at_risk' ? 'Off track' : 'At risk';\n\n                  return ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "onProjectClick(project._id)}>"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "setIsProjectsExpanded(!isProjectsExpanded)}\n        className=\"flex items-center justify-between w-full py-2 text-sm font-bold text-white hover:text-[var(--color-brand)] transition-colors group\"\n      >"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "s.isCompleted).length || 0;\n                    const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;\n\n                    return ("
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "onProjectClick(project._id)}>"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "TOTAL CLIENTS"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "ACTIVE PROJECTS"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "TOTAL AVERAGE MONTHLY"
+    },
+    {
+      "file": "features\\clients\\ClientsPage.tsx",
+      "text": "AVG. MONTHLY INCOME"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Add New Client"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "setClientType(e.target.value)}\n            >"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Facebook Ads (إعلانات فيس بوك)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Video Editing (مونتاج)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Photography (تصوير)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Graphic Design (تصميم)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Other (أخرى)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Categories / Tags"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Cancel"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Client Name *"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Company"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Email"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Phone (SIM 1)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Phone (SIM 2)"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Client Type / Service"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Account Manager"
+    },
+    {
+      "file": "features\\clients\\NewClientModal.tsx",
+      "text": "Collection Officer"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "t.clientId === clientId);\n    const total = txs.reduce((acc, t) => acc + (t.amountCents || 0), 0);\n    const numMonths = Math.max(1, txs.length);\n    return total / numMonths;\n  };\n\n  const totalAverageCents = clients.reduce((sum, c) => sum + getClientAverage(c._id), 0);\n  const totalRevenueCents = incomeTransactions.reduce((a, b) => a + (b.amountCents || 0), 0);\n\n  const revenueThisMonthCents = incomeTransactions\n    .filter(t => t.date >= startOfThisMonth)\n    .reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const revenueLastMonthCents = incomeTransactions\n    .filter(t => t.date >= startOfLastMonth && t.date"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "a + (b.amountCents || 0), 0)\n\n  const revChange = revenueLastMonthCents === 0\n    ? (revenueThisMonthCents > 0 ? 100 : 0)\n    : Math.round(((revenueThisMonthCents - revenueLastMonthCents) / revenueLastMonthCents) * 100)\n\n  // 2. Expense Calculations\n  const expenseTransactions = transactions.filter(t => t.type === 'expense')\n  const totalExpensesCents = expenseTransactions.reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const expensesThisMonthCents = expenseTransactions\n    .filter(t => t.date >= startOfThisMonth)\n    .reduce((a, b) => a + (b.amountCents || 0), 0)\n\n  const expensesLastMonthCents = expenseTransactions\n    .filter(t => t.date >= startOfLastMonth && t.date"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "t.date >= start.getTime() && t.date"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "a + ((b.amountCents || 0) / 100), 0)\n        const weekExpense = expenseTransactions\n          .filter(t => t.date >= start.getTime() && t.date"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": ")\n    }\n    return null\n  }\n\n  return ("
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/analytics')}>"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/projects')}>"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/clients')}\n        >"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/tasks')}\n        >"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/payments')}\n        >"
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "d.value > 0).map(item => ("
+    },
+    {
+      "file": "features\\dashboard\\DashboardPage.tsx",
+      "text": "navigate('/clients')}\n                  >"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "('overview')\n  const [isBalanceHidden, setIsBalanceHidden] = useState(false)\n  const [modalOpen, setModalOpen] = useState(false)\n  const [modalType, setModalType] = useState"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "('income')\n  const [filterType, setFilterType] = useState"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "t.type === 'income')\n  const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense')\n\n  const totalIncome = incomeTransactions.reduce((acc, t) => acc + (t.amountCents || 0), 0)\n  const totalExpense = expenseTransactions.reduce((acc, t) => acc + (t.amountCents || 0), 0)\n  const totalBalance = totalIncome - totalExpense\n\n  // Monthly calculations\n  const currentMonth = new Date().getMonth()\n  const currentYear = new Date().getFullYear()\n  const startOfMonth = new Date(currentYear, currentMonth, 1).getTime()\n  const startOfLastMonth = new Date(currentYear, currentMonth - 1, 1).getTime()\n\n  const incomeThisMonth = incomeTransactions.filter(t => t.date >= startOfMonth).reduce((a, b) => a + (b.amountCents || 0), 0)\n  const incomeLastMonth = incomeTransactions.filter(t => t.date >= startOfLastMonth && t.date"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Export"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Overview"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Monthly Collections"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "openModal('income')}\n                    className=\"flex items-center gap-3 px-6 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all\"\n                  >"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Add Income"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "openModal('expense')}\n                    className=\"flex items-center gap-3 px-6 py-4 bg-rose-500 hover:bg-rose-400 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-rose-500/30 transition-all\"\n                  >"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Add Expense"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Income (This Month)"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Expenses (This Month)"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Fixed Income/Month"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Profit Ratio"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0}%"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Recent Transactions"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "setFilterType(e.target.value as any)}\n                  className=\"h-9 px-3 bg-[var(--bg-muted)] border border-[var(--border-subtle)] rounded-xl text-xs font-bold focus:outline-none\"\n                >"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Income Only"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Expenses Only"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "No transactions yet"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Start by adding your first income or expense"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "openModal('income')}>"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Add Income"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "openModal('expense')}>"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Add Expense"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Category"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Date"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Type"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Source"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Amount"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Actions"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "setDeleteConfirmId(trx._id)}\n                            className=\"p-2 text-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all\"\n                          >"
+    },
+    {
+      "file": "features\\payments\\PaymentsPage.tsx",
+      "text": "Delete Transaction?"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Monthly Collections"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Overview of recurring monthly income. Select a month to view and record payments."
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Today"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Total Expected"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Collected"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Remaining"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Client Count"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Progress"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "0 ? Math.round((totalCollected / totalExpected) * 100) : 0}%"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "setSearchQuery(e.target.value)}\n          className=\"w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-[var(--color-brand)] transition-all shadow-sm\"\n        />"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Monthly Amount"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "0 ? formatCurrency(amountCents) : '0.00'}"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Due Day"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Status"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Collected"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Mark as Paid"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "No subscription clients found"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "setShowPaymentModal(false)}\n          >"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "e.stopPropagation()}\n            >"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "setShowPaymentModal(false)}\n                className=\"absolute top-6 right-6 text-white/40 hover:text-white transition-colors\"\n              >"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Select Payment Month"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Month"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Year"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Amount"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "setShowPaymentModal(false)}\n                >\n                  Cancel"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Confirm Payment"
+    },
+    {
+      "file": "features\\payments\\RecurringCollectionsView.tsx",
+      "text": "Search clients..."
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Amount"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Invoice Image (Optional)"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Attach an image or receipt for this transaction."
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "setDescription(e.target.value)}\n                placeholder=\"Income source or notes...\"\n                className=\"flex-1 bg-transparent border-none outline-none py-4 text-[var(--text-primary)] text-sm\"\n              />"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Category"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "New Category"
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Income source or notes..."
+    },
+    {
+      "file": "features\\payments\\TransactionModal.tsx",
+      "text": "Date"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "New Project"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "setTitle(e.target.value)}\n            placeholder=\"Project Title\"\n          />"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "setIsNewClientModalOpen(true)}\n                className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n              >"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Select a client..."
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "+ Create New Client..."
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "setDescription(e.target.value)}\n              placeholder=\"Brief details about the project...\"\n            />"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Cancel"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Title *"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Project Title"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Client *"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Advanced Options (Description & Deadline)"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Brief details about the project..."
+    },
+    {
+      "file": "features\\projects\\NewProjectModal.tsx",
+      "text": "Deadline"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "([]);\n  const [budget, setBudget] = useState('');\n  const [color, setColor] = useState(COLORS[0]);\n  const [priority, setPriority] = useState('medium');\n  const [tags, setTags] = useState"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": ");\n      case 2:\n        return ("
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "setDescription(e.target.value)}\n                placeholder=\"...\"\n              />"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": ");\n      case 3:\n        return ("
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "handleUpdateTask(task.id, 'title', e.target.value)}\n                      className=\"flex-1 h-8 text-sm\"\n                    />"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "handleUpdateTask(task.id, 'assignedTo', e.target.value)}\n                      className=\"h-8 bg-transparent border-none text-xs text-[var(--text-secondary)] w-24 outline-none\"\n                    >"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "handleRemoveTask(task.id)} className=\"p-1 text-red-500 hover:bg-red-500/10 rounded\">"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": ");\n      case 4:\n        return ("
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "EGP"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "setPriority(e.target.value)}\n                  className=\"w-full h-10 px-3 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-lg text-sm focus:outline-none focus:border-brand\"\n                >"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "setTags(tags.filter(t => t !== tag))}>"
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": ");\n    }\n  };\n\n  return ("
+    },
+    {
+      "file": "features\\projects\\NewProjectStepperModal.tsx",
+      "text": "i ? \"w-4 bg-[var(--color-brand)]/50\" : \"w-4 bg-white/10\"\n                )} />\n              ))}"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "void;\n  project: any | null;\n}\n\nconst STATUS_META: Record"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "setIsEditing(true)} className=\"p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-colors flex items-center gap-2 px-4\">"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Edit"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Production Progress"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Project Description"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Project Steps & Progress"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "deleteStep(step.id)}\n                          className=\"opacity-0 group-hover/step:opacity-100 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all\"\n                        >"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "No steps added yet"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "e.key === 'Enter' && handleAddStep()}\n                  placeholder=\"Add a new step...\"\n                  className=\"flex-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-sm outline-none focus:border-[var(--color-brand)] transition-colors\"\n                />"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Timeline & Status"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Deadline"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Current Stage"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Draft"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "In Review"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Revision"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Approved"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Done"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Project Title"
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Enter project details, objectives, requirements..."
+    },
+    {
+      "file": "features\\projects\\ProjectDetailsModal.tsx",
+      "text": "Add a new step..."
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "(null);\n  const [viewMode, setViewMode] = useState"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "('kanban');\n  const [filterStatus, setFilterStatus] = useState"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "('all');\n  const [filterType, setFilterType] = useState"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "setIsNewProjectModalOpen(true)}\n            className=\"flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_var(--color-brand-glow)]\"\n          >"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "} color=\"border-[var(--text-muted)]\" />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "} color=\"border-blue-500\" valueColor=\"text-blue-500\" />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "} color=\"border-[var(--color-brand)]\" valueColor=\"text-[var(--color-brand)]\" />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "} color=\"border-purple-500\" valueColor=\"text-purple-400\" />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "} color=\"border-pink-500\" />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "setSearch(e.target.value)}\n            className=\"w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors\"\n          />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "setFilterStatus(e.target.value)} className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]\">"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "setFilterType(e.target.value)} className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]\">"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "p.status === stage.slug);\n              return ("
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "List view is under construction..."
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "setIsNewProjectModalOpen(false)} \n      />"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "e.stopPropagation()}>"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": "PROGRESS"
+    },
+    {
+      "file": "features\\projects\\ProjectsPage.tsx",
+      "text": ") : null}"
+    },
+    {
+      "file": "features\\settings\\SettingsPage.tsx",
+      "text": "setLanguage(e.target.value as any)}\n            >"
+    },
+    {
+      "file": "features\\settings\\SettingsPage.tsx",
+      "text": "setTheme(e.target.value as any)}\n            >"
+    },
+    {
+      "file": "features\\settings\\SettingsPage.tsx",
+      "text": "FLMR Studio v1.0.0 &copy; 2026. All rights reserved."
+    },
+    {
+      "file": "features\\shared\\NotFoundPage.tsx",
+      "text": "Page Not Found"
+    },
+    {
+      "file": "features\\shared\\NotFoundPage.tsx",
+      "text": "The page you are looking for doesn't exist or has been moved."
+    },
+    {
+      "file": "features\\shared\\NotFoundPage.tsx",
+      "text": "Go back home"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Task Title"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Description"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Priority"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Low"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Medium"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "High"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "setIsNewClientModalOpen(true)}\n                    className=\"text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1\"\n                  >"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Assign to Client"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "None"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "+ Create New Client..."
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Advanced Options (Description, Priority, Client)"
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Add some details..."
+    },
+    {
+      "file": "features\\tasks\\NewTaskModal.tsx",
+      "text": "Due Date"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "| null>(null)\n  const [completeTaskId, setCompleteTaskId] = useState"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "| null>(null)\n  const [searchQuery, setSearchQuery] = useState('')\n  const [filterPriority, setFilterPriority] = useState"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "handleAddCard('todo')}>"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "New Task"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Total"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "setFilterPriority(e.target.value)}\n            className=\"h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-sm text-[var(--text-secondary)] focus:outline-none\"\n          >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Low"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Medium"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "High"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Urgent"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "e.key === 'Enter' && handleRenameStage()}\n                        className=\"text-xs font-bold bg-white/10 border-none outline-none px-2 py-1 rounded w-32\"\n                      />\n                    ) : ("
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "handleDeleteStage(column._id)}\n                      className=\"p-1.5 text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all\"\n                    >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "setCompleteTaskId(task._id)}\n                                              className=\"p-1.5 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-all\"\n                                            >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "setDeleteTaskId(task._id)}\n                                            className=\"p-1.5 text-rose-500 hover:bg-rose-500/20 rounded-lg transition-all\"\n                                          >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Task"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "handleAddCard(column.slug)}\n                  className=\"w-full py-3 rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-[var(--text-muted)] hover:text-brand hover:border-brand/50 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2\"\n                >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Add Task"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "e.key === 'Enter' && performAddStage()}\n                  className=\"bg-black/20 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand\"\n                />"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Add"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "setIsAddingStage(true)}\n                className=\"w-full p-4 rounded-2xl bg-white/5 border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-brand hover:border-brand hover:bg-brand/5 transition-all text-sm font-bold flex items-center gap-2\"\n              >"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "List name..."
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Delete Task?"
+    },
+    {
+      "file": "features\\tasks\\TasksPage.tsx",
+      "text": "Complete Task?"
+    },
+    {
+      "file": "hooks\\useAuth.tsx",
+      "text": "Promise"
+    },
+    {
+      "file": "hooks\\useAuth.tsx",
+      "text": "signup: (email: string, password: string, name?: string) => Promise"
+    },
+    {
+      "file": "hooks\\useAuth.tsx",
+      "text": "logout: () => void\n}\n\nconst AuthContext = createContext"
+    },
+    {
+      "file": "hooks\\useSettings.tsx",
+      "text": "void;\n  language: Language;\n  setLanguage: (lang: Language) => void;\n  t: (key: TranslationKey) => string;\n  dir: 'ltr' | 'rtl';\n}\n\nconst SettingsContext = createContext"
+    }
+  ]
+}

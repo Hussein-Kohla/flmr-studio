@@ -25,7 +25,14 @@ export const createProject = mutation({
     description: v.optional(v.string()),
     clientId: v.id("clients"),
     deadline: v.optional(v.number()),
+    startDate: v.optional(v.number()),
     budget: v.optional(v.number()),
+    projectType: v.optional(v.string()),
+    platform: v.optional(v.string()),
+    color: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    assignedTo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -39,6 +46,13 @@ export const createProject = mutation({
       status: "draft",
       deadline: args.deadline,
       budgetCents: args.budget !== undefined ? toCents(args.budget) : undefined,
+      startDate: args.startDate,
+      projectType: args.projectType,
+      platform: args.platform,
+      color: args.color,
+      priority: args.priority || 'medium',
+      tags: args.tags || [],
+      assignedTo: args.assignedTo,
       createdAt: now,
       updatedAt: now,
     });
@@ -76,7 +90,14 @@ export const updateProject = mutation({
     description: v.optional(v.string()),
     status: v.optional(v.string()),
     deadline: v.optional(v.number()),
+    startDate: v.optional(v.number()),
     budget: v.optional(v.number()),
+    projectType: v.optional(v.string()),
+    platform: v.optional(v.string()),
+    color: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    assignedTo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -88,7 +109,14 @@ export const updateProject = mutation({
     if (args.description !== undefined) updates.description = args.description;
     if (args.status !== undefined) updates.status = args.status;
     if (args.deadline !== undefined) updates.deadline = args.deadline;
+    if (args.startDate !== undefined) updates.startDate = args.startDate;
     if (args.budget !== undefined) updates.budgetCents = toCents(args.budget);
+    if (args.projectType !== undefined) updates.projectType = args.projectType;
+    if (args.platform !== undefined) updates.platform = args.platform;
+    if (args.color !== undefined) updates.color = args.color;
+    if (args.priority !== undefined) updates.priority = args.priority;
+    if (args.tags !== undefined) updates.tags = args.tags;
+    if (args.assignedTo !== undefined) updates.assignedTo = args.assignedTo;
 
     await ctx.db.patch(args.projectId, updates);
     await logAction(ctx, user._id, "UPDATE_PROJECT", "projects", args.projectId, updates);
@@ -138,6 +166,8 @@ export const updateProjectSteps = mutation({
       id: v.string(),
       title: v.string(),
       isCompleted: v.boolean(),
+      assignedTo: v.optional(v.string()),
+      deadline: v.optional(v.number()),
     })),
   },
   handler: async (ctx, args) => {
@@ -151,3 +181,16 @@ export const updateProjectSteps = mutation({
     });
   },
 });
+
+export const getAllProjects = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    return await ctx.db
+      .query("projects")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .collect();
+  },
+});
+

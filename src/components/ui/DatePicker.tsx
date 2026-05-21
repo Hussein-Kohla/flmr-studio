@@ -185,28 +185,38 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
   }) + (withTime ? ` ${selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}` : '') : "";
 
   return (
-    <div className="relative w-full" ref={containerRef}>
-      {label && <label className="form-label">{label}</label>}
-      
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
+    <div className="group flex flex-col gap-1 w-full" ref={containerRef}>
+      <div 
         className={cn(
-          "w-full flex items-center justify-between bg-[var(--bg-surface)] rounded-2xl border transition-all duration-300 px-5 py-3.5 text-left group",
-          isOpen ? "border-[var(--color-brand)] ring-4 ring-[var(--color-brand-glow)] shadow-brand" : "border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-muted)]"
+          "flex flex-col justify-center rounded-[18px] bg-[var(--bg-surface)] px-4 py-2 border transition-all duration-200",
+          "border-[var(--border-default)]",
+          isOpen ? "border-[var(--color-brand)] ring-4 ring-[var(--color-brand-subtle)]" : "hover:border-[var(--border-strong)]",
         )}
       >
-        <span className={cn(
-          "flex-1 text-sm tracking-wide",
-          !selectedDate ? "text-[var(--text-muted)]" : "text-[var(--text-primary)] font-semibold"
-        )}>
-          {selectedDate ? formattedDisplay : placeholder}
-        </span>
-        <CalendarIcon className={cn(
-          "w-5 h-5 transition-all duration-300",
-          isOpen ? "text-[var(--color-brand)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--color-brand)]"
-        )} />
-      </button>
+        {label && (
+          <span
+            className="text-[9px] font-black text-[var(--text-muted)] tracking-widest uppercase mb-0.5 transition-colors select-none group-focus-within:text-[var(--color-brand)]"
+          >
+            {label}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between bg-transparent text-left outline-none border-none p-0 h-6"
+        >
+          <span className={cn(
+            "text-[var(--text-sm)] tracking-wide",
+            !selectedDate ? "text-white/20" : "text-[var(--text-primary)] font-semibold"
+          )}>
+            {selectedDate ? formattedDisplay : placeholder}
+          </span>
+          <CalendarIcon className={cn(
+            "w-4 h-4 transition-all duration-300",
+            isOpen ? "text-[var(--color-brand)] scale-110" : "text-[var(--text-muted)] group-hover:text-[var(--color-brand)]"
+          )} />
+        </button>
+      </div>
 
       {isOpen && popoverCoords && createPortal(
         <div 

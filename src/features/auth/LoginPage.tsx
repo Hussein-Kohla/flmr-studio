@@ -102,7 +102,9 @@ export default function LoginPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-black/20"
+                  variant="minimal"
+                  autoComplete="name"
+                  className="bg-transparent"
                 />
               )}
               <Input
@@ -112,7 +114,9 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-black/20"
+                variant="minimal"
+                autoComplete="email"
+                className="bg-transparent"
               />
               <Input
                 label="Password"
@@ -121,7 +125,9 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-black/20"
+                variant="minimal"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                className="bg-transparent"
               />
               
               <div className="pt-4">

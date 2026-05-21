@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 
 interface PageWrapperProps {
   children: ReactNode
-  title?: string
-  subtitle?: string
+  title?: ReactNode
+  subtitle?: ReactNode
   actions?: ReactNode
 }
 

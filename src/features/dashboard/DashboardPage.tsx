@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { motion } from 'framer-motion'
 import {
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -65,6 +66,7 @@ function StatCard({ label, value, change, positive, icon: Icon, colorClass, onCl
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { token } = useAuth()
+  const { t } = useSettings()
   const [timeRange, setTimeRange] = useState<'week' | 'month' | '6months' | 'year'>('6months')
 
   // Data Queries
@@ -80,9 +82,18 @@ export default function DashboardPage() {
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime()
 
-  // 1. Revenue Calculations (Cents-aware)
-  const incomeTransactions = transactions.filter(t => t.type === 'income')
-  const totalRevenueCents = incomeTransactions.reduce((a, b) => a + (b.amountCents || 0), 0)
+  // 1. Average Calculations (Cents-aware)
+  const incomeTransactions = transactions.filter(t => t.type === 'income' && (t.status === 'paid' || t.status === 'posted'))
+  
+  const getClientAverage = (clientId: string) => {
+    const txs = incomeTransactions.filter(t => t.clientId === clientId);
+    const total = txs.reduce((acc, t) => acc + (t.amountCents || 0), 0);
+    const numMonths = Math.max(1, txs.length);
+    return total / numMonths;
+  };
+
+  const totalAverageCents = clients.reduce((sum, c) => sum + getClientAverage(c._id), 0);
+  const totalRevenueCents = incomeTransactions.reduce((a, b) => a + (b.amountCents || 0), 0);
 
   const revenueThisMonthCents = incomeTransactions
     .filter(t => t.date >= startOfThisMonth)
@@ -113,7 +124,7 @@ export default function DashboardPage() {
     : Math.round(((expensesThisMonthCents - expensesLastMonthCents) / expensesLastMonthCents) * 100)
 
   // 3. Net Profit
-  const netProfitCents = totalRevenueCents - totalExpensesCents
+  const netProfitCents = totalAverageCents - totalExpensesCents
   const netProfitThisMonth = revenueThisMonthCents - expensesThisMonthCents
   const profitChange = netProfitThisMonth >= 0 ? Math.round((netProfitThisMonth / (revenueThisMonthCents || 1)) * 100) : 0
 
@@ -131,6 +142,10 @@ export default function DashboardPage() {
   // 6. Client Calculations
   const totalClients = clients.length
   const newClientsThisMonth = clients.filter(c => c.createdAt >= startOfThisMonth).length
+
+  // Recent and Top Activity
+  const recentTransactions = [...transactions].sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+  const topClients = [...clients].sort((a, b) => (b.balanceCents || 0) - (a.balanceCents || 0)).slice(0, 5);
 
   // Chart Data - Revenue Over Time
   const chartData = useMemo(() => {
@@ -220,12 +235,12 @@ export default function DashboardPage() {
   }, [projects, stages])
 
   // Recent Transactions
-  const recentTransactions = [...transactions]
+  const recentTransactionsList = [...transactions]
     .sort((a, b) => (b.date || 0) - (a.date || 0))
     .slice(0, 5)
 
   // Top Clients
-  const topClients = [...clients]
+  const topClientsList = [...clients]
     .sort((a, b) => (b.balanceCents || 0) - (a.balanceCents || 0))
     .slice(0, 5)
 
@@ -249,15 +264,15 @@ export default function DashboardPage() {
 
   return (
     <PageWrapper
-      title="Dashboard"
-      subtitle="Comprehensive overview of your studio's operations and finances."
+      title={t('dashboard')}
+      subtitle={t('dashboardSubtitle')}
       actions={
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate('/analytics')}>
-            <Activity size={16} className="mr-2" /> Detailed Stats
+            <Activity size={16} className="mr-2" /> {t('detailedStats')}
           </Button>
           <Button size="sm" onClick={() => navigate('/projects')}>
-            <Plus size={16} className="mr-2" /> New Project
+            <Plus size={16} className="mr-2" /> {t('newProject')}
           </Button>
         </div>
       }
@@ -265,17 +280,17 @@ export default function DashboardPage() {
       {/* Stats Grid - Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <StatCard
-          label="Total Revenue"
-          value={formatCurrency(totalRevenueCents)}
+          label={t('totalAverageMonthly')}
+          value={formatCurrency(totalAverageCents)}
           change={`${Math.abs(revChange)}%`}
           positive={revChange >= 0}
           icon={TrendingUp}
           colorClass="bg-gradient-to-br from-emerald-500 to-emerald-600"
-          onClick={() => navigate('/payments')}
+          onClick={() => navigate('/clients')}
           delay={0}
         />
         <StatCard
-          label="Total Expenses"
+          label={t('totalExpenses')}
           value={formatCurrency(totalExpensesCents)}
           change={`${Math.abs(expenseChange)}%`}
           positive={expenseChange <= 0}
@@ -285,7 +300,7 @@ export default function DashboardPage() {
           delay={0.1}
         />
         <StatCard
-          label="Net Profit"
+          label={t('netProfit')}
           value={formatCurrency(netProfitCents)}
           change={`${Math.abs(profitChange)}%`}
           positive={netProfitThisMonth >= 0}
@@ -295,7 +310,7 @@ export default function DashboardPage() {
           delay={0.2}
         />
         <StatCard
-          label="Active Projects"
+          label={t('activeProjects')}
           value={activeProjects}
           change={`${newProjectsThisMonth} new`}
           positive={newProjectsThisMonth > 0}
@@ -317,9 +332,9 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Total Clients</p>
+              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t('totalClients')}</p>
               <h3 className="text-3xl font-black text-[var(--text-primary)]">{totalClients}</h3>
-              <p className="text-xs text-emerald-400 font-bold mt-1">{newClientsThisMonth} new this month</p>
+              <p className="text-xs text-emerald-400 font-bold mt-1">{newClientsThisMonth} {t('newThisMonth')}</p>
             </div>
             <div className="p-3 rounded-2xl bg-blue-500/20">
               <Users size={24} className="text-blue-400" />
@@ -336,9 +351,9 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Completed Projects</p>
+              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t('completedProjects')}</p>
               <h3 className="text-3xl font-black text-[var(--text-primary)]">{completedProjects}</h3>
-              <p className="text-xs text-purple-400 font-bold mt-1">of {projects.length} total</p>
+              <p className="text-xs text-purple-400 font-bold mt-1">{t('ofTotal').replace('{total}', projects.length.toString())}</p>
             </div>
             <div className="p-3 rounded-2xl bg-purple-500/20">
               <Target size={24} className="text-purple-400" />
@@ -355,9 +370,9 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">Pending Collection</p>
+              <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest mb-1">{t('pendingCollection')}</p>
               <h3 className="text-3xl font-black text-[var(--text-primary)]">{formatCurrency(pendingRevenueCents)}</h3>
-              <p className="text-xs text-amber-400 font-bold mt-1">{pendingThisMonthCents > 0 ? 'due this month' : 'all collected'}</p>
+              <p className="text-xs text-amber-400 font-bold mt-1">{pendingThisMonthCents > 0 ? t('dueThisMonth') : t('allCollected')}</p>
             </div>
             <div className="p-3 rounded-2xl bg-amber-500/20">
               <Clock size={24} className="text-amber-400" />
@@ -368,11 +383,11 @@ export default function DashboardPage() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Revenue Chart */}
+        {/* Average Monthly Chart */}
         <Card className="lg:col-span-2 flex flex-col overflow-hidden border-[var(--border-subtle)]">
           <CardHeader className="flex flex-row items-center justify-between border-b border-[var(--border-subtle)] bg-black/20">
             <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <Zap size={16} className="text-brand" /> Revenue & Expenses Trend
+              <Zap size={16} className="text-brand" /> {t('averageAndExpensesTrend')}
             </CardTitle>
             <div className="flex bg-[var(--bg-muted)]/20 p-1 rounded-xl border border-[var(--border-subtle)]">
               {(['week', 'month', '6months', 'year'] as const).map((r) => (
@@ -408,7 +423,7 @@ export default function DashboardPage() {
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} tickFormatter={val => `${val / 1000}k`} />
                 <RechartsTooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                <Area type="monotone" dataKey="revenue" name="Average Monthly" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                 <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#ef4d4d" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -418,7 +433,7 @@ export default function DashboardPage() {
         {/* Project Distribution */}
         <Card className="flex flex-col border-[var(--border-subtle)]">
           <CardHeader className="border-b border-[var(--border-subtle)] bg-black/20">
-            <CardTitle className="text-sm font-bold">Project Pipeline</CardTitle>
+            <CardTitle className="text-sm font-bold">{t('projectPipeline')}</CardTitle>
           </CardHeader>
           <CardBody className="p-6 flex-1 flex flex-col items-center justify-center min-h-[300px]">
             <div className="relative w-full h-full">
@@ -443,7 +458,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-3xl font-black text-[var(--text-primary)]">{projects.length}</span>
-                <span className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest">Projects</span>
+                <span className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest">{t('projects')}</span>
               </div>
             </div>
             <div className="w-full mt-4 space-y-2">
@@ -466,14 +481,14 @@ export default function DashboardPage() {
         {/* Recent Transactions */}
         <Card className="overflow-hidden border-[var(--border-subtle)]">
           <CardHeader className="flex flex-row items-center justify-between border-b border-[var(--border-subtle)] bg-black/20">
-            <CardTitle className="text-sm font-bold">Recent Transactions</CardTitle>
+            <CardTitle className="text-sm font-bold">{t('recentTransactions')}</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => navigate('/payments')}>
-              View All <ChevronRight size={14} className="ml-1" />
+              {t('viewAll')} <ChevronRight size={14} className="ml-1" />
             </Button>
           </CardHeader>
           <CardBody className="p-0">
             {recentTransactions.length === 0 ? (
-              <div className="p-8 text-center text-[var(--text-muted)]">No transactions yet</div>
+              <div className="p-8 text-center text-[var(--text-muted)]">{t('noTransactionsYet')}</div>
             ) : (
               <div className="divide-y divide-[var(--border-subtle)]">
                 {recentTransactions.map((trx, i) => (
@@ -512,14 +527,14 @@ export default function DashboardPage() {
         {/* Top Clients */}
         <Card className="overflow-hidden border-[var(--border-subtle)]">
           <CardHeader className="flex flex-row items-center justify-between border-b border-[var(--border-subtle)] bg-black/20">
-            <CardTitle className="text-sm font-bold">Top Clients</CardTitle>
+            <CardTitle className="text-sm font-bold">{t('topClients')}</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => navigate('/clients')}>
-              View All <ChevronRight size={14} className="ml-1" />
+              {t('viewAll')} <ChevronRight size={14} className="ml-1" />
             </Button>
           </CardHeader>
           <CardBody className="p-0">
             {topClients.length === 0 ? (
-              <div className="p-8 text-center text-[var(--text-muted)]">No clients yet</div>
+              <div className="p-8 text-center text-[var(--text-muted)]">{t('noClientsYet')}</div>
             ) : (
               <div className="divide-y divide-[var(--border-subtle)]">
                 {topClients.map((client, i) => (
@@ -544,7 +559,7 @@ export default function DashboardPage() {
                       <p className={cn("font-bold text-sm", (client.balanceCents || 0) >= 0 ? "text-emerald-400" : "text-rose-400")}>
                         {formatCurrency(client.balanceCents || 0)}
                       </p>
-                      <p className="text-xs text-[var(--text-muted)]">Balance</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('balance') || 'Balance'}</p>
                     </div>
                   </motion.div>
                 ))}

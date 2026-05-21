@@ -5,6 +5,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -26,6 +27,7 @@ const PRIORITY_COLORS = {
 
 export default function TasksPage() {
   const { token } = useAuth()
+  const { t } = useSettings()
   const { toast } = useToast()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeColumn, setActiveColumn] = useState('todo')
@@ -93,20 +95,20 @@ export default function TasksPage() {
       await addStage({ token, name: newStageName.trim() })
       setNewStageName('')
       setIsAddingStage(false)
-      toast("List added.", "success")
+      toast(t("listAdded"), "success")
     } catch (err) {
-      toast("Failed to add list.", "error")
+      toast(t("listAddFailed"), "error")
     }
   }
 
   const handleDeleteStage = async (stageId: Id<"task_stages">) => {
     if (!token) return
-    if (!confirm("Delete this list? Tasks will remain but the list will be gone.")) return
+    if (!confirm(t("deleteListConfirm"))) return
     try {
       await deleteStage({ token, stageId })
-      toast("List deleted.", "success")
+      toast(t("listDeleted"), "success")
     } catch (err) {
-      toast("Failed to delete list.", "error")
+      toast(t("listDeleteFailed"), "error")
     }
   }
 
@@ -115,9 +117,9 @@ export default function TasksPage() {
     try {
       await updateStage({ token, stageId: renamingStage.id, name: renamingStage.name })
       setRenamingStage(null)
-      toast("List renamed.", "success")
+      toast(t("listRenamed"), "success")
     } catch (err) {
-      toast("Failed to rename list.", "error")
+      toast(t("listRenameFailed"), "error")
     }
   }
 
@@ -125,9 +127,9 @@ export default function TasksPage() {
     if (!token || !deleteTaskId) return
     try {
       await deleteTask({ token, taskId: deleteTaskId })
-      toast("Task deleted.", "success")
+      toast(t("taskDeleted"), "success")
     } catch (err) {
-      toast("Failed to delete task.", "error")
+      toast(t("taskDeleteFailed"), "error")
     } finally {
       setDeleteTaskId(null)
     }
@@ -137,9 +139,9 @@ export default function TasksPage() {
     if (!token || !completeTaskId) return
     try {
       await updateTask({ token, taskId: completeTaskId, status: 'done' })
-      toast("Task completed!", "success")
+      toast(t("taskCompleted"), "success")
     } catch (err) {
-      toast("Failed to update task.", "error")
+      toast(t("taskUpdateFailed"), "error")
     } finally {
       setCompleteTaskId(null)
     }
@@ -147,8 +149,8 @@ export default function TasksPage() {
 
   return (
     <PageWrapper
-      title="Task Board"
-      subtitle="Organize and track your tasks with drag and drop"
+      title={t("taskBoard")}
+      subtitle="{t('organizeTasks')}"
       actions={
         <Button size="sm" onClick={() => handleAddCard('todo')}>
           <Plus size={16} className="mr-2" /> New Task
@@ -164,7 +166,7 @@ export default function TasksPage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <ListTodo size={14} className="text-[var(--text-muted)]" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Total</span>
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("totalCount")}</span>
           </div>
           <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.total}</h3>
         </motion.div>
@@ -176,7 +178,7 @@ export default function TasksPage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <Clock size={14} className="text-amber-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">To Do</span>
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("todo")}</span>
           </div>
           <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.todo}</h3>
         </motion.div>
@@ -188,7 +190,7 @@ export default function TasksPage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <AlertCircle size={14} className="text-blue-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">In Progress</span>
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("inProgress")}</span>
           </div>
           <h3 className="text-2xl font-black text-[var(--text-primary)]">{stats.inProgress}</h3>
         </motion.div>
@@ -200,7 +202,7 @@ export default function TasksPage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <CheckSquare size={14} className="text-emerald-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Done</span>
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("done")}</span>
           </div>
           <h3 className="text-2xl font-black text-emerald-400">{stats.done}</h3>
         </motion.div>
@@ -212,7 +214,7 @@ export default function TasksPage() {
         >
           <div className="flex items-center gap-2 mb-1">
             <AlertCircle size={14} className="text-rose-400" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Overdue</span>
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("overdue")}</span>
           </div>
           <h3 className="text-2xl font-black text-rose-400">{stats.overdue}</h3>
         </motion.div>
@@ -222,7 +224,7 @@ export default function TasksPage() {
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1 max-w-md">
           <Input
-            placeholder="Search tasks..."
+            placeholder={t("searchTasksPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search size={18} className="text-[var(--text-muted)]" />}
@@ -234,11 +236,11 @@ export default function TasksPage() {
             onChange={(e) => setFilterPriority(e.target.value)}
             className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-sm text-[var(--text-secondary)] focus:outline-none"
           >
-            <option value="all">All Priorities</option>
+            <option value="all">{t('allPriorities')}</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
-            <option value="urgent">Urgent</option>
+            <option value="urgent">{t("urgent")}</option>
           </select>
         </div>
       </div>
@@ -425,15 +427,15 @@ export default function TasksPage() {
               >
                 <input 
                   autoFocus
-                  placeholder="List name..."
+                  placeholder={t("listNamePlaceholder")}
                   value={newStageName}
                   onChange={e => setNewStageName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && performAddStage()}
                   className="bg-black/20 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand"
                 />
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={performAddStage}>Add</Button>
-                  <Button size="sm" variant="secondary" onClick={() => setIsAddingStage(false)}>Cancel</Button>
+                  <Button size="sm" className="flex-1" onClick={performAddStage}>{t("addButton")}</Button>
+                  <Button size="sm" variant="secondary" onClick={() => setIsAddingStage(false)}>{t("cancel")}</Button>
                 </div>
               </motion.div>
             ) : (
@@ -441,7 +443,7 @@ export default function TasksPage() {
                 onClick={() => setIsAddingStage(true)}
                 className="w-full p-4 rounded-2xl bg-white/5 border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-brand hover:border-brand hover:bg-brand/5 transition-all text-sm font-bold flex items-center gap-2"
               >
-                <Plus size={20} /> Add another list
+                <Plus size={20} /> {t('addAnotherList')}
               </button>
             )}
           </div>

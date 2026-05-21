@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { formatCurrency, cn } from '@/lib/utils'
 import { useMemo } from 'react'
 import { 
@@ -24,6 +25,7 @@ const COLORS = {
 
 export default function AnalyticsPage() {
   const { token } = useAuth()
+  const { t } = useSettings()
 
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
   const projectsData = useQuery(api.projects.getProjects, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
@@ -96,11 +98,11 @@ export default function AnalyticsPage() {
   }, {})
 
   const projectStatusData = [
-    { name: 'Draft', value: projectStatusCounts['draft'] || 0, color: COLORS.muted },
-    { name: 'In Review', value: projectStatusCounts['in_review'] || 0, color: COLORS.info },
-    { name: 'Revision', value: projectStatusCounts['revision'] || 0, color: COLORS.warning },
-    { name: 'Approved', value: projectStatusCounts['approved'] || 0, color: COLORS.brand },
-    { name: 'Completed', value: projectStatusCounts['done'] || 0, color: COLORS.success },
+    { name: t('draft'), value: projectStatusCounts['draft'] || 0, color: COLORS.muted },
+    { name: t('inReview'), value: projectStatusCounts['in_review'] || 0, color: COLORS.info },
+    { name: t('revision'), value: projectStatusCounts['revision'] || 0, color: COLORS.warning },
+    { name: t('approved'), value: projectStatusCounts['approved'] || 0, color: COLORS.brand },
+    { name: t('completed'), value: projectStatusCounts['done'] || 0, color: COLORS.success },
   ].filter(d => d.value > 0)
 
   // 3. Top Clients Table
@@ -130,7 +132,7 @@ export default function AnalyticsPage() {
 
   // 4. Monthly Revenue Trend
   const monthlyRevenue = useMemo(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const months = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')]
     const currentYear = new Date().getFullYear()
     
     return Array.from({ length: 12 }).map((_, i) => {
@@ -164,8 +166,8 @@ export default function AnalyticsPage() {
 
   return (
     <PageWrapper
-      title="Advanced Analytics"
-      subtitle="Comprehensive insights and financial tracking"
+      title={t("advancedAnalytics")}
+      subtitle={t("analyticsSubtitle")}
       actions={
         <div className="flex gap-2">
           <Badge variant="info" className="text-xs font-bold">
@@ -177,10 +179,10 @@ export default function AnalyticsPage() {
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {[
-          { label: 'Total Revenue', value: totalRevenue, color: COLORS.success, icon: TrendingUp, change: '+12%' },
-          { label: 'Total Expenses', value: totalExpenses, color: COLORS.danger, icon: TrendingDown, change: '-5%' },
-          { label: 'Net Profit', value: netProfit, color: COLORS.brand, icon: DollarSign, change: '+8%' },
-          { label: 'Pending Invoices', value: totalPending, color: COLORS.warning, icon: ClockIcon, change: '3 pending' }
+          { label: t('totalRevenue'), value: totalRevenue, color: COLORS.success, icon: TrendingUp, change: '+12%' },
+          { label: t('totalExpenses'), value: totalExpenses, color: COLORS.danger, icon: TrendingDown, change: '-5%' },
+          { label: t('netProfit'), value: netProfit, color: COLORS.brand, icon: DollarSign, change: '+8%' },
+          { label: t('pendingInvoices'), value: totalPending, color: COLORS.warning, icon: ClockIcon, change: '3 pending' }
         ].map((metric, i) => (
           <motion.div
             key={metric.label}
@@ -281,7 +283,7 @@ export default function AnalyticsPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">No project data</div>
+              <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">{t("noProjectData")}</div>
             )}
           </CardBody>
         </Card>
@@ -297,7 +299,7 @@ export default function AnalyticsPage() {
         {/* Monthly Revenue Bar Chart */}
         <Card className="border-[var(--border-subtle)]">
           <CardHeader className="border-b border-[var(--border-subtle)] bg-black/20">
-            <CardTitle className="text-sm font-bold">Monthly Revenue (Current Year)</CardTitle>
+            <CardTitle className="text-sm font-bold">{t("monthlyRevenueYear")}</CardTitle>
           </CardHeader>
           <CardBody className="p-6 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -315,7 +317,7 @@ export default function AnalyticsPage() {
         {/* Quick Stats */}
         <Card className="border-[var(--border-subtle)]">
           <CardHeader className="border-b border-[var(--border-subtle)] bg-black/20">
-            <CardTitle className="text-sm font-bold">Performance Metrics</CardTitle>
+            <CardTitle className="text-sm font-bold">{t("performanceMetrics")}</CardTitle>
           </CardHeader>
           <CardBody className="p-6">
             <div className="space-y-4">
@@ -324,7 +326,7 @@ export default function AnalyticsPage() {
                   <div className="p-2 bg-emerald-500/10 rounded-lg">
                     <Users size={18} className="text-emerald-400" />
                   </div>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">Total Clients</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{t("totalClients")}</span>
                 </div>
                 <span className="text-xl font-black text-[var(--text-primary)]">{clients.length}</span>
               </div>
@@ -333,7 +335,7 @@ export default function AnalyticsPage() {
                   <div className="p-2 bg-blue-500/10 rounded-lg">
                     <Briefcase size={18} className="text-blue-400" />
                   </div>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">Total Projects</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{t("projects") || "Total Projects"}</span>
                 </div>
                 <span className="text-xl font-black text-[var(--text-primary)]">{projects.length}</span>
               </div>
@@ -342,7 +344,7 @@ export default function AnalyticsPage() {
                   <div className="p-2 bg-purple-500/10 rounded-lg">
                     <Target size={18} className="text-purple-400" />
                   </div>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">Completed Projects</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{t("completedProjects")}</span>
                 </div>
                 <span className="text-xl font-black text-emerald-400">{projectStatusCounts['done'] || 0}</span>
               </div>
@@ -351,7 +353,7 @@ export default function AnalyticsPage() {
                   <div className="p-2 bg-amber-500/10 rounded-lg">
                     <DollarSign size={18} className="text-amber-400" />
                   </div>
-                  <span className="text-sm font-medium text-[var(--text-primary)]">Avg. Revenue/Client</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{t("avgRevenueClient")}</span>
                 </div>
                 <span className="text-xl font-black text-brand">
                   {clients.length > 0 ? formatCurrency(totalRevenue / clients.length) : '0'}
@@ -365,21 +367,21 @@ export default function AnalyticsPage() {
       {/* Top Clients Table */}
       <Card className="overflow-hidden border-[var(--border-subtle)]">
         <CardHeader className="border-b border-[var(--border-subtle)] bg-black/20">
-          <CardTitle className="text-sm font-bold">Top Clients by Revenue</CardTitle>
+          <CardTitle className="text-sm font-bold">{t("topClientsRevenue")}</CardTitle>
         </CardHeader>
         <CardBody className="p-0 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-muted)] text-xs uppercase tracking-wider font-bold">
-                <th className="p-4 pl-6">Client</th>
-                <th className="p-4">Total Projects</th>
-                <th className="p-4">Revenue Generated</th>
-                <th className="p-4">Pending Collection</th>
+                <th className="p-4 pl-6">{t("clientName")}</th>
+                <th className="p-4">{t("projects") || "Total Projects"}</th>
+                <th className="p-4">{t("revenue")}</th>
+                <th className="p-4">{t("pendingCollection")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
               {topClients.length === 0 ? (
-                <tr><td colSpan={4} className="p-8 text-center text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">No client data found.</td></tr>
+                <tr><td colSpan={4} className="p-8 text-center text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs">{t("noClientDataFound")}</td></tr>
               ) : topClients.map((client, i) => (
                 <motion.tr 
                   key={i} 

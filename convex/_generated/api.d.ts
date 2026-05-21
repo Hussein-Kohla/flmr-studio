@@ -22,6 +22,7 @@ import type * as publishing from "../publishing.js";
 import type * as services_events from "../services/events.js";
 import type * as services_ledger from "../services/ledger.js";
 import type * as settings from "../settings.js";
+import type * as staff from "../staff.js";
 import type * as stages from "../stages.js";
 import type * as task_stages from "../task_stages.js";
 import type * as tasks from "../tasks.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "services/events": typeof services_events;
   "services/ledger": typeof services_ledger;
   settings: typeof settings;
+  staff: typeof staff;
   stages: typeof stages;
   task_stages: typeof task_stages;
   tasks: typeof tasks;

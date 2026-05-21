@@ -45,11 +45,29 @@ export default defineSchema({
     notes: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     avatarId: v.optional(v.id("_storage")),
+    clientType: v.optional(v.string()), // 'fb_ads' | 'video_editing' | 'photography' | 'other'
+    accountManager: v.optional(v.string()),
+    collectionOfficer: v.optional(v.string()),
+    color: v.optional(v.string()),
+    customFields: v.optional(v.array(v.object({
+      key: v.string(),
+      value: v.string(),
+    }))),
     userId: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_userId", ["userId"])
     .index("by_status", ["status"]),
+
+  staff: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    platform: v.optional(v.string()),
+    pages: v.optional(v.array(v.string())),
+    color: v.optional(v.string()), // staff color
+    createdAt: v.number(),
+  }).index("by_userId", ["userId"]),
 
   // ── DOUBLE-ENTRY ACCOUNTING (LEGAL GRADE) ─────────────────────────────────
   ledger_accounts: defineTable({
@@ -106,8 +124,17 @@ export default defineSchema({
       id: v.string(),
       title: v.string(),
       isCompleted: v.boolean(),
+      assignedTo: v.optional(v.string()), // Added for step assignment
+      deadline: v.optional(v.number()),   // Added for step deadline
     }))),
     deadline: v.optional(v.number()),
+    startDate: v.optional(v.number()),
+    projectType: v.optional(v.string()),
+    platform: v.optional(v.string()),
+    color: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    assignedTo: v.optional(v.string()),
     userId: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),

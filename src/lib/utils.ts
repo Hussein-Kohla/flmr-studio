@@ -25,7 +25,27 @@ export function formatDate(
   if (!date) return '—'
   const d = new Date(date)
   if (isNaN(d.getTime())) return '—'
-  return new Intl.DateTimeFormat('en-US', options).format(d)
+  
+  // Force 12-hour format if hour options are present
+  const mergedOptions = { ...options };
+  if (mergedOptions.hour) {
+    mergedOptions.hour12 = true;
+  }
+  return new Intl.DateTimeFormat('en-US', mergedOptions).format(d)
+}
+
+/** Format a Date or timestamp to a 12-hour AM/PM time string */
+export function formatTime(
+  date: Date | string | number | undefined | null
+): string {
+  if (!date) return '—'
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return '—'
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).format(d)
 }
 
 /** Truncate a string to a max length with ellipsis */

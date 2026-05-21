@@ -96,3 +96,38 @@ export const deleteEvent = mutation({
     return await ctx.db.delete(args.eventId);
   },
 });
+
+export const getUniversalEvents = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+
+    const calendarEvents = await ctx.db
+      .query("calendar_events")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const publishingPosts = await ctx.db
+      .query("publishing_queue")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    return {
+      calendarEvents,
+      projects: projects.filter((p) => p.deadline !== undefined),
+      tasks: tasks.filter((t) => t.dueDate !== undefined),
+      publishingPosts: publishingPosts.filter((p) => p.publishDate !== undefined),
+    };
+  },
+});
+

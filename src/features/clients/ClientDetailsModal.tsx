@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Phone, MapPin, CheckCircle2, MessageSquare, TrendingUp, 
-User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar } from 'lucide-react';
+import { Plus, X, Phone, MapPin, CheckCircle2, MessageSquare, TrendingUp, 
+User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar, Printer } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,12 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PromptDialog } from '@/components/ui/PromptDialog';
 import { motion } from 'framer-motion';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useSettings } from '@/hooks/useSettings';
+import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
+import { ExportClientPDF } from '@/components/ExportClientPDF';
+import { ExportClientExcel } from '@/components/ExportClientExcel';
 
 interface ClientDetailsModalProps {
   isOpen: boolean;
@@ -33,9 +39,35 @@ const TABS = [
 export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
   const { token } = useAuth();
   const { toast } = useToast();
+  const { language } = useSettings();
+  
+  const getStatusLabel = (status: string) => {
+    const mapping: Record<string, { en: string, ar: string, color: string }> = {
+      lead: { en: 'Lead', ar: 'عميل محتمل', color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+      active: { en: 'Active', ar: 'نشط', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+      at_risk: { en: 'At Risk', ar: 'معرض للفقد', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
+      suspended: { en: 'Suspended', ar: 'معلق', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
+      archived: { en: 'Archived', ar: 'مؤرشف', color: 'bg-white/5 text-white/40 border-white/10' }
+    };
+    return mapping[status] || { en: status, ar: status, color: 'bg-white/5 text-white/40 border-white/10' };
+  };
+
+  const getClientTypeLabel = (type: string) => {
+    const mapping: Record<string, { en: string, ar: string }> = {
+      fb_ads: { en: 'Facebook Ads', ar: 'إعلانات فيس بوك' },
+      video_editing: { en: 'Video Editing', ar: 'مونتاج فيديو' },
+      photography: { en: 'Photography', ar: 'تصوير' },
+      design: { en: 'Graphic Design', ar: 'تصميم' },
+      other: { en: 'Other', ar: 'أخرى' }
+    };
+    const val = mapping[type] || mapping.other;
+    return language === 'ar' ? val.ar : val.en;
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'finance' | 'monthly'>('finance');
+  const [noteSavingStatus, setNoteSavingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [newPayment, setNewPayment] = useState({ amount: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid' as 'paid' | 'pending' });
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [editingPaymentData, setEditingPaymentData] = useState({ amount: '' as string | number, description: '', date: '', status: 'paid' as 'paid' | 'pending' });
@@ -70,6 +102,12 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     avatarUrl: '',
     avatarId: undefined as string | undefined,
     notes: '',
+    clientType: 'other',
+    accountManager: '',
+    collectionOfficer: '',
+    status: 'lead',
+    customFields: [] as {key: string, value: string}[],
+    color: '#8b5cf6',
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeletingRecord, setIsDeletingRecord] = useState(false);
@@ -116,9 +154,38 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
         avatarUrl: client.avatarUrl || '',
         avatarId: client.avatarId,
         notes: client.notes || '',
+        clientType: client.clientType || 'other',
+        accountManager: client.accountManager || '',
+    customFields: (client.customFields || []) as {key: string, value: string}[],
+        collectionOfficer: client.collectionOfficer || '',
+        status: client.status || 'lead',
+        color: client.color || '#8b5cf6',
       });
     }
   }, [client, isEditing]);
+
+  const debouncedNotes = useDebounce(formData.notes, 1000);
+
+  React.useEffect(() => {
+    if (token && client && debouncedNotes !== undefined && debouncedNotes !== (client.notes || '')) {
+      const saveNotes = async () => {
+        setNoteSavingStatus('saving');
+        try {
+          await updateClient({
+            token,
+            clientId: client._id,
+            notes: debouncedNotes,
+          });
+          setNoteSavingStatus('saved');
+          setTimeout(() => setNoteSavingStatus('idle'), 2000);
+        } catch (err) {
+          console.error("Auto-save notes failed:", err);
+          setNoteSavingStatus('error');
+        }
+      };
+      saveNotes();
+    }
+  }, [debouncedNotes, client?._id, token]);
 
   if (!isOpen || !client) return null;
 
@@ -139,10 +206,11 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
       await createPayment({
         token,
         clientId: client._id,
-        type: newPayment.status === 'paid' ? 'income' : 'pending',
+        type: 'income',
         amount: Number(newPayment.amount),
         description: newPayment.description || 'Manual Payment',
         category: 'Manual',
+        status: newPayment.status,
         date: new Date(newPayment.date).getTime(),
         source: 'Manual',
       });
@@ -254,12 +322,19 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
           date: new Date(targetYear, selectedMonthIndex, formData.subscription.dueDay).getTime()
         });
       }
+
+      await updateClient({
+        token,
+        clientId: client._id,
+        subscription: newSubscription
+      });
+
+      toast(`${MONTHS[selectedMonthIndex]} ${targetYear} updated successfully`, "success");
+      setSelectedMonthIndex(null);
     } catch (e) {
       console.error("Failed to sync payment record:", e);
+      toast("Failed to update month data", "error");
     }
-
-    toast(`${MONTHS[selectedMonthIndex]} ${targetYear} updated successfully`, "success");
-    setSelectedMonthIndex(null);
   };
 
   const handleMonthClick = (index: number) => {
@@ -370,18 +445,10 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
         : [...prev.tags, tagId]
     }));
   };
-  const PRESET_AVATARS = [
-    '/avatars/avatar_1.png',
-    '/avatars/avatar_2.png',
-    '/avatars/avatar_3.png',
-    '/avatars/avatar_4.png',
-    '/avatars/avatar_5.png',
-    '/avatars/avatar_6.png',
-    '/avatars/avatar_7.png',
-    '/avatars/avatar_8.png',
-    '/avatars/avatar_9.png',
-    '/avatars/avatar_10.png',
-  ];
+  const CLIENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b'];
+
+const PRESET_AVATARS = [
+    '/avatars/doctor_male.png', '/avatars/doctor_female.png', '/avatars/engineer_male.png', '/avatars/engineer_female.png', '/avatars/business_male.png', '/avatars/business_female.png'];
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -416,14 +483,18 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
               Save Changes
             </Button>
           ) : (
-            <Button 
-              size="sm" 
-              variant="secondary"
-              className="rounded-full w-10 h-10 p-0 bg-white/5 border-white/5 hover:bg-white/10"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit2 size={18} />
-            </Button>
+            <div className="flex gap-2">
+              <ExportClientPDF client={client} transactions={filteredPayments} />
+              <ExportClientExcel client={client} transactions={filteredPayments} />
+              <Button 
+                size="sm" 
+                variant="secondary"
+                className="rounded-full w-10 h-10 p-0 bg-white/5 border-white/5 hover:bg-white/10"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit2 size={18} />
+              </Button>
+            </div>
           )}
           <button 
             onClick={onClose}
@@ -487,22 +558,25 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
                
                <div 
                  className={cn(
-                   "w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-[var(--color-brand)] to-purple-500 mb-6 transition-transform group-hover:scale-105 relative",
+                   "w-32 h-32 rounded-full p-1 mb-6 transition-transform group-hover:scale-105 relative",
                    isEditing && "cursor-pointer hover:brightness-125"
                  )}
+                 style={{ backgroundImage: `linear-gradient(to top right, ${formData.color || '#8b5cf6'}, #4f46e5)` }}
                  onClick={() => isEditing && fileInputRef.current?.click()}
                >
                  <div className="w-full h-full rounded-full bg-[#0a0a0b] p-1 overflow-hidden relative flex items-center justify-center">
-                     {formData.avatarUrl ? (
+                     <div className="w-full h-full rounded-full bg-[#0a0a0b] flex items-center justify-center text-4xl font-black text-white uppercase absolute inset-0 z-0">
+                       {getInitials(formData.name || client.name || '?')}
+                     </div>
+                     {formData.avatarUrl && (
                        <img 
                          src={formData.avatarUrl} 
                          alt={client.name} 
-                         className="w-full h-full rounded-full object-cover"
+                         className="w-full h-full rounded-full object-cover absolute inset-0 z-10"
+                         onError={(e) => {
+                           e.currentTarget.style.display = 'none';
+                         }}
                        />
-                     ) : (
-                       <div className={cn("w-full h-full rounded-full flex items-center justify-center text-4xl font-black text-white uppercase", getAvatarColor(formData.name || client.name))}>
-                         {getInitials(formData.name || client.name)}
-                       </div>
                      )}
                      {isEditing && (
                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -515,19 +589,21 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
 
                {isEditing ? (
                  <div className="space-y-3 w-full mb-6">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest text-center">Quick Select Avatar</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest text-center">Pick a color</p>
                     <div className="flex flex-wrap justify-center gap-2 mb-4">
-                      {PRESET_AVATARS.map((url, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => setFormData({...formData, avatarUrl: url, avatarId: undefined})}
+                      {CLIENT_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setFormData({...formData, color: c, avatarUrl: ''});
+                          }}
                           className={cn(
-                            "w-10 h-10 rounded-full border-2 transition-all hover:scale-110 overflow-hidden",
-                            formData.avatarUrl === url ? "border-[var(--color-brand)] scale-110 shadow-lg shadow-[var(--color-brand)]/20" : "border-white/10"
+                            "w-8 h-8 rounded-full border-2 transition-all hover:scale-110",
+                            formData.color === c && !formData.avatarUrl ? "border-white scale-110 shadow-lg" : "border-transparent"
                           )}
-                        >
-                          <img src={url} alt="Preset" className="w-full h-full object-cover" />
-                        </button>
+                          style={{ backgroundColor: c }}
+                        />
                       ))}
                     </div>
 
@@ -592,81 +668,227 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
                      Email Client
                    </Button>
                     <div className="flex flex-col gap-2">
-                      {phoneNumbers.map((num, i) => (
-                        <Button 
-                          key={i}
-                          variant="secondary" 
-                          className="rounded-2xl h-12 font-bold bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-500" 
-                          leftIcon={<MessageSquare size={16} />}
-                          onClick={() => window.open(`https://wa.me/${num.replace(/\D/g, '')}`, '_blank')}
-                        >
-                          {phoneNumbers.length > 1 ? `WhatsApp (SIM ${i + 1})` : 'WhatsApp'}
-                        </Button>
-                      ))}
-                    </div>
-                 </div>
+                       {phoneNumbers.map((num, i) => (
+                         <Button 
+                           key={i}
+                           variant="secondary" 
+                           className="rounded-2xl h-12 font-bold bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-500" 
+                           leftIcon={<MessageSquare size={16} />}
+                           onClick={() => window.open(`https://wa.me/${num.replace(/\D/g, '')}`, '_blank')}
+                         >
+                           {phoneNumbers.length > 1 ? `WhatsApp (SIM ${i + 1})` : 'WhatsApp'}
+                         </Button>
+                       ))}
+                     </div>
+                  </div>
                )}
             </Card>
 
-            {/* Column 2: Geographics Card */}
+            {/* Column 2: CRM & Geographics Card */}
             <Card glass className="p-8 border-white/5 rounded-[32px] flex flex-col">
-              <h4 className="text-2xl font-black text-white mb-8">Geographics</h4>
+              <h4 className="text-2xl font-black text-white mb-8">
+                {language === 'ar' ? 'بيانات العميل' : 'CRM & Geographics'}
+              </h4>
               
               <div className="space-y-6 flex-1">
+                {/* Contact info */}
                 <div className="flex items-start gap-4 group">
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform shrink-0">
                     <Phone size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">Contact</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">
+                      {language === 'ar' ? 'الاتصال' : 'Contact'}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {phoneNumbers.length > 0 ? phoneNumbers.map((num, i) => (
                         <div key={i} className="bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-xs font-black text-white/90 shadow-sm">
                           {num}
                         </div>
                       )) : (
-                        <p className="text-sm font-bold text-white/40 italic">No numbers set</p>
+                        <p className="text-sm font-bold text-white/40 italic">
+                          {language === 'ar' ? 'لا توجد أرقام' : 'No numbers set'}
+                        </p>
                       )}
                     </div>
                   </div>
                 </div>
 
+                {/* Company Name */}
                 <div className="flex items-center gap-4 group">
                   <div className="w-12 h-12 rounded-2xl bg-[#5850ec]/10 flex items-center justify-center text-[#5850ec] group-hover:scale-110 transition-transform shrink-0">
                     <Briefcase size={20} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">Company Name</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
+                      {language === 'ar' ? 'اسم الشركة' : 'Company Name'}
+                    </p>
                     {isEditing ? (
                       <input 
                         type="text" 
                         value={formData.company} 
                         onChange={e => setFormData({...formData, company: e.target.value})}
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
-                        placeholder="Company Name"
+                        placeholder={language === 'ar' ? "اسم الشركة" : "Company Name"}
                       />
                     ) : (
-                      <p className="text-sm font-bold text-white/80">{formData.company || 'Not Specified'}</p>
+                      <p className="text-sm font-bold text-white/80">
+                        {formData.company || (language === 'ar' ? 'غير محدد' : 'Not Specified')}
+                      </p>
                     )}
                   </div>
                 </div>
 
+                {/* Address */}
                 <div className="flex items-center gap-4 group">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform shrink-0">
                     <MapPin size={20} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">Address</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
+                      {language === 'ar' ? 'العنوان' : 'Address'}
+                    </p>
                     {isEditing ? (
                       <input 
                         type="text" 
                         value={formData.address} 
                         onChange={e => setFormData({...formData, address: e.target.value})}
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
-                        placeholder="Client Address"
+                        placeholder={language === 'ar' ? "عنوان العميل" : "Client Address"}
                       />
                     ) : (
-                      <p className="text-sm font-bold text-white/80">{formData.address || 'No address provided'}</p>
+                      <p className="text-sm font-bold text-white/80">
+                        {formData.address || (language === 'ar' ? 'لا يوجد عنوان' : 'No address provided')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Service Type / Client Type */}
+                <div className="flex items-center gap-4 group">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
+                    <Briefcase size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
+                      {language === 'ar' ? 'نوع الخدمة' : 'Service Type'}
+                    </p>
+                    {isEditing ? (
+                      <select 
+                        value={formData.clientType} 
+                        onChange={e => setFormData({...formData, clientType: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
+                      >
+                        <option value="fb_ads">{language === 'ar' ? 'إعلانات فيس بوك' : 'Facebook Ads'}</option>
+                        <option value="video_editing">{language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'}</option>
+                        <option value="photography">{language === 'ar' ? 'تصوير' : 'Photography'}</option>
+                        <option value="design">{language === 'ar' ? 'تصميم' : 'Graphic Design'}</option>
+                        <option value="other">{language === 'ar' ? 'أخرى' : 'Other'}</option>
+                      </select>
+                    ) : (
+                      <p className="text-sm font-bold text-white/80">{getClientTypeLabel(formData.clientType)}</p>
+                    )}
+                  </div>
+                </div>
+
+                
+
+                
+
+                
+                {/* Custom Fields */}
+                {formData.customFields && formData.customFields.map((field: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
+                      <Briefcase size={20} />
+                    </div>
+                    <div className="flex-1">
+                      {isEditing ? (
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            value={field.key}
+                            onChange={(e) => {
+                              const newFields = [...formData.customFields];
+                              newFields[idx].key = e.target.value;
+                              setFormData({ ...formData, customFields: newFields });
+                            }}
+                            placeholder="Field Name"
+                            className="w-1/2 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
+                          />
+                          <input 
+                            type="text"
+                            value={field.value}
+                            onChange={(e) => {
+                              const newFields = [...formData.customFields];
+                              newFields[idx].value = e.target.value;
+                              setFormData({ ...formData, customFields: newFields });
+                            }}
+                            placeholder="Value"
+                            className="w-1/2 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const newFields = formData.customFields.filter((_: any, i: number) => i !== idx);
+                              setFormData({ ...formData, customFields: newFields });
+                            }}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
+                            {field.key}
+                          </p>
+                          <p className="text-sm font-bold text-white/80">{field.value}</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {isEditing && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newFields = [...(formData.customFields || []), { key: '', value: '' }];
+                      setFormData({ ...formData, customFields: newFields });
+                    }}
+                    className="flex items-center gap-2 justify-center w-full py-2 bg-white/5 hover:bg-white/10 border border-dashed border-white/20 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors"
+                  >
+                    <Plus size={16} /> {language === 'ar' ? 'إضافة حقل جديد' : 'Add Custom Field'}
+                  </button>
+                )}
+
+
+                {/* Client Status */}
+                <div className="flex items-center gap-4 group">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:scale-110 transition-transform shrink-0">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
+                      {language === 'ar' ? 'حالة العميل' : 'Client Status'}
+                    </p>
+                    {isEditing ? (
+                      <select 
+                        value={formData.status} 
+                        onChange={e => setFormData({...formData, status: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
+                      >
+                        <option value="lead">{language === 'ar' ? 'عميل محتمل (Lead)' : 'Lead'}</option>
+                        <option value="active">{language === 'ar' ? 'نشط (Active)' : 'Active'}</option>
+                        <option value="at_risk">{language === 'ar' ? 'معرض للفقد (At Risk)' : 'At Risk'}</option>
+                        <option value="suspended">{language === 'ar' ? 'معلق (Suspended)' : 'Suspended'}</option>
+                        <option value="archived">{language === 'ar' ? 'مؤرشف (Archived)' : 'Archived'}</option>
+                      </select>
+                    ) : (
+                      <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border", getStatusLabel(formData.status).color)}>
+                        {language === 'ar' ? getStatusLabel(formData.status).ar : getStatusLabel(formData.status).en}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -674,37 +896,50 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
 
               <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-center gap-2 text-white/40">
                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Repeated Client</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  {language === 'ar' ? 'عميل متكرر' : 'Repeated Client'}
+                </span>
               </div>
             </Card>
 
-             {/* Column 3: Stats Cards */}
+            {/* Column 3: Stats Cards */}
             <div className="flex flex-col gap-6">
                 <Card glass className="p-8 border-white/5 rounded-[32px] flex flex-col justify-center relative overflow-hidden">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-xl font-black text-white">Records</h4>
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                      <TrendingUp size={18} />
+                    <h4 className="text-xl font-black text-white">
+                      {language === 'ar' ? 'المعلق' : 'Pending'}
+                    </h4>
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                      <Calendar size={18} />
                     </div>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-white tracking-tighter">{totalRecords}</span>
-                    <span className="text-white/40 font-bold">(Total)</span>
+                    <span className="text-4xl font-black text-white tracking-tighter">
+                      {formatCurrency(clientPayments.filter(p => p.status === 'pending').reduce((acc, p) => acc + (p.amountCents || 0), 0))}
+                    </span>
                   </div>
-                  <p className="text-indigo-500 text-[10px] font-black uppercase tracking-widest mt-4">Finance History</p>
+                  <p className="text-orange-500 text-[10px] font-black uppercase tracking-widest mt-4">
+                    {language === 'ar' 
+                      ? `${clientPayments.filter(p => p.status === 'pending').length} معاملات قيد الانتظار` 
+                      : `${clientPayments.filter(p => p.status === 'pending').length} Pending Transactions`}
+                  </p>
                </Card>
 
                <Card glass className="p-8 border-white/5 rounded-[32px] flex flex-col justify-center relative overflow-hidden">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-xl font-black text-white">Revenue</h4>
+                    <h4 className="text-xl font-black text-white">
+                      {language === 'ar' ? 'متوسط الدخل الشهري' : 'Average'}
+                    </h4>
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                       <CheckCircle2 size={18} />
                     </div>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white tracking-tighter">{formatCurrency(totalPaid)}</span>
+                    <span className="text-4xl font-black text-white tracking-tighter">
+                      {formatCurrency(totalPaid / Math.max(1, clientPayments.filter(p => p.status === 'paid' || p.status === 'posted').length))}
+                    </span>
                   </div>
-                  <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-4">Total Collected</p>
+                  <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-4">Average Monthly</p>
                </Card>
 
                <Card glass className="p-8 border-white/5 rounded-[32px] flex flex-col justify-center relative overflow-hidden bg-brand/5">
@@ -717,12 +952,19 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
                   <div className="flex items-baseline gap-2">
                     <span className={cn(
                       "text-4xl font-black tracking-tighter",
-                      (client.balanceCents || 0) >= 0 ? "text-emerald-400" : "text-rose-500"
+                      "text-emerald-400"
                     )}>
-                      {formatCurrency(client.balanceCents || 0)}
+                      {formatCurrency(Math.max(0, client.balanceCents || 0))}
                     </span>
                   </div>
-                  <p className="text-brand text-[10px] font-black uppercase tracking-widest mt-4">Net Account Status</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <p className="text-brand text-[10px] font-black uppercase tracking-widest">Net Account Status</p>
+                    {(client.balanceCents || 0) < 0 && (
+                      <Badge variant="warning" className="bg-orange-500/10 text-orange-500 text-[8px] font-black border-none uppercase px-2 py-0.5">
+                        {language === 'ar' ? 'تم تسوية البيانات القديمة' : 'Legacy Data Settled'}
+                      </Badge>
+                    )}
+                  </div>
                </Card>
             </div>
 
@@ -998,18 +1240,59 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
                       </div>
                       <h5 className="text-3xl font-black text-white group-hover:text-indigo-400 transition-colors">{formData.subscription?.dueDay || 1}<span className="text-sm text-white/40 ml-2">th of Month</span></h5>
                    </Card>
-                   <Card glass className="p-6 border-white/5 rounded-3xl flex flex-col relative overflow-hidden group">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Client Notes</p>
-                        <MessageSquare size={12} className="text-white/20" />
+                   <Card glass className="p-6 border-white/5 rounded-3xl flex flex-col relative overflow-hidden group min-h-[160px] transition-all hover:border-white/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare size={16} className="text-[var(--color-brand)]" />
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-white/80">
+                            {language === 'ar' ? 'ملاحظات العميل' : 'Client Notes'}
+                          </h4>
+                        </div>
+                        
+                        {/* Auto-save Status Indicator */}
+                        <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider">
+                          {noteSavingStatus === 'saving' && (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-ping" />
+                              <span className="text-[var(--text-muted)] animate-pulse">
+                                {language === 'ar' ? 'جاري الحفظ...' : 'Saving...'}
+                              </span>
+                            </>
+                          )}
+                          {noteSavingStatus === 'saved' && (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-emerald-400">
+                                {language === 'ar' ? 'تم الحفظ' : 'Saved'}
+                              </span>
+                            </>
+                          )}
+                          {noteSavingStatus === 'error' && (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                              <span className="text-rose-400">
+                                {language === 'ar' ? 'خطأ' : 'Error'}
+                              </span>
+                            </>
+                          )}
+                          {noteSavingStatus === 'idle' && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-white/20" />
+                              <span className="text-white/20">
+                                {language === 'ar' ? 'سحابي' : 'Cloud'}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                       <textarea 
                         value={formData.notes || ''}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value } as any)}
-                        placeholder="Add a quick note..."
-                        className="bg-transparent border-none outline-none text-[11px] font-medium text-white/60 resize-none h-full w-full placeholder:text-white/10 scrollbar-hide min-h-[40px]"
+                        placeholder={language === 'ar' ? 'اكتب ملاحظة سريعة هنا وسيتم حفظها تلقائياً...' : 'Write a quick note here, it will auto-save...'}
+                        className="bg-black/20 border border-white/5 focus:border-[var(--color-brand)]/35 focus:bg-black/30 rounded-2xl p-3 outline-none text-xs font-semibold text-white/80 resize-none h-full w-full placeholder:text-white/20 transition-all min-h-[90px] custom-scrollbar focus:ring-1 focus:ring-[var(--color-brand)]/20"
+                        dir={language === 'ar' ? 'rtl' : 'ltr'}
                       />
-                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400/30 to-orange-500/30"></div>
+                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-brand)]/20 to-[var(--color-accent)]/20"></div>
                    </Card>
                 </div>
 
@@ -1223,6 +1506,179 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
           defaultValue={promptConfig.defaultValue}
           type={promptConfig.type}
         />
+
+        {/* Print Styles Sheet */}
+        <style>{`
+          @media print {
+            body {
+              background: white !important;
+              color: black !important;
+            }
+            body > * {
+              visibility: hidden !important;
+            }
+            #print-area, #print-area * {
+              visibility: visible !important;
+            }
+            #print-area {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 40px !important;
+              background: white !important;
+              color: black !important;
+              display: block !important;
+              direction: ${language === 'ar' ? 'rtl' : 'ltr'} !important;
+              font-family: system-ui, -apple-system, sans-serif !important;
+            }
+            .print-table th, .print-table td {
+              border-bottom: 1px solid #e2e8f0 !important;
+              padding: 12px 16px !important;
+            }
+            .print-badge {
+              display: inline-block !important;
+              padding: 4px 10px !important;
+              border-radius: 9999px !important;
+              font-size: 11px !important;
+              font-weight: 700 !important;
+              text-transform: uppercase !important;
+            }
+            .print-badge-paid {
+              background-color: #d1fae5 !important;
+              color: #065f46 !important;
+            }
+            .print-badge-pending {
+              background-color: #ffedd5 !important;
+              color: #9a3412 !important;
+            }
+          }
+        `}</style>
+
+        {/* Printable Area */}
+        <div id="print-area" className="hidden print:block text-black bg-white p-10 font-sans">
+          {/* Header Branding */}
+          <div className="flex justify-between items-center border-b border-slate-200 pb-6 mb-8">
+            <div>
+              <h1 className="text-3xl font-black tracking-wider text-slate-900">FLMR STUDIO</h1>
+              <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">
+                {language === 'ar' ? 'كشف حساب العميل' : 'Client Statement of Account'}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold text-slate-800">
+                {language === 'ar' ? 'التاريخ:' : 'Date:'} {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Ref: ST-{client._id.slice(-6).toUpperCase()}
+              </p>
+            </div>
+          </div>
+
+          {/* Info Details Section */}
+          <div className="grid grid-cols-2 gap-10 mb-10">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                {language === 'ar' ? 'معلومات العميل:' : 'Client Details:'}
+              </h3>
+              <p className="text-xl font-extrabold text-slate-800">{client.name}</p>
+              {client.company && <p className="text-sm text-slate-600 mt-1">{client.company}</p>}
+              {client.phone && <p className="text-sm text-slate-600 mt-1">{client.phone}</p>}
+              {client.email && <p className="text-sm text-slate-600 mt-1">{client.email}</p>}
+              {client.address && <p className="text-sm text-slate-600 mt-1">{client.address}</p>}
+            </div>
+            <div className="text-right">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                {language === 'ar' ? 'الملخص المالي:' : 'Financial Summary:'}
+              </h3>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600">
+                  {language === 'ar' ? 'إجمالي المحصل:' : 'Total Collected:'}{' '}
+                  <span className="font-bold text-slate-800">{formatCurrency(totalPaid)}</span>
+                </p>
+                <p className="text-sm text-slate-600">
+                  {language === 'ar' ? 'المعاملات المعلقة:' : 'Pending Amount:'}{' '}
+                  <span className="font-bold text-slate-800">
+                    {formatCurrency(clientPayments.filter(p => p.status === 'pending').reduce((acc, p) => acc + (p.amountCents || 0), 0))}
+                  </span>
+                </p>
+                <div className="border-t border-slate-200 pt-2 mt-2">
+                  <p className="text-base font-extrabold text-slate-900">
+                    {language === 'ar' ? 'صافي رصيد الحساب:' : 'Net Account Balance:'}{' '}
+                    <span className={client.balanceCents >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                      {formatCurrency(client.balanceCents || 0)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Ledger Table */}
+          <div className="mb-10">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-4 pb-2 border-b border-slate-200">
+              {language === 'ar' ? 'سجل المعاملات المالية' : 'Transaction Ledger'}
+            </h3>
+            <table className="w-full text-left border-collapse print-table">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">
+                  <th className="py-3 px-4">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                  <th className="py-3 px-4">{language === 'ar' ? 'البيان' : 'Description'}</th>
+                  <th className="py-3 px-4 text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                  <th className="py-3 px-4 text-right">{language === 'ar' ? 'القيمة' : 'Amount'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-sm text-slate-700">
+                {filteredPayments.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-slate-400 italic">
+                      {language === 'ar' ? 'لا يوجد سجل معاملات مالية.' : 'No transactions recorded.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPayments.map((p) => (
+                    <tr key={p._id} className="border-b border-slate-100">
+                      <td className="py-3 px-4">{formatDate(p.date || p.createdAt)}</td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-bold text-slate-800">{p.description || (language === 'ar' ? 'دفعة يدوية' : 'Manual Payment')}</p>
+                          <p className="text-[10px] text-slate-400">Ref: {p._id.slice(-6).toUpperCase()}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`print-badge ${
+                          (p.status === 'paid' || p.status === 'posted') ? 'print-badge-paid' : 'print-badge-pending'
+                        }`}>
+                          {(p.status === 'paid' || p.status === 'posted') 
+                            ? (language === 'ar' ? 'مدفوع' : 'Paid') 
+                            : (language === 'ar' ? 'معلق' : 'Pending')}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-950">
+                        {formatCurrency(p.amountCents || 0)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer Statement */}
+          <div className="text-center text-xs text-slate-400 border-t border-slate-100 pt-8 mt-12">
+            <p>
+              {language === 'ar' 
+                ? 'نشكركم على تعاملكم معنا. لأي استفسارات مالية يرجى التواصل عبر البريد الإلكتروني: finance@flmrstudio.com' 
+                : 'Thank you for your business. For any financial inquiries, please email: finance@flmrstudio.com'}
+            </p>
+            <p className="mt-1">
+              {language === 'ar' 
+                ? 'تم الإنشاء بواسطة نظام FLMR Studio CRM. جميع الحقوق محفوظة.' 
+                : 'Generated by FLMR Studio CRM. All rights reserved.'}
+            </p>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

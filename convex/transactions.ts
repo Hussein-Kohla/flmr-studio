@@ -91,13 +91,18 @@ export const createTransaction = mutation({
       createdAt: Date.now(),
     });
 
-    // Update Client Balance & Revenue if clientId is provided
+    // Update Client Balance & Revenue if clientId is provided and transaction is active
     if (args.clientId && args.type === 'income') {
-      const client = await ctx.db.get(args.clientId as Id<"clients">);
-      if (client) {
-        await ctx.db.patch(client._id, {
-          balanceCents: (client.balanceCents || 0) + amountCents,
-        });
+      const status = args.status || "posted";
+      const isActive = status === 'posted' || status === 'paid';
+      if (isActive) {
+        const client = await ctx.db.get(args.clientId as Id<"clients">);
+        if (client) {
+          await ctx.db.patch(client._id, {
+            balanceCents: (client.balanceCents || 0) + amountCents,
+            revenueCents: (client.revenueCents || 0) + amountCents,
+          });
+        }
       }
     }
 
@@ -124,8 +129,8 @@ export const deleteTransaction = mutation({
         const balanceChange = tx.type === 'income' ? -amount : amount;
         const revenueChange = tx.type === 'income' ? -amount : 0;
         await ctx.db.patch(client._id, {
-          balanceCents: (client.balanceCents || 0) + balanceChange,
-          revenueCents: (client.revenueCents || 0) + revenueChange,
+          balanceCents: Math.max(0, (client.balanceCents || 0) + balanceChange),
+          revenueCents: Math.max(0, (client.revenueCents || 0) + revenueChange),
         });
       }
     }
@@ -163,8 +168,8 @@ export const updateTransaction = mutation({
         const client = await ctx.db.get(tx.clientId as Id<"clients">);
         if (client) {
           await ctx.db.patch(client._id, {
-            balanceCents: (client.balanceCents || 0) + balanceChange,
-            revenueCents: (client.revenueCents || 0) + revenueChange,
+            balanceCents: Math.max(0, (client.balanceCents || 0) + balanceChange),
+            revenueCents: Math.max(0, (client.revenueCents || 0) + revenueChange),
           });
         }
       }
@@ -185,8 +190,8 @@ export const updateTransaction = mutation({
             const balanceChange = (tx.type === 'income' ? amount : -amount) * multiplier;
             const revenueChange = (tx.type === 'income' ? amount : 0) * multiplier;
             await ctx.db.patch(client._id, {
-              balanceCents: (client.balanceCents || 0) + balanceChange,
-              revenueCents: (client.revenueCents || 0) + revenueChange,
+              balanceCents: Math.max(0, (client.balanceCents || 0) + balanceChange),
+              revenueCents: Math.max(0, (client.revenueCents || 0) + revenueChange),
             });
           }
         }

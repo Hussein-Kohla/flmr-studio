@@ -7,6 +7,8 @@ import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
 
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,10 +16,10 @@ interface TransactionModalProps {
 }
 
 export function TransactionModal({ isOpen, onClose, type }: TransactionModalProps) {
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState('General');
+  const [amount, setAmount] = useLocalStorage('draft-tx-amount', '');
+  const [description, setDescription] = useLocalStorage('draft-tx-description', '');
+  const [date, setDate] = useLocalStorage('draft-tx-date', new Date().toISOString().split('T')[0]);
+  const [category, setCategory] = useLocalStorage('draft-tx-category', 'General');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { token } = useAuth();
