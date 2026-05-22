@@ -15,9 +15,11 @@ interface NewEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   eventToEdit?: any | null;
+  initialCategory?: 'calendar' | 'project' | 'task' | 'publishing';
+  initialClientId?: string;
 }
 
-export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalProps) {
+export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, initialClientId }: NewEventModalProps) {
   const { t } = useSettings();
   const { token } = useAuth();
   
@@ -45,7 +47,7 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
   const deletePost = useMutation(api.publishing.deletePost);
 
   // States
-  const [itemCategory, setItemCategory] = useState<'calendar' | 'project' | 'task' | 'publishing'>('calendar');
+  const [itemCategory, setItemCategory] = useState<'calendar' | 'project' | 'task' | 'publishing'>(initialCategory || 'calendar');
   const [title, setTitle] = useState('');
   const [startAt, setStartAt] = useState('');
   const [notes, setNotes] = useState('');
@@ -55,6 +57,9 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
 
   // Project-specific state
   const [budget, setBudget] = useState('');
+  const [projectType, setProjectType] = useState('other');
+  const [projectStatus, setProjectStatus] = useState('current');
+  const [projectColor, setProjectColor] = useState('bg-emerald-500');
 
   // Task-specific state
   const [priority, setPriority] = useState('medium');
@@ -64,7 +69,7 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
   const [platform, setPlatform] = useState('facebook');
 
   // Shared references
-  const [clientId, setClientId] = useState('');
+  const [clientId, setClientId] = useState(initialClientId || '');
   const [projectId, setProjectId] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,21 +88,27 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
       setPriority(eventToEdit.priority || 'medium');
       setStatus(eventToEdit.status || 'todo');
       setBudget(eventToEdit.budgetCents ? (eventToEdit.budgetCents / 100).toString() : '');
+      setProjectType(eventToEdit.projectType || 'other');
+      setProjectStatus(eventToEdit.status || 'current');
+      setProjectColor(eventToEdit.color || 'bg-emerald-500');
       setPlatform(eventToEdit.platform || 'facebook');
     } else if (!eventToEdit && isOpen) {
       setTitle('');
-      setItemCategory('calendar');
+      setItemCategory(initialCategory || 'calendar');
       setStartAt(new Date().toISOString().slice(0, 16));
       setNotes('');
       setType('other');
-      setClientId('');
+      setClientId(initialClientId || '');
       setProjectId('');
       setPriority('medium');
       setStatus('todo');
       setBudget('');
+      setProjectType('other');
+      setProjectStatus('current');
+      setProjectColor('bg-emerald-500');
       setPlatform('facebook');
     }
-  }, [eventToEdit, isOpen]);
+  }, [eventToEdit, isOpen, initialCategory, initialClientId]);
 
   if (!isOpen) return null;
 
@@ -143,7 +154,9 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
             description: notes,
             deadline: timeMs,
             budget: budget ? parseFloat(budget) : undefined,
-            status,
+            status: projectStatus,
+            projectType,
+            color: projectColor,
           });
         }
       } else {
@@ -171,6 +184,9 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
             clientId: clientId as any,
             deadline: timeMs,
             budget: budget ? parseFloat(budget) : undefined,
+            status: projectStatus,
+            projectType,
+            color: projectColor,
           });
         } else if (itemCategory === 'task') {
           await createTask({
@@ -323,17 +339,46 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
             )}
 
             {itemCategory === 'project' && (
-              <div>
-                <label className="form-label">{t("budgetAmount")}</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  className="input-field"
-                  placeholder="Budget Amount"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="form-label">{t("budgetAmount") || "الميزانية"}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    className="input-field"
+                    placeholder="Budget Amount"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">النوع</label>
+                  <select value={projectType} onChange={e => setProjectType(e.target.value)} className="input-field select-field">
+                    <option value="editing">مونتاج</option>
+                    <option value="financing">تمويل</option>
+                    <option value="photography">تصوير</option>
+                    <option value="publishing">نشر</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">الحالة</label>
+                  <select value={projectStatus} onChange={e => setProjectStatus(e.target.value)} className="input-field select-field">
+                    <option value="current">حالي</option>
+                    <option value="future">مستقبلي</option>
+                    <option value="postponed">مؤجل</option>
+                    <option value="completed">مكتمل</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="form-label">لون المشروع</label>
+                  <div className="flex gap-2 mt-1">
+                    {['bg-orange-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500'].map(c => (
+                      <button key={c} type="button" onClick={() => setProjectColor(c)} className={cn("w-8 h-8 rounded-full border-2 transition-all", projectColor === c ? "border-[var(--color-brand)] scale-110" : "border-transparent hover:scale-105", c)} />
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
 
             {itemCategory === 'task' && (
@@ -467,8 +512,8 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
             </div>
           )}
 
-          {/* Task or Project Status field if editing */}
-          {eventToEdit && (itemCategory === 'task' || itemCategory === 'project') && (
+          {/* Task Status field if editing */}
+          {eventToEdit && itemCategory === 'task' && (
             <div>
               <label className="form-label">Status</label>
               <select
@@ -476,20 +521,9 @@ export function NewEventModal({ isOpen, onClose, eventToEdit }: NewEventModalPro
                 onChange={(e) => setStatus(e.target.value)}
                 className="input-field select-field"
               >
-                {itemCategory === 'task' ? (
-                  <>
-                    <option value="todo">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="done">Completed</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                    <option value="suspended">Suspended</option>
-                  </>
-                )}
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Completed</option>
               </select>
             </div>
           )}

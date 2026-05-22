@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { api } from '@/../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useSettings } from '@/hooks/useSettings';
@@ -11,22 +10,38 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { 
-  Folder, Plus, Search, CheckCircle2, Clock, 
+  Folder, Plus, Search, CheckCircle2, Circle, Clock, 
   AlertCircle, LayoutGrid, List as ListIcon, 
-  MoreVertical, Calendar, DollarSign, Users, Target, Activity, CheckSquare, Tag, Monitor
+  MoreVertical, Calendar, DollarSign, Users, Target, Activity, CheckSquare, Tag, Monitor, Link as LinkIcon, MessageSquare
 } from 'lucide-react';
 import { NewProjectStepperModal } from './NewProjectStepperModal';
 import { ProjectDetailsDrawer } from './ProjectDetailsDrawer';
+import { DatePicker } from '@/components/ui/DatePicker';
 
 const ITEMS_PER_PAGE = 20;
 
-const STAGE_CONFIG = [
-  { slug: 'draft', name: 'draft', color: 'border-slate-500', icon: Clock },
-  { slug: 'in_review', name: 'inReview', color: 'border-blue-500', icon: AlertCircle },
-  { slug: 'revision', name: 'revision', color: 'border-amber-500', icon: AlertCircle },
-  { slug: 'approved', name: 'approved', color: 'border-purple-500', icon: CheckCircle2 },
-  { slug: 'done', name: 'completed', color: 'border-[var(--color-brand)]', icon: CheckCircle2 },
+const PROJECT_CATEGORIES = [
+  { slug: 'all', name: 'allStatuses' },
+  { slug: 'current', name: 'current' },
+  { slug: 'future', name: 'future' },
+  { slug: 'postponed', name: 'postponed' },
+  { slug: 'completed', name: 'completed' },
 ];
+
+const PASTEL_COLORS = [
+  'bg-orange-50 border-orange-200 text-orange-950',
+  'bg-blue-50 border-blue-200 text-blue-950',
+  'bg-green-50 border-green-200 text-green-950',
+  'bg-purple-50 border-purple-200 text-purple-950',
+];
+
+const catTranslations: Record<string, string> = {
+  allStatuses: 'كل الحالات',
+  current: 'حالي',
+  future: 'مستقبلي',
+  postponed: 'مؤجل',
+  completed: 'مكتمل'
+};
 
 export default function ProjectsPage() {
   const { token } = useAuth();
@@ -36,33 +51,63 @@ export default function ProjectsPage() {
   
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterType, setFilterType] = useState<string>('all');
+  const [filterClient, setFilterClient] = useState<string>('all');
+  const [filterAssignee, setFilterAssignee] = useState<string>('all');
+  const [filterDate, setFilterDate] = useState<string>('');
 
   const projectsQuery = useQuery(api.projects.getProjects, token ? {
     token,
     paginationOpts: { numItems: 100, cursor: null }
   } : 'skip');
   
+  const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
   const clientsQuery = useQuery(api.clients.getClients, token ? {
     token,
-    paginationOpts: { numItems: 100, cursor: null }
+    paginationOpts: { numItems: 1000, cursor: null }
   } : 'skip');
 
-  const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
+  const staffQuery = useQuery(api.staff.getStaff, token ? { token } : 'skip');
+
+  const updateProjectSteps = useMutation(api.projects.updateProjectSteps);
 
   const projects = projectsQuery?.page || [];
   const clients = clientsQuery?.page || [];
+  const staff = staffQuery || [];
 
   const filteredProjects = useMemo(() => {
-    return projects.filter(p => {
+    let result = projects.filter(p => {
       const matchesSearch = !debouncedSearch || p.title?.toLowerCase().includes(debouncedSearch.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
-      const matchesType = filterType === 'all' || p.projectType === filterType;
-      return matchesSearch && matchesStatus && matchesType;
+      
+      const s = p.status;
+      const isCurrent = s === 'current' || s === 'active';
+      const isFuture = s === 'future' || s === 'draft';
+      const isPostponed = s === 'postponed' || s === 'suspended';
+      const isCompleted = s === 'completed' || s === 'done';
+      
+      let matchesStatus = filterStatus === 'all';
+      if (filterStatus === 'current') matchesStatus = isCurrent;
+      if (filterStatus === 'future') matchesStatus = isFuture;
+      if (filterStatus === 'postponed') matchesStatus = isPostponed;
+      if (filterStatus === 'completed') matchesStatus = isCompleted;
+
+      const matchesClient = filterClient === 'all' || p.clientId === filterClient;
+      const matchesAssignee = filterAssignee === 'all' || p.assignedTo === filterAssignee;
+      
+      let matchesDate = true;
+      if (filterDate) {
+        const projectStartStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+        const projectDeadlineStr = p.deadline ? new Date(p.deadline).toISOString().split('T')[0] : '';
+        matchesDate = projectStartStr === filterDate || projectDeadlineStr === filterDate;
+      }
+
+      return matchesSearch && matchesStatus && matchesClient && matchesAssignee && matchesDate;
     });
-  }, [projects, debouncedSearch, filterStatus, filterType]);
+
+    result.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    return result;
+  }, [projects, debouncedSearch, filterStatus, filterClient, filterAssignee, filterDate]);
 
   const stats = useMemo(() => {
     const total = projects.length;
@@ -88,19 +133,7 @@ export default function ProjectsPage() {
     };
   }, [projects, clients]);
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination || !token) return;
-    const { draggableId, destination } = result;
-
-    const project = projects.find(p => p._id.toString() === draggableId);
-    if (project && project.status !== destination.droppableId) {
-      updateProjectStatus({
-        token,
-        projectId: project._id,
-        status: destination.droppableId
-      }).catch(console.error);
-    }
-  };
+  // onDragEnd removed as Kanban is removed
 
   return (
     <PageWrapper
@@ -115,14 +148,6 @@ export default function ProjectsPage() {
       }
       actions={
         <div className="flex gap-3 items-center">
-          <div className="flex bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-default)]">
-            <button onClick={() => setViewMode('kanban')} className={cn("p-2 rounded-lg transition-all", viewMode === 'kanban' ? 'bg-[var(--color-brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-white')}>
-              <LayoutGrid size={18} />
-            </button>
-            <button onClick={() => setViewMode('list')} className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? 'bg-[var(--color-brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-white')}>
-              <ListIcon size={18} />
-            </button>
-          </div>
           <button 
             onClick={() => setIsNewProjectModalOpen(true)}
             className="flex items-center gap-2 bg-[var(--color-brand)] hover:bg-[var(--color-brand-dim)] text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-[0_0_20px_var(--color-brand-glow)]"
@@ -140,85 +165,98 @@ export default function ProjectsPage() {
         <StatCard title={t('clientsCount')} value={stats.totalClients} icon={<Users size={18} />} color="border-pink-500" />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 border-y border-[var(--border-default)] py-4 bg-black/20" dir="rtl">
-        <div className="flex-1 max-w-md relative">
-          <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder={t('searchProjectsPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors"
-          />
-        </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option value="all">{t('allStatuses')} ▼</option>
-            {STAGE_CONFIG.map(s => <option key={s.slug} value={s.slug}>{t(s.name as any)}</option>)}
-          </select>
-          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option value="all">{t('allClients')} ▼</option>
-          </select>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option value="all">{t('allTypes')} ▼</option>
-            <option value="web">{t('web')}</option>
-            <option value="mobile">{t('mobile')}</option>
-          </select>
-          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option value="recent">{t('newest')} ▼</option>
-            <option value="oldest">{t('oldest')}</option>
-          </select>
+      <div className="flex flex-col gap-4 mb-6" dir="rtl">
+        <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-black/20 p-4 rounded-2xl border border-[var(--border-default)]">
+          <div className="flex-1 w-full xl:max-w-md relative">
+            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder={t('searchProjectsPlaceholder') || "بحث في المشاريع..."}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-10 pl-4 pr-10 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-white focus:outline-none focus:border-[var(--color-brand)] transition-colors"
+            />
+          </div>
+          
+          <div className="flex flex-col lg:flex-row gap-3 w-full xl:w-auto">
+            <select 
+              value={filterClient} 
+              onChange={e => setFilterClient(e.target.value)}
+              className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm font-bold text-white focus:outline-none px-4 py-2 w-full lg:w-auto min-w-[120px]"
+            >
+              <option value="all">العميل: الكل</option>
+              {clients.map((c: any) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </select>
+
+            <select 
+              value={filterAssignee} 
+              onChange={e => setFilterAssignee(e.target.value)}
+              className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm font-bold text-white focus:outline-none px-4 py-2 w-full lg:w-auto min-w-[120px]"
+            >
+              <option value="all">الموظف: الكل</option>
+              {staff.map((s: any) => (
+                <option key={s._id} value={s._id}>{s.name}</option>
+              ))}
+            </select>
+
+            <div className="w-full lg:w-44">
+              <DatePicker 
+                value={filterDate}
+                onChange={setFilterDate}
+                placeholder="تاريخ التسليم / البداية"
+                withTime={false}
+              />
+            </div>
+
+            <div className="flex gap-2 items-center overflow-x-auto custom-scrollbar pb-1 sm:pb-0 w-full lg:w-auto shrink-0 mt-2 lg:mt-0">
+              {PROJECT_CATEGORIES.map(cat => (
+                <button
+                  key={cat.slug}
+                  onClick={() => setFilterStatus(cat.slug)}
+                  className={cn(
+                    "px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all",
+                    filterStatus === cat.slug 
+                      ? "bg-[var(--color-brand)] text-white shadow-lg" 
+                      : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-white"
+                  )}
+                >
+                  {t(cat.name as any) || catTranslations[cat.name] || cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {viewMode === 'kanban' ? (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-8 items-start custom-scrollbar min-h-[600px]" dir="ltr">
-            {STAGE_CONFIG.map((stage) => {
-              const columnProjects = filteredProjects.filter(p => p.status === stage.slug);
-              return (
-                <div key={stage.slug} className="flex flex-col w-[320px] shrink-0 bg-transparent rounded-2xl">
-                  <div className="flex items-center justify-between mb-4 px-1" dir="rtl">
-                    <div className="flex items-center gap-2">
-                      <div className={cn("w-3 h-3 rounded-full border-2", stage.color, stage.slug === 'done' ? 'bg-[var(--color-brand)]' : 'bg-transparent')} />
-                      <h3 className="font-bold text-white text-sm uppercase tracking-wider">{t(stage.name as any)}</h3>
-                    </div>
-                    <span className="text-xs font-bold bg-[var(--bg-surface)] text-[var(--text-muted)] px-2 py-1 rounded-full border border-[var(--border-default)]">
-                      {columnProjects.length}
-                    </span>
-                  </div>
-
-                  <Droppable droppableId={stage.slug}>
-                    {(provided, snapshot) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className={cn(
-                          "flex-1 rounded-2xl min-h-[150px] transition-colors p-2 space-y-3",
-                          snapshot.isDraggingOver ? 'bg-white/5 border border-dashed border-white/20' : 'bg-transparent'
-                        )}
-                        dir="rtl"
-                      >
-                        {columnProjects.map((project, index) => (
-                          <KanbanCard 
-                            key={project._id.toString()} 
-                            project={project} 
-                            index={index} 
-                            onClick={() => setSelectedProject(project)}
-                          />
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              );
-            })}
+      <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 pb-8" dir="rtl">
+        {filteredProjects.map((project, index) => (
+          <div key={project._id.toString()} className="break-inside-avoid">
+            <ProjectMasonryCard 
+              project={project} 
+              index={index} 
+              onClick={() => setSelectedProject(project)}
+              onToggleStep={async (stepId) => {
+                if (!token) return;
+                const updatedSteps = (project.steps || []).map((s: any) => 
+                  s.id === stepId ? { ...s, isCompleted: !s.isCompleted } : s
+                );
+                await updateProjectSteps({
+                  token,
+                  projectId: project._id,
+                  steps: updatedSteps
+                });
+              }}
+            />
           </div>
-        </DragDropContext>
-      ) : (
-        <div className="text-center py-20 text-[var(--text-muted)]">{t("listViewUnderConstruction")}</div>
-      )}
+        ))}
+        {filteredProjects.length === 0 && (
+          <div className="col-span-full py-20 text-center text-[var(--text-muted)] border-2 border-dashed border-[var(--border-default)] rounded-2xl">
+            {t('noProjectsFound' as any)}
+          </div>
+        )}
+      </div>
 
       <NewProjectStepperModal 
         isOpen={isNewProjectModalOpen} 
@@ -228,7 +266,7 @@ export default function ProjectsPage() {
       <ProjectDetailsDrawer 
         isOpen={!!selectedProject} 
         onClose={() => setSelectedProject(null)} 
-        project={selectedProject} 
+        project={selectedProject ? (projects.find(p => p._id === selectedProject._id) || selectedProject) : null} 
       />
     </PageWrapper>
   );
@@ -250,97 +288,124 @@ function StatCard({ title, value, icon, color, valueColor = "text-white" }: { ti
   );
 }
 
-function KanbanCard({ project, index, onClick }: { project: any, index: number, onClick: () => void }) {
-  const steps = project.steps || [];
+function ProjectMasonryCard({ project, index, onClick, onToggleStep }: { project: any, index: number, onClick: () => void, onToggleStep: (stepId: string) => void }) {
+  const [localSteps, setLocalSteps] = React.useState<any[]>(project.steps || []);
+  
+  React.useEffect(() => {
+    if (project.steps) {
+      setLocalSteps(project.steps);
+    }
+  }, [project.steps]);
+
+  const steps = localSteps;
   const completedSteps = steps.filter((s: any) => s.isCompleted).length;
   const progress = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0;
   const { t } = useSettings();
   
-  const priorityColors: Record<string, string> = {
-    low: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-    medium: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-    high: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
-    critical: 'text-red-400 bg-red-400/10 border-red-400/20'
-  };
+  const isCustomColor = !!project.color;
+  const colorIndex = project._id ? project._id.charCodeAt(project._id.length - 1) % PASTEL_COLORS.length : 0;
+  const cardColorClass = isCustomColor ? `${project.color} text-white border-transparent` : PASTEL_COLORS[colorIndex];
 
   return (
-    <Draggable draggableId={project._id.toString()} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          onClick={onClick}
-          className={cn(
-            "group bg-[var(--bg-surface)] rounded-xl border border-[var(--border-default)] p-4 cursor-pointer hover:border-[var(--color-brand)]/50 hover:shadow-xl hover:shadow-[var(--color-brand-glow)]/5 transition-all",
-            snapshot.isDragging && "shadow-2xl ring-2 ring-[var(--color-brand)]/50 scale-[1.02] rotate-1"
-          )}
-        >
-          <div className="flex justify-between items-start mb-3">
-            <div className="flex items-center gap-2 max-w-[85%]">
-              <div 
-                className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0"
-                style={{ backgroundColor: project.color ? project.color.replace('bg-', '') : 'var(--color-brand)' }}
-              >
-                <Monitor size={12} />
-              </div>
-              <h4 className="text-white font-bold text-sm truncate">{project.title}</h4>
-            </div>
-            <button className="text-[var(--text-muted)] hover:text-white transition-colors p-1" onClick={e => e.stopPropagation()}>
-              <MoreVertical size={14} />
-            </button>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: (index % 10) * 0.05 }}
+      onClick={onClick}
+      className={cn(
+        "group rounded-[24px] border-2 p-5 cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden",
+        cardColorClass
+      )}
+    >
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className="px-3 py-1 bg-white/60 border border-white/50 text-xs font-bold rounded-full backdrop-blur-sm shadow-sm">
+          #{t(project.projectType as any) || t('project' as any)}
+        </span>
+        <div className="mr-auto">
+          <button className="text-black/40 hover:text-black/70 transition-colors p-1 bg-white/40 rounded-full" onClick={e => e.stopPropagation()}>
+            <MoreVertical size={16} />
+          </button>
+        </div>
+      </div>
 
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold text-white border-2 border-[var(--bg-surface)] shrink-0" title={project.assignedTo}>
-              {project.assignedTo ? project.assignedTo.charAt(0).toUpperCase() : '?'}
-            </div>
-            <span className="text-[10px] font-medium text-[var(--text-muted)] truncate max-w-[80px]">
-              {project.assignedTo || t('unassigned')}
-            </span>
-            <span className="text-[10px] bg-black px-2 py-0.5 rounded-full border border-[var(--border-default)] text-[var(--text-muted)]">
-              {project.projectType === 'web' ? `🌐 ${t('web')}` : project.projectType === 'mobile' ? `📱 ${t('mobile')}` : `🎨 ${t('design')}`}
-            </span>
-          </div>
+      <h4 className={cn("font-black text-xl mb-3 leading-tight", isCustomColor ? "text-white" : "text-black/80")}>{project.title}</h4>
+      
+      {project.description && (
+        <p className={cn("text-sm mb-4 line-clamp-3 leading-relaxed", isCustomColor ? "text-white/80" : "text-black/60")}>
+          {project.description}
+        </p>
+      )}
 
-          <div className="mb-4">
-            <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-[var(--text-muted)] font-medium tracking-widest">{t("progressUppercase")}</span>
-              <span className="text-white font-bold">{progress}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-black rounded-full overflow-hidden border border-[var(--border-default)]">
+      {steps.length > 0 && (
+        <div className="bg-white/40 rounded-2xl p-3 mb-4 border border-white/50">
+          <div className="flex gap-2 mb-2">
+            <div className="w-10 h-6 bg-white/60 rounded-md flex items-center justify-center text-black/50 shadow-sm"><ListIcon size={14} /></div>
+            <div className="w-10 h-6 bg-white/60 rounded-md flex items-center justify-center text-black/50 shadow-sm"><CheckSquare size={14} /></div>
+          </div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={cn("text-xs font-bold", isCustomColor ? "text-white/80" : "text-black/60")}>{t('progress' as any)}</span>
+            <span className={cn("text-xs font-black mr-auto", isCustomColor ? "text-white" : "text-black")}>{progress}%</span>
+          </div>
+          <div className="flex gap-1 h-2.5">
+            {[...Array(10)].map((_, i) => (
               <div 
-                className="h-full bg-[var(--color-brand)] rounded-full transition-all duration-500" 
-                style={{ width: `${progress}%` }} 
+                key={i} 
+                className={cn(
+                  "flex-1 rounded-sm transform -skew-x-12",
+                  i < Math.floor(progress / 10) ? "bg-black/70" : "bg-black/10"
+                )}
               />
-            </div>
+            ))}
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-[var(--border-default)]">
-            <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)]">
-              <span className="flex items-center gap-1" title={t('deadline')}>
-                <Calendar size={12} />
-                {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--/--'}
-              </span>
-              {project.budgetCents ? (
-                <span className="flex items-center gap-1 font-bold text-[var(--color-brand)]" title={t('budget')}>
-                  <DollarSign size={12} />
-                  {project.budgetCents / 100}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
-                <CheckSquare size={12} />
-                {completedSteps}/{steps.length}
-              </span>
-              <span className={cn("text-[9px] px-1.5 py-0.5 rounded border", priorityColors[project.priority || 'medium'])}>
-                {project.priority === 'high' || project.priority === 'critical' ? '🔴' : '🟡'} {t(project.priority as any || 'medium')}
-              </span>
-            </div>
+          <div className="space-y-1 mt-3">
+            {steps.slice(0, 3).map((step: any) => (
+              <div 
+                key={step.id} 
+                className={cn(
+                  "flex items-center gap-2 text-xs p-1.5 rounded-lg transition-colors cursor-pointer",
+                  isCustomColor ? "hover:bg-white/10" : "hover:bg-black/5"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const updatedSteps = localSteps.map((s: any) => 
+                    s.id === step.id ? { ...s, isCompleted: !s.isCompleted } : s
+                  );
+                  setLocalSteps(updatedSteps);
+                  onToggleStep(step.id);
+                }}
+              >
+                 {step.isCompleted ? <CheckCircle2 size={14} className={isCustomColor ? "text-white/80" : "text-black/70"} /> : <Circle size={14} className={isCustomColor ? "text-white/50" : "text-black/40"} />}
+                 <span className={cn("truncate flex-1 font-medium", step.isCompleted ? (isCustomColor ? "line-through text-white/50" : "line-through text-black/50") : (isCustomColor ? "text-white" : "text-black/80"))}>{step.title}</span>
+              </div>
+            ))}
+            {steps.length > 3 && (
+              <div className={cn("text-[10px] text-center pt-1 font-medium", isCustomColor ? "text-white/50" : "text-black/50")}>
+                +{steps.length - 3} مهام أخرى
+              </div>
+            )}
           </div>
         </div>
       )}
-    </Draggable>
+
+      <div className={cn("flex items-center justify-between mt-4 pt-4 border-t", isCustomColor ? "border-white/20" : "border-black/10")}>
+        <div className={cn("flex items-center gap-2 text-xs font-bold", isCustomColor ? "text-white/70" : "text-black/50")}>
+          <Calendar size={12} className={isCustomColor ? "text-white/60" : "text-black/40"} />
+          {project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--/--'}
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 text-black/50 text-xs font-bold" title={t('links' as any)}>
+            <LinkIcon size={12} /> {project.steps?.length || 0}
+          </div>
+          <div className="flex items-center gap-1 text-black/50 text-xs font-bold" title={t('comments' as any)}>
+            <MessageSquare size={12} /> {Math.floor(Math.random() * 5)}
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 border-2 border-white flex items-center justify-center text-[10px] font-black text-black/70 shadow-sm" title={project.assignedTo}>
+            {project.assignedTo ? project.assignedTo.charAt(0).toUpperCase() : '?'}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }

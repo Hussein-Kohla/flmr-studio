@@ -24,6 +24,7 @@ export const createProject = mutation({
     title: v.string(),
     description: v.optional(v.string()),
     clientId: v.id("clients"),
+    status: v.optional(v.string()),
     deadline: v.optional(v.number()),
     startDate: v.optional(v.number()),
     budget: v.optional(v.number()),
@@ -33,6 +34,19 @@ export const createProject = mutation({
     priority: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     assignedTo: v.optional(v.string()),
+    steps: v.optional(v.array(v.object({
+      id: v.string(),
+      title: v.string(),
+      isCompleted: v.boolean(),
+      assignedTo: v.optional(v.string()),
+      deadline: v.optional(v.number()),
+      description: v.optional(v.string()),
+      subtasks: v.optional(v.array(v.object({
+        id: v.string(),
+        title: v.string(),
+        isCompleted: v.boolean(),
+      }))),
+    }))),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -43,7 +57,7 @@ export const createProject = mutation({
       title: args.title,
       description: args.description,
       clientId: args.clientId,
-      status: "draft",
+      status: args.status || "draft",
       deadline: args.deadline,
       budgetCents: args.budget !== undefined ? toCents(args.budget) : undefined,
       startDate: args.startDate,
@@ -53,6 +67,7 @@ export const createProject = mutation({
       priority: args.priority || 'medium',
       tags: args.tags || [],
       assignedTo: args.assignedTo,
+      steps: args.steps || [],
       createdAt: now,
       updatedAt: now,
     });
@@ -98,6 +113,7 @@ export const updateProject = mutation({
     priority: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     assignedTo: v.optional(v.string()),
+    clientId: v.optional(v.id("clients")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -117,6 +133,7 @@ export const updateProject = mutation({
     if (args.priority !== undefined) updates.priority = args.priority;
     if (args.tags !== undefined) updates.tags = args.tags;
     if (args.assignedTo !== undefined) updates.assignedTo = args.assignedTo;
+    if (args.clientId !== undefined) updates.clientId = args.clientId;
 
     await ctx.db.patch(args.projectId, updates);
     await logAction(ctx, user._id, "UPDATE_PROJECT", "projects", args.projectId, updates);
@@ -168,6 +185,12 @@ export const updateProjectSteps = mutation({
       isCompleted: v.boolean(),
       assignedTo: v.optional(v.string()),
       deadline: v.optional(v.number()),
+      description: v.optional(v.string()),
+      subtasks: v.optional(v.array(v.object({
+        id: v.string(),
+        title: v.string(),
+        isCompleted: v.boolean(),
+      }))),
     })),
   },
   handler: async (ctx, args) => {

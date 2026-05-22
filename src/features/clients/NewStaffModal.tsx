@@ -14,13 +14,16 @@ interface NewStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  staffToEdit?: any | null;
 }
 
-export function NewStaffModal({ isOpen, onClose, onSuccess }: NewStaffModalProps) {
+export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewStaffModalProps) {
   const { token } = useAuth();
   const { t } = useSettings();
   const { toast } = useToast();
   const createStaff = useMutation(api.staff.createStaff);
+  const updateStaff = useMutation(api.staff.updateStaff as any);
+  const deleteStaff = useMutation(api.staff.deleteStaff);
 
   const [name, setName] = useState('');
   const [platform, setPlatform] = useState('');
@@ -32,6 +35,20 @@ export function NewStaffModal({ isOpen, onClose, onSuccess }: NewStaffModalProps
   const PRESET_AVATARS = [
     '/avatars/doctor_male.png', '/avatars/doctor_female.png', '/avatars/engineer_male.png', '/avatars/engineer_female.png', '/avatars/business_male.png', '/avatars/business_female.png'];
 
+  React.useEffect(() => {
+    if (isOpen && staffToEdit) {
+      setName(staffToEdit.name || '');
+      setPlatform(staffToEdit.platform || '');
+      setAvatarUrl(staffToEdit.avatarUrl || '');
+      setColor(staffToEdit.color || '#8b5cf6');
+    } else if (isOpen) {
+      setName('');
+      setPlatform('');
+      setAvatarUrl(PRESET_AVATARS[0]);
+      setColor('#8b5cf6');
+    }
+  }, [isOpen, staffToEdit]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,23 +57,48 @@ export function NewStaffModal({ isOpen, onClose, onSuccess }: NewStaffModalProps
     
     setIsSubmitting(true);
     try {
-      await createStaff({
-        token,
-        name,
-        avatarUrl,
-        platform,
-        color,
-      });
+      if (staffToEdit) {
+        await updateStaff({
+          token,
+          staffId: staffToEdit._id,
+          name,
+          avatarUrl,
+          platform,
+          color,
+        });
+        toast('Staff updated successfully!', 'success');
+      } else {
+        await createStaff({
+          token,
+          name,
+          avatarUrl,
+          platform,
+          color,
+        });
+        toast('Staff added successfully!', 'success');
+      }
       
-      toast('Staff added successfully!', 'success');
-      setName('');
-      setPlatform('');
-      setAvatarUrl(PRESET_AVATARS[0]);
       onClose();
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast('Failed to add staff', 'error');
+      toast('Failed to save staff', 'error');
       console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!token || !staffToEdit) return;
+    if (!window.confirm("Are you sure you want to delete this staff member?")) return;
+    setIsSubmitting(true);
+    try {
+      await deleteStaff({ token, staffId: staffToEdit._id });
+      toast('Staff deleted', 'success');
+      onClose();
+      if (onSuccess) onSuccess();
+    } catch (e) {
+      toast('Failed to delete', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -147,24 +189,31 @@ export function NewStaffModal({ isOpen, onClose, onSuccess }: NewStaffModalProps
               placeholder="e.g. Upwork, Freelancer, Local"
             />
 
-            <div className="flex gap-4 pt-6 mt-4 border-t border-[var(--border-subtle)]">
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full uppercase font-bold text-xs"
-                onClick={onClose}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full uppercase font-bold text-xs"
-                disabled={isSubmitting || !name}
-                loading={isSubmitting}
-              >
-                {t('addStaff') || 'Add Staff'}
-              </Button>
+            <div className="flex justify-between gap-4 pt-6 mt-4 border-t border-[var(--border-subtle)]">
+              {staffToEdit ? (
+                <Button type="button" variant="danger" onClick={handleDelete} disabled={isSubmitting}>
+                  Delete
+                </Button>
+              ) : <div />}
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="uppercase font-bold text-xs"
+                  onClick={onClose}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="uppercase font-bold text-xs"
+                  disabled={isSubmitting || !name}
+                  loading={isSubmitting}
+                >
+                  {staffToEdit ? 'Save Changes' : (t('addStaff') || 'Add Staff')}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

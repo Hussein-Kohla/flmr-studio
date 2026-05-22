@@ -126,6 +126,12 @@ export default defineSchema({
       isCompleted: v.boolean(),
       assignedTo: v.optional(v.string()), // Added for step assignment
       deadline: v.optional(v.number()),   // Added for step deadline
+      description: v.optional(v.string()),
+      subtasks: v.optional(v.array(v.object({
+        id: v.string(),
+        title: v.string(),
+        isCompleted: v.boolean(),
+      }))),
     }))),
     deadline: v.optional(v.number()),
     startDate: v.optional(v.number()),

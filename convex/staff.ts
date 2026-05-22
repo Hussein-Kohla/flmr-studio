@@ -64,3 +64,28 @@ export const deleteStaff = mutation({
     await ctx.db.delete(args.staffId);
   },
 });
+
+export const updateStaff = mutation({
+  args: {
+    token: v.string(),
+    staffId: v.id("staff"),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    color: v.optional(v.string()),
+    platform: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await authenticate(ctx, args.token);
+    const staffMember = await ctx.db.get(args.staffId);
+    
+    if (!staffMember) throw new Error("Staff member not found");
+    if (staffMember.userId !== userId) throw new Error("Unauthorized");
+    
+    await ctx.db.patch(args.staffId, {
+      name: args.name,
+      avatarUrl: args.avatarUrl,
+      color: args.color,
+      platform: args.platform,
+    });
+  },
+});

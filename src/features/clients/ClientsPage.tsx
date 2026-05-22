@@ -19,6 +19,7 @@ import {
 import { NewClientModal } from './NewClientModal';
 import { NewStaffModal } from './NewStaffModal';
 import { ClientDetailsModal } from './ClientDetailsModal';
+import { NewEventModal } from '../calendar/NewEventModal';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -50,6 +51,10 @@ export default function ClientsPage() {
   const [isNewStaffOpen, setIsNewStaffOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'clients' | 'staff'>('clients');
   const [selectedClientForDetails, setSelectedClientForDetails] = useState<any | null>(null);
+
+  const [isNewEventOpen, setIsNewEventOpen] = useState(false);
+  const [eventInitialClientId, setEventInitialClientId] = useState('');
+  const [staffToEdit, setStaffToEdit] = useState<any | null>(null);
 
   const staffQuery = useQuery(api.staff.getStaff as any, token ? { token } : 'skip');
   const staffList = staffQuery || [];
@@ -193,6 +198,10 @@ export default function ClientsPage() {
             getFinancials={getClientFinancials} 
             onClientClick={setSelectedClientForDetails}
             onProjectClick={(pId: any) => navigate('/projects')}
+            onAddProject={(cId: string) => {
+              setEventInitialClientId(cId);
+              setIsNewEventOpen(true);
+            }}
           />
         )
       )}
@@ -206,7 +215,7 @@ export default function ClientsPage() {
             </div>
           ) : (
             staffList.map((st: any) => (
-              <Card key={st._id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--color-brand)] transition-all">
+              <Card key={st._id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--color-brand)] transition-all cursor-pointer" onClick={() => { setStaffToEdit(st); setIsNewStaffOpen(true); }}>
                 <div className="p-6 flex flex-col items-center gap-4">
                   <div className="w-20 h-20 rounded-full p-1 transition-all duration-300" style={{ backgroundImage: `linear-gradient(to top right, ${st.color || '#8b5cf6'}, #4f46e5)` }}>
                     <div className="w-full h-full rounded-full bg-[var(--bg-raised)] p-1 overflow-hidden flex items-center justify-center relative">
@@ -238,8 +247,18 @@ export default function ClientsPage() {
         </div>
       )}
 
-      <NewStaffModal isOpen={isNewStaffOpen} onClose={() => setIsNewStaffOpen(false)} />
+      <NewStaffModal 
+        isOpen={isNewStaffOpen} 
+        onClose={() => { setIsNewStaffOpen(false); setStaffToEdit(null); }} 
+        staffToEdit={staffToEdit}
+      />
       <NewClientModal isOpen={isNewClientOpen} onClose={() => setIsNewClientOpen(false)} />
+      <NewEventModal 
+        isOpen={isNewEventOpen} 
+        onClose={() => setIsNewEventOpen(false)} 
+        initialCategory="project"
+        initialClientId={eventInitialClientId}
+      />
       {selectedClientForDetails && (
         <ClientDetailsModal 
           isOpen={true} 
@@ -429,7 +448,7 @@ function ExpandableClientRow({ client, projects, financials, onClientClick, onPr
   );
 }
 
-function GridView({ clients, getProjects, getFinancials, onClientClick, onProjectClick }: any) {
+function GridView({ clients, getProjects, getFinancials, onClientClick, onProjectClick, onAddProject }: any) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" dir="rtl">
       {clients.map((client: any) => (
@@ -440,13 +459,14 @@ function GridView({ clients, getProjects, getFinancials, onClientClick, onProjec
           financials={getFinancials(client._id)}
           onClientClick={() => onClientClick(client)}
           onProjectClick={onProjectClick}
+          onAddProject={onAddProject}
         />
       ))}
     </div>
   );
 }
 
-function GridCard({ client, projects, financials, onClientClick, onProjectClick }: any) {
+function GridCard({ client, projects, financials, onClientClick, onProjectClick, onAddProject }: any) {
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
   const { t } = useSettings();
 
@@ -569,7 +589,7 @@ function GridCard({ client, projects, financials, onClientClick, onProjectClick 
                 </div>
               )}
               <div className="p-2 border-t border-[var(--border-default)] bg-[var(--bg-base)]">
-                <button className="w-full py-1 text-xs text-[var(--color-brand)] hover:bg-[var(--color-brand)]/10 rounded font-bold transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); onAddProject(client._id); }} className="w-full py-1 text-xs text-[var(--color-brand)] hover:bg-[var(--color-brand)]/10 rounded font-bold transition-colors">
                   + {t('addProject')}
                 </button>
               </div>
