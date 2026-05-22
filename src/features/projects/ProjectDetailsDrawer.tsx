@@ -303,7 +303,7 @@ export function ProjectDetailsDrawer({ project, isOpen, onClose }: ProjectDetail
                   </div>
                   <div className="flex-1">
                     <h4 className="text-sm font-bold text-white mb-1">{client.name}</h4>
-                    <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">👤 {t('client')}</span>
+                    <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">👤 {t('client' as any)}</span>
                   </div>
                   {client.phone && (
                     <a href={`tel:${client.phone}`} className="text-xs text-[var(--color-brand)] hover:underline" onClick={(e) => e.stopPropagation()}>
