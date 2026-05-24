@@ -6,15 +6,35 @@ import { paginationOptsValidator } from "convex/server";
 export const getTasks = query({
   args: { 
     token: v.string(),
-    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
     return await ctx.db
       .query("tasks")
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .order("desc")
-      .paginate(args.paginationOpts);
+      .collect();
+  },
+});
+
+export const getArchivedTasks = query({
+  args: { 
+    token: v.string(),
+    stageSlug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .filter((q) => q.and(
+        q.eq(q.field("status"), args.stageSlug),
+        q.eq(q.field("isArchived"), true)
+      ))
+      .order("desc")
+      .collect();
+    return tasks;
   },
 });
 
@@ -24,7 +44,7 @@ export const createTask = mutation({
     title: v.string(),
     description: v.optional(v.string()),
     status: v.string(),
-    priority: v.string(),
+    priority: v.optional(v.string()),
     dueDate: v.optional(v.number()),
     clientId: v.optional(v.id("clients")),
     projectId: v.optional(v.id("projects")),
@@ -75,5 +95,41 @@ export const deleteTask = mutation({
     
     await ctx.db.delete(args.taskId);
     await logAction(ctx, user._id, "DELETE_TASK", "tasks", args.taskId, { title: task.title });
+  },
+});
+
+export const archiveTask = mutation({
+  args: {
+    token: v.string(),
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== user._id) throw new Error("Unauthorized");
+    
+    await ctx.db.patch(args.taskId, {
+      isArchived: true,
+      archivedAt: Date.now(),
+    });
+    await logAction(ctx, user._id, "ARCHIVE_TASK", "tasks", args.taskId, { title: task.title });
+  },
+});
+
+export const unarchiveTask = mutation({
+  args: {
+    token: v.string(),
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== user._id) throw new Error("Unauthorized");
+    
+    await ctx.db.patch(args.taskId, {
+      isArchived: false,
+      archivedAt: undefined,
+    });
+    await logAction(ctx, user._id, "UNARCHIVE_TASK", "tasks", args.taskId, { title: task.title });
   },
 });

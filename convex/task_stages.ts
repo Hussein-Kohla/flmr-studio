@@ -74,6 +74,7 @@ export const updateStage = mutation({
     stageId: v.id("task_stages"),
     name: v.optional(v.string()),
     order: v.optional(v.number()),
+    isCompletedStage: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.token);
@@ -86,6 +87,7 @@ export const updateStage = mutation({
       updates.slug = args.name.toLowerCase().replace(/\s+/g, '-');
     }
     if (args.order !== undefined) updates.order = args.order;
+    if (args.isCompletedStage !== undefined) updates.isCompletedStage = args.isCompletedStage;
 
     await ctx.db.patch(args.stageId, updates);
   },
@@ -101,5 +103,31 @@ export const deleteStage = mutation({
     const stage = await ctx.db.get(args.stageId);
     if (!stage || stage.userId !== user._id) throw new Error("Unauthorized");
     return await ctx.db.delete(args.stageId);
+  },
+});
+
+export const setCompletedStage = mutation({
+  args: {
+    token: v.string(),
+    stageId: v.id("task_stages"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.token);
+    const stages = await ctx.db
+      .query("task_stages")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .collect();
+
+    for (const stage of stages) {
+      if (stage._id === args.stageId) {
+        if (!stage.isCompletedStage) {
+          await ctx.db.patch(stage._id, { isCompletedStage: true });
+        }
+      } else {
+        if (stage.isCompletedStage) {
+          await ctx.db.patch(stage._id, { isCompletedStage: false });
+        }
+      }
+    }
   },
 });

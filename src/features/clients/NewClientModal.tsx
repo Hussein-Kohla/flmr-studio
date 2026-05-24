@@ -4,7 +4,7 @@ import { X, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useMutation } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -23,6 +23,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   const { token } = useAuth();
   const { toast } = useToast();
   const createClient = useMutation(api.clients.createClient);
+  
+  const allClients = useQuery(api.clients.getAllClients, token ? { token } : 'skip');
+  const allTags = Array.from(new Set((allClients || []).flatMap(c => c.tags || [])));
 
   const [name, setName] = useLocalStorage('draft-client-name', '');
   const [email, setEmail] = useLocalStorage('draft-client-email', '');
@@ -37,17 +40,12 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   const [clientType, setClientType] = useLocalStorage('draft-client-clientType', 'other');
   const [accountManager, setAccountManager] = useLocalStorage('draft-client-accountManager', '');
   const [collectionOfficer, setCollectionOfficer] = useLocalStorage('draft-client-collectionOfficer', '');
+  const [tagInput, setTagInput] = useState('');
 
   const CLIENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b'];
 
 const PRESET_AVATARS = [
     '/avatars/doctor_male.png', '/avatars/doctor_female.png', '/avatars/engineer_male.png', '/avatars/engineer_female.png', '/avatars/business_male.png', '/avatars/business_female.png'];
-
-  const PRESET_TAGS = [
-    { id: 'تحصيل', label: 'تحصيل', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-    { id: 'فيس', label: 'فيس', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-    { id: 'مميزين', label: 'مميزين', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
-  ];
 
   if (!isOpen) return null;
 
@@ -107,7 +105,7 @@ const PRESET_AVATARS = [
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
       <Card className="w-full max-w-md shadow-2xl overflow-hidden relative border border-[var(--border-default)] bg-[var(--bg-raised)] rounded-[32px] animate-in zoom-in-95 duration-200" padding="none">
         <div className="flex items-center justify-between p-6 border-b border-[var(--border-subtle)]">
           <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight">Add New Client</h2>
@@ -257,41 +255,81 @@ const PRESET_AVATARS = [
           </div>
   
 
-          {/* CRM Fields */}
+          {/* Categories / Tags Field */}
           <div className="grid grid-cols-1 gap-4 border-t border-[var(--border-subtle)] pt-4">
-            <Select
-              label={t("clientTypeServiceLabel")}
-              value={clientType}
-              onChange={(e) => setClientType(e.target.value)}
-            >
-              <option value="fb_ads">Facebook Ads (إعلانات فيس بوك)</option>
-              <option value="video_editing">Video Editing (مونتاج)</option>
-              <option value="photography">Photography (تصوير)</option>
-              <option value="design">Graphic Design (تصميم)</option>
-              <option value="other">Other (أخرى)</option>
-            </Select>
-
             
-          </div>
+            <div className="flex flex-col gap-1 w-full bg-[var(--bg-surface)] px-4 py-4 border border-[var(--border-default)] rounded-[18px] relative overflow-hidden">
+               
+               <div className="relative z-10 mb-2">
+                 <span className="text-[10px] font-black text-[var(--text-muted)] tracking-widest uppercase mb-3 block">التصنيفات (Categories)</span>
 
-          <div className="flex flex-col gap-1 w-full bg-[var(--bg-surface)] px-4 py-2.5 border border-[var(--border-default)] rounded-[18px]">
-            <span className="text-[9px] font-black text-[var(--text-muted)] tracking-widest uppercase mb-1">Categories / Tags</span>
-            <div className="flex flex-wrap gap-2 py-1">
-              {PRESET_TAGS.map(tag => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                    tags.includes(tag.id) 
-                      ? tag.color 
-                      : "bg-[var(--bg-raised)] text-[var(--text-muted)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
-                  )}
-                >
-                  {tag.label}
-                </button>
-              ))}
+                 <div className="mb-4 relative">
+                   <input 
+                     type="text"
+                     value={tagInput}
+                     onChange={(e) => setTagInput(e.target.value)}
+                     placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
+                     className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--color-brand)] placeholder:text-[var(--text-muted)] transition-colors shadow-inner"
+                     onKeyDown={e => {
+                       if (e.key === 'Enter') {
+                         e.preventDefault();
+                         const val = tagInput.trim();
+                         if (val && !tags.includes(val)) {
+                           setTags(prev => [...prev, val]);
+                           setTagInput('');
+                         }
+                       }
+                     }}
+                   />
+                   <button 
+                     type="button"
+                     className="absolute left-3 top-1/2 -translate-y-1/2 bg-[var(--color-brand)] text-white w-7 h-7 rounded-lg flex items-center justify-center font-bold"
+                     onClick={() => {
+                       const val = tagInput.trim();
+                       if (val && !tags.includes(val)) {
+                         setTags(prev => [...prev, val]);
+                         setTagInput('');
+                       }
+                     }}
+                   >
+                     <Plus size={16} />
+                   </button>
+                   
+                   {allTags.length > 0 && (
+                     <div className="mt-3">
+                       <div className="flex flex-wrap gap-2">
+                         {allTags.filter(t => !tags.includes(t)).map(tag => {
+                           return (
+                             <button 
+                               key={tag}
+                               onClick={(e) => { e.preventDefault(); toggleTag(tag); }}
+                               className="text-xs font-bold px-3 py-1.5 rounded-lg border bg-[var(--bg-raised)] border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--color-brand)] transition-colors"
+                             >
+                               + {tag}
+                             </button>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
+                 </div>
+
+                 <div className="flex flex-col gap-2">
+                   {tags.map(tagId => {
+                     return (
+                       <div
+                         key={tagId}
+                         className="text-xs font-black uppercase tracking-widest px-4 py-3 rounded-xl flex items-center justify-between transition-all border bg-[var(--bg-raised)] text-[var(--text-primary)] border-[var(--border-default)]"
+                       >
+                         <span>{tagId}</span>
+                         <button onClick={(e) => { e.preventDefault(); toggleTag(tagId); }} className="hover:text-red-400 bg-black/10 rounded-full p-1 transition-colors">
+                           <X size={14} />
+                         </button>
+                       </div>
+                     );
+                   })}
+                 </div>
+               </div>
             </div>
           </div>
 

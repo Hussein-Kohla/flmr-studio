@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useSettings } from '@/hooks/useSettings';
@@ -29,9 +29,26 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
   const [platform, setPlatform] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [color, setColor] = useState('#8b5cf6');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const CLIENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b'];
+  const staffList = useQuery(api.staff.getStaff, token ? { token } : "skip");
+  const allTags = React.useMemo(() => {
+    const ts = new Set<string>();
+    if (staffList) {
+      staffList.forEach((s: any) => {
+        if (s.tags) s.tags.forEach((t: string) => ts.add(t));
+      });
+    }
+    return Array.from(ts);
+  }, [staffList]);
+
+  const toggleTag = (tagId: string) => {
+    setTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
+  };
+
+  const CLIENT_COLORS = ['#3b82f6', '#10b981', '#14b8a6', '#8b5cf6', '#ec4899', '#f97316', '#ef4444', '#f59e0b', '#64748b'];
   const PRESET_AVATARS = [
     '/avatars/doctor_male.png', '/avatars/doctor_female.png', '/avatars/engineer_male.png', '/avatars/engineer_female.png', '/avatars/business_male.png', '/avatars/business_female.png'];
 
@@ -41,11 +58,13 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
       setPlatform(staffToEdit.platform || '');
       setAvatarUrl(staffToEdit.avatarUrl || '');
       setColor(staffToEdit.color || '#8b5cf6');
+      setTags(staffToEdit.tags || []);
     } else if (isOpen) {
       setName('');
       setPlatform('');
       setAvatarUrl(PRESET_AVATARS[0]);
       setColor('#8b5cf6');
+      setTags([]);
     }
   }, [isOpen, staffToEdit]);
 
@@ -63,8 +82,8 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
           staffId: staffToEdit._id,
           name,
           avatarUrl,
-          platform,
           color,
+          tags,
         });
         toast('Staff updated successfully!', 'success');
       } else {
@@ -72,8 +91,8 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
           token,
           name,
           avatarUrl,
-          platform,
           color,
+          tags,
         });
         toast('Staff added successfully!', 'success');
       }
@@ -181,13 +200,83 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
               placeholder="e.g. Ahmed Ali"
             />
 
-            <Input
-              label={t("platformLabel") || "Platform"}
-              type="text"
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              placeholder="e.g. Upwork, Freelancer, Local"
-            />
+            {/* Tags Area */}
+            <div className="w-full border border-emerald-500/20 rounded-2xl p-4 bg-[#0a0a0b] text-left relative overflow-hidden group">
+               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+               <div className="relative z-10">
+                  <p className="text-[10px] font-black text-emerald-500/50 uppercase tracking-widest mb-3">التصنيفات (Categories)</p>
+                  
+                  <div className="mb-4 relative">
+                    <input 
+                      type="text" 
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 pr-12 text-sm font-bold text-white outline-none focus:border-emerald-500 placeholder:text-white/20 transition-colors shadow-inner"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = tagInput.trim();
+                          if (val && !tags.includes(val)) {
+                            toggleTag(val);
+                            setTagInput('');
+                          }
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                      onClick={() => {
+                        const val = tagInput.trim();
+                        if (val && !tags.includes(val)) {
+                          toggleTag(val);
+                          setTagInput('');
+                        }
+                      }}
+                    >
+                      <Plus size={18} />
+                    </button>
+                    
+                    {allTags.filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length > 0 && (
+                      <div className="mt-3">
+                        <div className="flex flex-wrap gap-2">
+                          {allTags
+                            .filter(t => !tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase()))
+                            .map(tag => {
+                            return (
+                              <button 
+                                key={tag}
+                                onClick={(e) => { e.preventDefault(); toggleTag(tag); setTagInput(''); }}
+                                className="text-xs font-bold px-3 py-1.5 rounded border bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-emerald-500/50 transition-colors"
+                              >
+                                + {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {tags.map(tagId => (
+                      <div 
+                        key={tagId} 
+                        className="text-xs font-black uppercase tracking-widest px-4 py-3 rounded-xl flex items-center justify-between transition-all border bg-white/10 border-white/10 text-white/90"
+                      >
+                        <span>{tagId}</span>
+                        <button onClick={(e) => { e.preventDefault(); toggleTag(tagId); }} className="hover:text-red-400 bg-black/20 rounded-full p-1 transition-colors">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    {tags.length === 0 && (
+                      <p className="text-xs text-white/20 font-bold italic">No tags added</p>
+                    )}
+                  </div>
+               </div>
+            </div>
 
             <div className="flex justify-between gap-4 pt-6 mt-4 border-t border-[var(--border-subtle)]">
               {staffToEdit ? (

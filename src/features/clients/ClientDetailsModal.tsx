@@ -80,6 +80,9 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip');
   const transactions = transactionsData?.page || [];
   
+  const allClients = useQuery(api.clients.getAllClients, token ? { token } : 'skip');
+  const allTags = Array.from(new Set((allClients || []).flatMap(c => c.tags || [])));
+  
   const updateClient = useMutation(api.clients.updateClient);
   const generateUploadUrl = useMutation(api.clients.generateUploadUrl);
   const createPayment = useMutation(api.transactions.createTransaction);
@@ -109,6 +112,7 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     customFields: [] as {key: string, value: string}[],
     color: '#8b5cf6',
   });
+  const [tagInput, setTagInput] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeletingRecord, setIsDeletingRecord] = useState(false);
   const [promptConfig, setPromptConfig] = useState<{
@@ -431,19 +435,21 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     }
   };
 
-  const CLIENT_TAGS = [
-    { id: 'تحصيل', label: 'تحصيل', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-    { id: 'فيس', label: 'فيس', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-    { id: 'مميزين', label: 'مميزين', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
-  ];
-
-  const toggleTag = (tagId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.includes(tagId) 
-        ? prev.tags.filter(t => t !== tagId) 
-        : [...prev.tags, tagId]
-    }));
+  const toggleTag = async (tagId: string) => {
+    const isAdding = !formData.tags.includes(tagId);
+    const newTags = isAdding 
+      ? [...formData.tags, tagId] 
+      : formData.tags.filter(t => t !== tagId);
+      
+    setFormData(prev => ({ ...prev, tags: newTags }));
+    
+    if (!isEditing && token) {
+      try {
+        await updateClient({ token, clientId: client._id, tags: newTags });
+      } catch (err) {
+        console.error("Failed to auto-save tags", err);
+      }
+    }
   };
   const CLIENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b'];
 
@@ -510,40 +516,6 @@ const PRESET_AVATARS = [
             <h2 className="text-4xl font-black text-white tracking-tight">Clients</h2>
             <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40">
               <User size={18} />
-            </div>
-            
-            <div className="flex gap-2 ml-4">
-              {isEditing ? (
-                CLIENT_TAGS.map(tag => (
-                  <button
-                    key={tag.id}
-                    onClick={() => toggleTag(tag.id)}
-                    className={cn(
-                      "px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all",
-                      formData.tags.includes(tag.id) 
-                        ? tag.color 
-                        : "bg-white/5 text-white/20 border-white/5 hover:text-white/40"
-                    )}
-                  >
-                    {tag.label}
-                  </button>
-                ))
-              ) : (
-                <>
-                  {formData.tags.length > 0 ? (
-                    formData.tags.map(tagId => {
-                      const tag = CLIENT_TAGS.find(t => t.id === tagId);
-                      return (
-                        <Badge key={tagId} className={cn("border-none text-[10px] font-black uppercase tracking-widest px-3 py-1", tag?.color || "bg-white/5 text-white/40")}>
-                          {tagId}
-                        </Badge>
-                      );
-                    })
-                  ) : (
-                    <Badge variant="muted" className="bg-white/5 border-none text-[10px] font-black uppercase tracking-widest px-3 py-1">General</Badge>
-                  )}
-                </>
-              )}
             </div>
           </div>
 
@@ -682,6 +654,87 @@ const PRESET_AVATARS = [
                      </div>
                   </div>
                )}
+
+               {/* Combined Categories/Tags Area */}
+               <div className="mt-8 w-full border border-emerald-500/20 rounded-2xl p-4 bg-[#0a0a0b] text-left relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                  
+                  <div className="relative z-10">
+                     <p className="text-[10px] font-black text-emerald-500/50 uppercase tracking-widest mb-3">التصنيفات (Categories)</p>
+
+                         <div className="mb-4 relative">
+                           <input 
+                             type="text" 
+                             value={tagInput}
+                             onChange={(e) => setTagInput(e.target.value)}
+                             placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
+                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 pr-12 text-sm font-bold text-white outline-none focus:border-emerald-500 placeholder:text-white/20 transition-colors shadow-inner"
+                             onKeyDown={e => {
+                               if (e.key === 'Enter') {
+                                 e.preventDefault();
+                                 const val = tagInput.trim();
+                                 if (val && !formData.tags.includes(val)) {
+                                   toggleTag(val);
+                                   setTagInput('');
+                                 }
+                               }
+                             }}
+                           />
+                           <button 
+                             type="button"
+                             className="absolute left-2 top-1/2 -translate-y-1/2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                             onClick={() => {
+                               const val = tagInput.trim();
+                               if (val && !formData.tags.includes(val)) {
+                                 toggleTag(val);
+                                 setTagInput('');
+                               }
+                             }}
+                           >
+                             <Plus size={18} />
+                           </button>
+                         
+                         {allTags.filter(t => !formData.tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase())).length > 0 && (
+                           <div className="mt-3">
+                             <div className="flex flex-wrap gap-2">
+                               {allTags
+                                 .filter(t => !formData.tags.includes(t) && t.toLowerCase().includes(tagInput.toLowerCase()))
+                                 .map(tag => {
+                                 return (
+                                   <button 
+                                     key={tag}
+                                     onClick={(e) => { e.preventDefault(); toggleTag(tag); setTagInput(''); }}
+                                     className="text-xs font-bold px-3 py-1.5 rounded border bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-emerald-500/50 transition-colors"
+                                   >
+                                     + {tag}
+                                   </button>
+                                 );
+                               })}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+
+                     <div className="flex flex-col gap-2">
+                       {formData.tags.map(tagId => {
+                         return (
+                           <div 
+                             key={tagId} 
+                             className="text-xs font-black uppercase tracking-widest px-4 py-3 rounded-xl flex items-center justify-between transition-all border bg-white/10 border-white/10 text-white/90"
+                           >
+                             <span>{tagId}</span>
+                             <button onClick={(e) => { e.preventDefault(); toggleTag(tagId); }} className="hover:text-red-400 bg-black/20 rounded-full p-1 transition-colors">
+                               <X size={14} />
+                             </button>
+                           </div>
+                         );
+                       })}
+                       {formData.tags.length === 0 && (
+                         <p className="text-xs text-white/20 font-bold italic">No tags added</p>
+                       )}
+                     </div>
+                  </div>
+               </div>
             </Card>
 
             {/* Column 2: CRM & Geographics Card */}
@@ -764,38 +817,7 @@ const PRESET_AVATARS = [
                   </div>
                 </div>
 
-                {/* Service Type / Client Type */}
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
-                    <Briefcase size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
-                      {language === 'ar' ? 'نوع الخدمة' : 'Service Type'}
-                    </p>
-                    {isEditing ? (
-                      <select 
-                        value={formData.clientType} 
-                        onChange={e => setFormData({...formData, clientType: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
-                      >
-                        <option value="fb_ads">{language === 'ar' ? 'إعلانات فيس بوك' : 'Facebook Ads'}</option>
-                        <option value="video_editing">{language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'}</option>
-                        <option value="photography">{language === 'ar' ? 'تصوير' : 'Photography'}</option>
-                        <option value="design">{language === 'ar' ? 'تصميم' : 'Graphic Design'}</option>
-                        <option value="other">{language === 'ar' ? 'أخرى' : 'Other'}</option>
-                      </select>
-                    ) : (
-                      <p className="text-sm font-bold text-white/80">{getClientTypeLabel(formData.clientType)}</p>
-                    )}
-                  </div>
-                </div>
-
-                
-
-                
-
-                
+                {/* Service Type moved to Column 1 */}
                 {/* Custom Fields */}
                 {formData.customFields && formData.customFields.map((field: any, idx: number) => (
                   <div key={idx} className="flex items-center gap-4 group">

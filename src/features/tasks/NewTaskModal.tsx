@@ -1,5 +1,5 @@
 import { useSettings } from "@/hooks/useSettings";
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
@@ -8,66 +8,99 @@ import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DatePicker } from '@/components/ui/DatePicker'
 
-import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { SmartDropdown } from '@/components/ui/SmartDropdown'
 import { NewClientModal } from '../clients/NewClientModal'
-import { TASK_PRIORITIES, type TaskPriority } from './taskOptions'
 
 interface NewTaskModalProps {
   isOpen: boolean
   onClose: () => void
   status?: string
+  taskToEdit?: any | null
 }
 
-export function NewTaskModal({ isOpen, onClose, status = 'todo' }: NewTaskModalProps) {
+export function NewTaskModal({ isOpen, onClose, status = 'todo', taskToEdit }: NewTaskModalProps) {
   const { t } = useSettings();
   const { token } = useAuth()
   const createTask = useMutation(api.tasks.createTask)
+  const updateTask = useMutation(api.tasks.updateTask)
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip')
   const clients = clientsData?.page || []
-
+  const projects = useQuery(api.projects.getAllProjects, token ? { token } : 'skip') || []
+  const stages = useQuery(api.task_stages.getStages, token ? { token } : 'skip') || []
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false)
 
-  const [formData, setFormData] = useLocalStorage('draft-task-form', {
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium' as TaskPriority,
     clientId: '',
+    projectId: '',
     dueDate: '',
+    status: status,
   })
 
+  // Update form when status changes
+  useEffect(() => {
+    if (!taskToEdit && isOpen) {
+      setFormData(prev => ({ ...prev, status }))
+    }
+  }, [status, isOpen, taskToEdit])
+
+  useEffect(() => {
+    if (taskToEdit && isOpen) {
+      setFormData({
+        title: taskToEdit.title || '',
+        description: taskToEdit.description || '',
+        clientId: taskToEdit.clientId || '',
+        projectId: taskToEdit.projectId || '',
+        dueDate: taskToEdit.dueDate ? new Date(taskToEdit.dueDate).toISOString().slice(0, 16) : '',
+        status: taskToEdit.status || status,
+      })
+    } else if (!taskToEdit && isOpen) {
+      setFormData({ title: '', description: '', clientId: '', projectId: '', dueDate: '', status })
+    }
+  }, [taskToEdit, isOpen, status])
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!token || !formData.title) return
 
-    await createTask({
-      token,
-      title: formData.title,
-      description: formData.description || undefined,
-      status,
-      priority: formData.priority,
-      dueDate: formData.dueDate ? new Date(formData.dueDate).getTime() : undefined,
-      clientId: formData.clientId ? (formData.clientId as Id<'clients'>) : undefined,
-      order: 0, // Will be handled by the backend or updated later
-    })
+    if (taskToEdit) {
+      await updateTask({
+        token,
+        taskId: taskToEdit._id,
+        title: formData.title,
+        description: formData.description || undefined,
+        status: taskToEdit.status || formData.status,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).getTime() : undefined,
+      })
+    } else {
+      await createTask({
+        token,
+        title: formData.title,
+        description: formData.description || undefined,
+        status: formData.status || status,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).getTime() : undefined,
+        clientId: formData.clientId ? (formData.clientId as Id<'clients'>) : undefined,
+        projectId: formData.projectId ? (formData.projectId as Id<'projects'>) : undefined,
+        order: 0,
+      })
+    }
     
-    setFormData({ title: '', description: '', priority: 'medium', clientId: '', dueDate: '' })
+    setFormData({ title: '', description: '', clientId: '', projectId: '', dueDate: '', status })
     onClose()
   }
 
   return (
     <>
-      <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="w-full max-w-md bg-[var(--bg-surface)] rounded-2xl shadow-2xl border border-[var(--border-subtle)] overflow-hidden animate-in zoom-in-95">
           <div className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between">
-            <h3 className="text-lg font-bold">{t('newTaskTitle')}</h3>
+            <h3 className="text-lg font-bold">{taskToEdit ? 'تعديل المهمة' : t('newTaskTitle')}</h3>
             <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full"><X size={18} /></button>
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
-              <label className="form-label">Task Title</label>
+              <label className="form-label">{t("titleLabelUppercase") || "العنوان"}</label>
               <input 
                 autoFocus
                 type="text" 
@@ -78,71 +111,81 @@ export function NewTaskModal({ isOpen, onClose, status = 'todo' }: NewTaskModalP
                 placeholder={t("whatNeedsToBeDone")}
               />
             </div>
-            <SmartDropdown label="Advanced Options (Description, Priority, Client)">
+            
+            {/* Status / List Selection - Only for new tasks */}
+            {!taskToEdit && stages.length > 0 && (
               <div>
-                <label className="form-label">Description</label>
-                <textarea 
-                  value={formData.description} 
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="input-field h-24 resize-none"
-                  placeholder="Add some details..."
-                />
+                <label className="form-label">القائمة</label>
+                <select 
+                  value={formData.status}
+                  onChange={e => setFormData({...formData, status: e.target.value})}
+                  className="input-field select-field"
+                >
+                  {stages.map(s => <option key={s._id} value={s.slug}>{s.name}</option>)}
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">{t('priorityLabel')}</label>
-                  <select 
-                    value={formData.priority}
-                    onChange={e => setFormData({...formData, priority: e.target.value as TaskPriority})}
-                    className="input-field select-field"
-                  >
-                    {TASK_PRIORITIES.map((p) => (
-                      <option key={p} value={p}>{t(p)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <DatePicker 
-                    label="Due Date"
-                    value={formData.dueDate}
-                    onChange={date => setFormData({...formData, dueDate: date})}
-                    withTime={true}
-                  />
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute right-3 top-1.5 z-10">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsNewClientModalOpen(true)}
-                    className="text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-dim)] bg-[var(--color-brand)]/10 hover:bg-[var(--color-brand)]/20 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1"
-                  >
-                    <Plus size={10} /> جديد
-                  </button>
-                </div>
-                <label className="form-label">Assign to Client</label>
+            )}
+            
+            <div className="space-y-4">
+            {/* Client & Project Row */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="form-label">{t("clientRelationship") || "العميل"}</label>
                 <select 
                   value={formData.clientId}
                   onChange={e => {
                     if (e.target.value === 'NEW_CLIENT') {
                       setIsNewClientModalOpen(true);
-                      setFormData({...formData, clientId: ''});
+                      setFormData({...formData, clientId: '', projectId: ''});
                     } else {
-                      setFormData({...formData, clientId: e.target.value});
+                      setFormData({...formData, clientId: e.target.value, projectId: ''});
                     }
                   }}
                   className="input-field select-field"
                 >
-                   <option value="">{t("none")}</option>
-                   <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
-                     + Create New Client...
-                   </option>
-                  {clients.map(c => <option key={c._id} value={c._id} className="bg-[var(--bg-surface)]">{c.name}</option>)}
+                  <option value="">{t("noClientAssoc") || "بدون عميل"}</option>
+                  <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
+                    + إضافة عميل جديد...
+                  </option>
+                  {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                 </select>
               </div>
-            </SmartDropdown>
+              <div className="flex-1">
+                <label className="form-label">{t("associatedProject") || "المشروع"}</label>
+                <select 
+                  value={formData.projectId}
+                  onChange={e => setFormData({...formData, projectId: e.target.value})}
+                  className="input-field select-field"
+                >
+                  <option value="">{t("noProjectAssoc") || "بدون مشروع"}</option>
+                  {projects.map(p => <option key={p._id} value={p._id}>{p.title}</option>)}
+                </select>
+              </div>
+            </div>
+            
+            {/* Due Date */}
+            <div>
+              <DatePicker 
+                label="تاريخ الاستحقاق"
+                value={formData.dueDate}
+                onChange={date => setFormData({...formData, dueDate: date})}
+                withTime={true}
+              />
+            </div>
+            
+            {/* Description */}
+            <div>
+              <label className="form-label">الوصف</label>
+              <textarea 
+                value={formData.description} 
+                onChange={e => setFormData({...formData, description: e.target.value})}
+                className="input-field h-20 resize-none"
+                placeholder="أضف تفاصيل..."
+              />
+            </div>
+          </div>
             <div className="pt-2">
-              <Button type="submit" className="w-full">{t('createTask')}</Button>
+              <Button type="submit" className="w-full">{taskToEdit ? 'حفظ التغييرات' : t('createTask')}</Button>
             </div>
           </form>
         </div>

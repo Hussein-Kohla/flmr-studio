@@ -26,8 +26,12 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
   const [selectedDate, setSelectedDate] = useState<Date | null>(value ? new Date(value) : null);
   
   // For time selection
-  const [hours, setHours] = useState(initialDate.getHours().toString().padStart(2, '0'));
+  const [hours, setHours] = useState(() => {
+    const h = initialDate.getHours();
+    return h === 0 ? '12' : h > 12 ? (h - 12).toString().padStart(2, '0') : h.toString().padStart(2, '0');
+  });
   const [minutes, setMinutes] = useState(initialDate.getMinutes().toString().padStart(2, '0'));
+  const [isPM, setIsPM] = useState(initialDate.getHours() >= 12);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,7 +43,9 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
         setSelectedDate(d);
         setViewMonth(d.getMonth());
         setViewYear(d.getFullYear());
-        setHours(d.getHours().toString().padStart(2, '0'));
+        const h = d.getHours();
+        setIsPM(h >= 12);
+        setHours(h === 0 ? '12' : h > 12 ? (h - 12).toString().padStart(2, '0') : h.toString().padStart(2, '0'));
         setMinutes(d.getMinutes().toString().padStart(2, '0'));
       }
     } else {
@@ -148,7 +154,9 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
     setSelectedDate(today);
     setViewMonth(today.getMonth());
     setViewYear(today.getFullYear());
-    setHours(today.getHours().toString().padStart(2, '0'));
+    const h = today.getHours();
+    setIsPM(h >= 12);
+    setHours(h === 0 ? '12' : h > 12 ? (h - 12).toString().padStart(2, '0') : h.toString().padStart(2, '0'));
     setMinutes(today.getMinutes().toString().padStart(2, '0'));
     
     if (!withTime) {
@@ -168,7 +176,14 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
   const handleTimeConfirm = () => {
     if (selectedDate) {
       const finalDate = new Date(selectedDate);
-      finalDate.setHours(parseInt(hours));
+      let hour24 = parseInt(hours);
+      // Convert from 12-hour to 24-hour format
+      if (isPM && hour24 !== 12) {
+        hour24 += 12;
+      } else if (!isPM && hour24 === 12) {
+        hour24 = 0;
+      }
+      finalDate.setHours(hour24);
       finalDate.setMinutes(parseInt(minutes));
       
       const tzoffset = finalDate.getTimezoneOffset() * 60000;
@@ -182,7 +197,7 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
     month: '2-digit',
     day: '2-digit',
     year: 'numeric'
-  }) + (withTime ? ` ${selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}` : '') : "";
+  }) + (withTime ? ` ${selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}` : '') : "";
 
   return (
     <div className="group flex flex-col gap-1 w-full" ref={containerRef}>
@@ -315,9 +330,18 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
                     <input 
                       type="text" 
                       value={hours} 
-                      onChange={(e) => setHours(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                      onBlur={() => setHours(h => h.padStart(2, '0'))}
-                      className="w-12 h-10 text-center bg-transparent outline-none font-bold text-[var(--text-primary)] text-lg"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        if (parseInt(val) <= 12 || val === '') {
+                          setHours(val);
+                        }
+                      }}
+                      onBlur={() => setHours(h => {
+                        if (h === '' || h === '0') return '12';
+                        return h.padStart(2, '0');
+                      })}
+                      className="w-14 h-10 text-center bg-transparent outline-none font-bold text-[var(--text-primary)] text-lg"
+                      placeholder="HH"
                     />
                     <span className="text-[var(--text-muted)] font-bold text-lg">:</span>
                     <input 
@@ -326,12 +350,42 @@ export function DatePicker({ value, onChange, label, withTime = false, placehold
                       onChange={(e) => setMinutes(e.target.value.replace(/\D/g, '').slice(0, 2))}
                       onBlur={() => setMinutes(m => m.padStart(2, '0'))}
                       className="w-12 h-10 text-center bg-transparent outline-none font-bold text-[var(--text-primary)] text-lg"
+                      placeholder="MM"
                     />
                   </div>
+                  {/* AM/PM Toggle */}
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsPM(false)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        !isPM 
+                          ? "bg-[var(--color-brand)] text-white shadow-md" 
+                          : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-white/10"
+                      )}
+                    >
+                      AM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsPM(true)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        isPM 
+                          ? "bg-[var(--color-brand)] text-white shadow-md" 
+                          : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-white/10"
+                      )}
+                    >
+                      PM
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-center gap-2">
                   <Button 
                     type="button" 
                     onClick={handleTimeConfirm}
-                    className="h-12 px-6 rounded-xl font-bold shadow-lg"
+                    className="h-10 px-6 rounded-xl font-bold shadow-lg"
                     disabled={!selectedDate}
                   >
                     Set

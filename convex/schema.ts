@@ -63,8 +63,9 @@ export default defineSchema({
     userId: v.id("users"),
     name: v.string(),
     avatarUrl: v.optional(v.string()),
-    platform: v.optional(v.string()),
+    platform: v.optional(v.string()), // Kept for backwards compatibility
     pages: v.optional(v.array(v.string())),
+    tags: v.optional(v.array(v.string())),
     color: v.optional(v.string()), // staff color
     createdAt: v.number(),
   }).index("by_userId", ["userId"]),
@@ -221,13 +222,15 @@ export default defineSchema({
   tasks: defineTable({
     title: v.string(),
     status: v.string(), 
-    priority: v.string(), 
+    priority: v.optional(v.string()), 
     dueDate: v.optional(v.number()),
     projectId: v.optional(v.id("projects")),
     clientId: v.optional(v.id("clients")),
     description: v.optional(v.string()),
     userId: v.id("users"),
     order: v.number(),
+    isArchived: v.optional(v.boolean()),
+    archivedAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_userId", ["userId"])
     .index("by_projectId", ["projectId"]),
@@ -289,6 +292,7 @@ export default defineSchema({
     slug: v.string(),
     color: v.optional(v.string()),
     order: v.number(),
+    isCompletedStage: v.optional(v.boolean()),
     userId: v.id("users"),
     createdAt: v.number(),
   }).index("by_userId", ["userId"]),

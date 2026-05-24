@@ -29,8 +29,8 @@ export const createStaff = mutation({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     color: v.optional(v.string()),
-    platform: v.optional(v.string()),
     pages: v.optional(v.array(v.string())),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await authenticate(ctx, args.token);
@@ -40,8 +40,8 @@ export const createStaff = mutation({
       name: args.name,
       avatarUrl: args.avatarUrl,
       color: args.color,
-      platform: args.platform,
       pages: args.pages,
+      tags: args.tags,
       createdAt: Date.now(),
     });
     
@@ -72,7 +72,7 @@ export const updateStaff = mutation({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     color: v.optional(v.string()),
-    platform: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await authenticate(ctx, args.token);
@@ -85,7 +85,7 @@ export const updateStaff = mutation({
       name: args.name,
       avatarUrl: args.avatarUrl,
       color: args.color,
-      platform: args.platform,
+      tags: args.tags,
     });
   },
 });

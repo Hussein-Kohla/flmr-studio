@@ -430,23 +430,6 @@ export function NewEventModal({
               </>
             )}
 
-            {itemCategory === 'task' && (
-              <div>
-                <label className="form-label">{t('priorityLabel')}</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="input-field select-field"
-                >
-                  {TASK_PRIORITIES.map((p) => (
-                    <option key={p} value={p}>
-                      {t(p)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
             {itemCategory === 'publishing' && (
               <div>
                 <label className="form-label">{t("platformLabel")} *</label>
@@ -530,10 +513,9 @@ export function NewEventModal({
                     value={projectId}
                     onChange={(e) => setProjectId(e.target.value)}
                     className="input-field select-field"
-                    disabled={!clientId && projects.length === 0}
                   >
                     <option value="">{t("noProjectAssoc")}</option>
-                    {filteredProjects.map((p) => (
+                    {projects.map((p) => (
                       <option key={p._id} value={p._id}>{p.title}</option>
                     ))}
                   </select>

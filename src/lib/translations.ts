@@ -251,6 +251,7 @@ export const translations = {
     searchProjectsPlaceholder: 'Search...',
     allStatuses: 'All Statuses',
     allClients: 'All Clients',
+    allTags: 'All Tags',
     allTypes: 'All Types',
     newest: 'Newest',
     oldest: 'Oldest',
@@ -357,7 +358,18 @@ export const translations = {
     descriptionText: 'Description',
     categoryManual: 'Manual',
     categoryGeneral: 'General',
-    taskTitleLabel: 'Task Title'
+    taskTitleLabel: 'Task Title',
+    deleteTaskTitle: 'Delete Task?',
+    deleteTaskDesc: 'Are you sure you want to delete this task? This cannot be undone.',
+    confirmDelete: 'Yes, Delete',
+    archive: 'Archive',
+    noArchivedTasks: 'No archived tasks',
+    restore: 'Restore',
+    taskRestored: 'Task restored successfully',
+    taskRestoreFailed: 'Failed to restore task',
+    close: 'Close',
+    totalTasks: 'Total Tasks',
+    noTasksFound: 'No tasks found'
   },
   ar: {
     eventTitle: 'عنوان الحدث',
@@ -610,6 +622,7 @@ export const translations = {
     searchProjectsPlaceholder: 'بحث...',
     allStatuses: 'كل الحالات',
     allClients: 'كل العملاء',
+    allTags: 'كل التصنيفات',
     allTypes: 'كل الأنواع',
     newest: 'الأحدث',
     oldest: 'الأقدم',
@@ -716,7 +729,18 @@ export const translations = {
     descriptionText: 'الوصف',
     categoryManual: 'يدوي',
     categoryGeneral: 'عام',
-    taskTitleLabel: 'عنوان المهمة'
+    taskTitleLabel: 'عنوان المهمة',
+    deleteTaskTitle: 'حذف المهمة؟',
+    deleteTaskDesc: 'هل أنت متأكد من حذف هذه المهمة؟ لا يمكن التراجع.',
+    confirmDelete: 'نعم، احذف',
+    archive: 'الأرشيف',
+    noArchivedTasks: 'لا توجد مهام مؤرشفة',
+    restore: 'استعادة',
+    taskRestored: 'تمت استعادة المهمة',
+    taskRestoreFailed: 'فشل استعادة المهمة',
+    close: 'إغلاق',
+    totalTasks: 'إجمالي المهام',
+    noTasksFound: 'لا توجد مهام'
   }
 };
 

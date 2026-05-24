@@ -80,12 +80,28 @@ export default function ClientsPage() {
     return projects.filter(p => p.clientId === clientId);
   };
 
+  const getStaffProjects = (staffId: string) => {
+    return projects.filter(p => p.assignedTo === staffId);
+  };
+
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+
+  const allTags = useMemo(() => {
+    return Array.from(new Set(clients.flatMap(c => c.tags || [])));
+  }, [clients]);
+
   const filteredClients = useMemo(() => {
     return clients.filter(c => {
       const q = debouncedSearch.toLowerCase();
-      return !q || c.name?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.company?.toLowerCase().includes(q);
+      const matchesSearch = !q || c.name?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.company?.toLowerCase().includes(q);
+      const matchesTag = selectedTag === 'all' || (c.tags || []).includes(selectedTag);
+      const matchesType = selectedType === 'all' || c.clientType === selectedType;
+      const matchesStatus = selectedStatus === 'all' || c.status === selectedStatus;
+      return matchesSearch && matchesTag && matchesType && matchesStatus;
     });
-  }, [clients, debouncedSearch]);
+  }, [clients, debouncedSearch, selectedTag, selectedType, selectedStatus]);
 
   const activeProjectsCount = projects.filter(p => p.status !== 'done').length;
   const totalAverageMonthly = clients.reduce((sum, c) => sum + getClientFinancials(c._id).avg, 0);
@@ -161,14 +177,15 @@ export default function ClientsPage() {
           />
         </div>
         <div className="flex gap-2 items-center flex-wrap">
-          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option>{t('newest')} ▼</option>
-          </select>
-          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option>{t('allTypes')} ▼</option>
-          </select>
-          <select className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]">
-            <option>{t('allStatuses')} ▼</option>
+          <select 
+            value={selectedTag}
+            onChange={(e) => setSelectedTag(e.target.value)}
+            className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]"
+          >
+            <option value="all">{t('allTags') || 'كل التصنيفات'} ▼</option>
+            {allTags.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -214,12 +231,18 @@ export default function ClientsPage() {
       ) : viewMode === 'list' ? (
         <StaffListView
           staff={staffList}
-          onStaffClick={(st) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
+          getProjects={getStaffProjects}
+          onStaffClick={(st: any) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
         />
       ) : (
         <StaffGridView
           staff={staffList}
-          onStaffClick={(st) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
+          getProjects={getStaffProjects}
+          onStaffClick={(st: any) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
+          onProjectClick={(pId: any) => navigate('/projects')}
+          onAddProject={(staffId: string) => {
+            setIsNewEventOpen(true);
+          }}
         />
       )}
 
@@ -268,25 +291,23 @@ function StaffAvatar({ staff, size = 'md' }: { staff: any; size?: 'sm' | 'md' })
   );
 }
 
-function StaffListView({ staff, onStaffClick }: { staff: any[]; onStaffClick: (st: any) => void }) {
+function StaffListView({ staff, getProjects, onStaffClick }: { staff: any[]; getProjects?: any; onStaffClick: (st: any) => void }) {
   const { t } = useSettings();
   return (
     <div className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-2xl overflow-hidden" dir="rtl">
-      <div className="grid grid-cols-[auto_2fr_1fr] gap-4 p-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] text-xs font-bold text-[var(--text-muted)]">
+      <div className="grid grid-cols-[auto_1fr] gap-4 p-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] text-xs font-bold text-[var(--text-muted)]">
         <div className="w-10" />
         <div>{t('clientNameLabel')}</div>
-        <div>{t('platformLabel')}</div>
       </div>
       <div className="divide-y divide-[var(--border-default)]">
         {staff.map((st) => (
           <div
             key={st._id}
-            className="grid grid-cols-[auto_2fr_1fr] gap-4 p-4 items-center cursor-pointer bg-[var(--bg-base)] hover:bg-[var(--bg-overlay)] transition-colors"
+            className="grid grid-cols-[auto_1fr] gap-4 p-4 items-center cursor-pointer bg-[var(--bg-base)] hover:bg-[var(--bg-overlay)] transition-colors"
             onClick={() => onStaffClick(st)}
           >
             <StaffAvatar staff={st} size="sm" />
             <span className="font-bold text-sm text-white hover:text-[var(--color-brand)] transition-colors">{st.name}</span>
-            <span className="text-sm text-[var(--color-brand)]">{st.platform || 'General'}</span>
           </div>
         ))}
       </div>
@@ -294,22 +315,126 @@ function StaffListView({ staff, onStaffClick }: { staff: any[]; onStaffClick: (s
   );
 }
 
-function StaffGridView({ staff, onStaffClick }: { staff: any[]; onStaffClick: (st: any) => void }) {
+function StaffGridView({ staff, getProjects, onStaffClick, onProjectClick, onAddProject }: any) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" dir="rtl">
-      {staff.map((st) => (
-        <Card key={st._id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--color-brand)] transition-all cursor-pointer" onClick={() => onStaffClick(st)}>
-          <div className="p-6 flex flex-col items-center gap-4">
-            <StaffAvatar staff={st} />
-            <div className="text-center">
-              <h3 className="text-lg font-bold text-white">{st.name}</h3>
-              <p className="text-xs text-[var(--color-brand)] bg-[var(--color-brand)]/10 px-2 py-1 rounded-full mt-2 inline-block">
-                {st.platform || 'General'}
-              </p>
-            </div>
-          </div>
-        </Card>
+      {staff.map((st: any) => (
+        <StaffGridCard 
+          key={st._id} 
+          staff={st}
+          projects={getProjects ? getProjects(st._id) : []}
+          onStaffClick={() => onStaffClick(st)}
+          onProjectClick={onProjectClick}
+          onAddProject={onAddProject}
+        />
       ))}
+    </div>
+  );
+}
+
+function StaffGridCard({ staff, projects, onStaffClick, onProjectClick, onAddProject }: any) {
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
+  const { t } = useSettings();
+
+  const getStatusTranslationKey = (status: string) => {
+    const mapping: Record<string, string> = {
+      'in_review': 'inReview',
+      'done': 'done',
+      'at_risk': 'atRisk',
+      'revision': 'revision',
+      'draft': 'draft',
+      'approved': 'approved'
+    };
+    return mapping[status] || 'draft';
+  };
+
+  return (
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl hover:border-[var(--color-brand)] transition-all flex flex-col p-6">
+      <div className="flex flex-col items-center gap-4 cursor-pointer mb-6" onClick={onStaffClick}>
+        <StaffAvatar staff={staff} />
+        <div className="text-center">
+          <h3 className="text-lg font-bold text-white hover:text-[var(--color-brand)] transition-colors">{staff.name}</h3>
+        </div>
+      </div>
+
+      <div className="h-px bg-[var(--border-default)] w-full my-4" />
+
+      <button 
+        onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+        className="flex items-center justify-between w-full py-2 text-sm font-bold text-white hover:text-[var(--color-brand)] transition-colors group"
+      >
+        <span className="flex items-center gap-2">
+          <motion.div animate={{ rotate: isProjectsExpanded ? 90 : 0 }} className="text-[var(--text-muted)] group-hover:text-[var(--color-brand)]">
+            <ChevronRight size={16} />
+          </motion.div>
+          {t('projects')} ({projects.length})
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {isProjectsExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-xl mt-3 overflow-hidden">
+              {projects.length === 0 ? (
+                <div className="p-4 text-center text-xs text-[var(--text-muted)]">{t('noProjectsLinked')}</div>
+              ) : (
+                <div className="divide-y divide-[var(--border-default)]">
+                  {projects.map((project: any) => {
+                    const statusKey = getStatusTranslationKey(project.status);
+                    const statusLabel = t(statusKey as any);
+                    const statusColor = STATUS_COLORS[project.status] || STATUS_COLORS['draft'];
+                    
+                    const pTotalTasks = project.steps?.length || 0;
+                    const pCompletedTasks = project.steps?.filter((s:any) => s.isCompleted).length || 0;
+                    const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;
+
+                    return (
+                      <div key={project._id} className="p-3 hover:bg-[var(--bg-overlay)] transition-colors cursor-pointer" onClick={() => onProjectClick(project._id)}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <Folder size={12} className="text-[var(--text-muted)]" />
+                            <span className="text-xs font-bold text-white truncate max-w-[120px]">{project.title}</span>
+                          </div>
+                          <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-md", statusColor)}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-4 h-4 rounded-full bg-[var(--border-default)] flex items-center justify-center text-[8px] text-white">ي</div>
+                            <span className="text-[10px] text-[var(--text-muted)]">يوسف</span>
+                          </div>
+                          <span className="text-[10px] text-[var(--text-muted)]">{pRatio}%</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex-1 max-w-[60%] h-1 bg-[var(--border-default)] rounded-full overflow-hidden">
+                            <div className="h-full bg-[var(--color-brand)] transition-all" style={{ width: `${pRatio}%` }} />
+                          </div>
+                          <span className="text-[9px] text-[var(--text-muted)] font-mono">
+                            {pCompletedTasks}/{pTotalTasks} {t('todo')}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="p-2 border-t border-[var(--border-default)] bg-[var(--bg-base)]">
+                <button onClick={(e) => { e.stopPropagation(); onAddProject(staff._id); }} className="w-full py-1 text-xs text-[var(--color-brand)] hover:bg-[var(--color-brand)]/10 rounded font-bold transition-colors">
+                  + {t('addProject')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
