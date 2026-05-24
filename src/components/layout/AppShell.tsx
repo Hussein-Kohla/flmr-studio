@@ -35,7 +35,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const { toast } = useToast()
-  const { t } = useSettings()
+  const { t, zoom } = useSettings()
 
   const translatedNav = NAV_ITEMS.map(item => ({
     to: item.to,
@@ -44,28 +44,29 @@ export function AppShell({ children }: AppShellProps) {
   }))
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--bg-base)]">
-      <Sidebar navItems={translatedNav} logo={<Logo />} />
-      <div className="flex-1 overflow-hidden flex flex-col relative">
-        {/* Premium Top Header */}
-        <header className="h-20 shrink-0 border-b border-[var(--border-subtle)] bg-black/10 backdrop-blur-md flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-4 flex-1">
-             {/* Search Bar Removed as requested */}
-          </div>
+    <div className="h-screen w-screen overflow-hidden bg-[var(--bg-base)]">
+      <div className="flex h-full w-full" style={{ zoom }}>
+        <Sidebar navItems={translatedNav} logo={<Logo />} />
+        <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+          <header className="h-20 shrink-0 border-b border-[var(--border-subtle)] bg-black/10 backdrop-blur-md flex items-center justify-between px-8 z-10">
+            <div className="flex items-center gap-4 flex-1">
+               {/* Search Bar Removed as requested */}
+            </div>
 
-          <div className="flex items-center gap-4">
-             <button 
-                onClick={() => toast("You have no new notifications.", "info")}
-                className="w-11 h-11 rounded-[var(--radius-xl)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand-subtle)] transition-all relative group"
-             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--color-danger)] rounded-full border-2 border-[var(--bg-surface)] group-hover:scale-125 transition-transform" />
-             </button>
+            <div className="flex items-center gap-4">
+               <button 
+                  onClick={() => toast("You have no new notifications.", "info")}
+                  className="w-11 h-11 rounded-[var(--radius-xl)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand-subtle)] transition-all relative group"
+               >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--color-danger)] rounded-full border-2 border-[var(--bg-surface)] group-hover:scale-125 transition-transform" />
+               </button>
+            </div>
+          </header>
+
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col relative">
+            {children}
           </div>
-        </header>
-        
-        <div className="flex-1 overflow-hidden flex flex-col relative">
-          {children}
         </div>
       </div>
     </div>

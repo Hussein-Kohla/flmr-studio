@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { Calculator, X, GripHorizontal } from 'lucide-react';
+import { Calculator, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { APP_ZOOM_MAX, APP_ZOOM_MIN, useSettings } from '@/hooks/useSettings';
 
 export function ToolHelper({ isSidebarOpen }: { isSidebarOpen?: boolean }) {
+  const { t, zoom, zoomIn, zoomOut } = useSettings();
   const [open, setOpen] = useState(false);
+  const zoomPercent = Math.round(zoom * 100);
+  const canZoomOut = zoom > APP_ZOOM_MIN + 0.001;
+  const canZoomIn = zoom < APP_ZOOM_MAX - 0.001;
   const [displayValue, setDisplayValue] = useState('0');
   const [previousValue, setPreviousValue] = useState<string | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
@@ -104,11 +109,62 @@ export function ToolHelper({ isSidebarOpen }: { isSidebarOpen?: boolean }) {
 
   return (
     <>
-      <div className="px-3 pb-4">
+      <div className="shrink-0 space-y-2 px-3 pb-4">
+        <div
+          className={cn(
+            'w-full rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm',
+            isSidebarOpen
+              ? 'flex h-12 items-center gap-1 px-2'
+              : 'flex flex-col items-center gap-1 py-2'
+          )}
+        >
+          <button
+            type="button"
+            onClick={zoomOut}
+            disabled={!canZoomOut}
+            title={t('zoomOut')}
+            aria-label={t('zoomOut')}
+            className={cn(
+              'flex items-center justify-center rounded-[var(--radius-lg)] transition-all duration-200',
+              'text-[var(--text-secondary)] hover:bg-[var(--color-brand)]/10 hover:text-[var(--color-brand)]',
+              'disabled:pointer-events-none disabled:opacity-40',
+              isSidebarOpen ? 'h-9 flex-1' : 'h-8 w-8'
+            )}
+          >
+            <ZoomOut size={isSidebarOpen ? 18 : 16} />
+          </button>
+          <span
+            className={cn(
+              'shrink-0 font-semibold tabular-nums text-[var(--text-secondary)]',
+              isSidebarOpen
+                ? 'min-w-[2.5rem] text-center text-[var(--text-xs)]'
+                : 'text-[10px] leading-none'
+            )}
+          >
+            {zoomPercent}%
+          </span>
+          <button
+            type="button"
+            onClick={zoomIn}
+            disabled={!canZoomIn}
+            title={t('zoomIn')}
+            aria-label={t('zoomIn')}
+            className={cn(
+              'flex items-center justify-center rounded-[var(--radius-lg)] transition-all duration-200',
+              'text-[var(--text-secondary)] hover:bg-[var(--color-brand)]/10 hover:text-[var(--color-brand)]',
+              'disabled:pointer-events-none disabled:opacity-40',
+              isSidebarOpen ? 'h-9 flex-1' : 'h-8 w-8'
+            )}
+          >
+            <ZoomIn size={isSidebarOpen ? 18 : 16} />
+          </button>
+        </div>
+
         <button
           onClick={() => setOpen(!open)}
           className={cn(
-            'group relative flex items-center gap-4 h-12 w-full px-3 rounded-[var(--radius-xl)] transition-all duration-300',
+            'group relative flex h-12 w-full rounded-[var(--radius-xl)] transition-all duration-300',
+            isSidebarOpen ? 'items-center gap-4 px-3' : 'items-center justify-center px-0',
             open 
               ? 'bg-[var(--color-brand)]/20 border border-[var(--color-brand)]/50 text-[var(--color-brand)]'
               : 'bg-[var(--bg-surface)] hover:bg-[var(--color-brand)]/10 border border-[var(--border-subtle)] hover:border-[var(--color-brand)]/30 shadow-sm'

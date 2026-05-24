@@ -80,7 +80,8 @@
 
   /* --- Typography --- */
   --font-sans: 'Inter', 'Outfit', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Fira Code', monospace;
+  --font-mono: 'Geist Mono', 'Fira Code', ui-monospace, monospace;
+  --font-numbers: var(--font-mono);
 
   --text-xs:   clamp(0.7rem,  1.2vw, 0.75rem);
   --text-sm:   clamp(0.8rem,  1.5vw, 0.875rem);

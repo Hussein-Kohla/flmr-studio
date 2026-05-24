@@ -43,7 +43,7 @@ export default function ClientsPage() {
   const { token } = useAuth();
   const { t } = useSettings();
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   
@@ -135,8 +135,8 @@ export default function ClientsPage() {
       }
     >
       <div className="flex gap-4 mb-6" dir="rtl">
-        <button onClick={() => setActiveTab('clients')} className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'clients' ? 'bg-[var(--color-brand)] text-white shadow-lg' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white'}`}>{t('clients')}</button>
-        <button onClick={() => setActiveTab('staff')} className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'staff' ? 'bg-[var(--color-brand)] text-white shadow-lg' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white'}`}>{t('staffLabel') || 'فريق العمل'}</button>
+        <button onClick={() => { setActiveTab('clients'); setViewMode('grid'); }} className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'clients' ? 'bg-[var(--color-brand)] text-white shadow-lg' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white'}`}>{t('clients')}</button>
+        <button onClick={() => { setActiveTab('staff'); setViewMode('grid'); }} className={`px-6 py-2 rounded-xl font-bold transition-all ${activeTab === 'staff' ? 'bg-[var(--color-brand)] text-white shadow-lg' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-white'}`}>{t('staffLabel') || 'فريق العمل'}</button>
       </div>
       
       {activeTab === 'clients' ? (
@@ -207,44 +207,20 @@ export default function ClientsPage() {
       )}
 
       </>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" dir="rtl">
-          {staffList.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-white/50 bg-white/5 rounded-2xl border border-dashed border-white/10">
-              لا يوجد موظفين مضافين بعد
-            </div>
-          ) : (
-            staffList.map((st: any) => (
-              <Card key={st._id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--color-brand)] transition-all cursor-pointer" onClick={() => { setStaffToEdit(st); setIsNewStaffOpen(true); }}>
-                <div className="p-6 flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-full p-1 transition-all duration-300" style={{ backgroundImage: `linear-gradient(to top right, ${st.color || '#8b5cf6'}, #4f46e5)` }}>
-                    <div className="w-full h-full rounded-full bg-[var(--bg-raised)] p-1 overflow-hidden flex items-center justify-center relative">
-                      <div className="w-full h-full rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-xl font-black text-[var(--text-muted)] uppercase absolute inset-0 z-0">
-                        {st.name ? st.name.slice(0, 2) : '?'}
-                      </div>
-                      {st.avatarUrl && (
-                        <img 
-                          src={st.avatarUrl} 
-                          alt={st.name} 
-                          className="w-full h-full object-cover rounded-full absolute inset-0 z-10" 
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-bold text-white">{st.name}</h3>
-                    <p className="text-xs text-[var(--color-brand)] bg-[var(--color-brand)]/10 px-2 py-1 rounded-full mt-2 inline-block">
-                      {st.platform || 'General'}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
+      ) : staffList.length === 0 ? (
+        <div className="py-12 text-center text-white/50 bg-white/5 rounded-2xl border border-dashed border-white/10" dir="rtl">
+          لا يوجد موظفين مضافين بعد
         </div>
+      ) : viewMode === 'list' ? (
+        <StaffListView
+          staff={staffList}
+          onStaffClick={(st) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
+        />
+      ) : (
+        <StaffGridView
+          staff={staffList}
+          onStaffClick={(st) => { setStaffToEdit(st); setIsNewStaffOpen(true); }}
+        />
       )}
 
       <NewStaffModal 
@@ -258,6 +234,7 @@ export default function ClientsPage() {
         onClose={() => setIsNewEventOpen(false)} 
         initialCategory="project"
         initialClientId={eventInitialClientId}
+        allowedCategories={['project']}
       />
       {selectedClientForDetails && (
         <ClientDetailsModal 
@@ -267,6 +244,73 @@ export default function ClientsPage() {
         />
       )}
     </PageWrapper>
+  );
+}
+
+function StaffAvatar({ staff, size = 'md' }: { staff: any; size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'w-10 h-10 text-sm' : 'w-20 h-20 text-xl';
+  return (
+    <div className={cn(sizeClass, 'rounded-full p-1 transition-all duration-300 flex-shrink-0')} style={{ backgroundImage: `linear-gradient(to top right, ${staff.color || '#8b5cf6'}, #4f46e5)` }}>
+      <div className="w-full h-full rounded-full bg-[var(--bg-raised)] p-1 overflow-hidden flex items-center justify-center relative">
+        <div className={cn('w-full h-full rounded-full bg-[var(--bg-surface)] flex items-center justify-center font-black text-[var(--text-muted)] uppercase absolute inset-0 z-0', size === 'sm' ? 'text-xs' : 'text-xl')}>
+          {staff.name ? staff.name.slice(0, 2) : '?'}
+        </div>
+        {staff.avatarUrl && (
+          <img
+            src={staff.avatarUrl}
+            alt={staff.name}
+            className="w-full h-full object-cover rounded-full absolute inset-0 z-10"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StaffListView({ staff, onStaffClick }: { staff: any[]; onStaffClick: (st: any) => void }) {
+  const { t } = useSettings();
+  return (
+    <div className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-2xl overflow-hidden" dir="rtl">
+      <div className="grid grid-cols-[auto_2fr_1fr] gap-4 p-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] text-xs font-bold text-[var(--text-muted)]">
+        <div className="w-10" />
+        <div>{t('clientNameLabel')}</div>
+        <div>{t('platformLabel')}</div>
+      </div>
+      <div className="divide-y divide-[var(--border-default)]">
+        {staff.map((st) => (
+          <div
+            key={st._id}
+            className="grid grid-cols-[auto_2fr_1fr] gap-4 p-4 items-center cursor-pointer bg-[var(--bg-base)] hover:bg-[var(--bg-overlay)] transition-colors"
+            onClick={() => onStaffClick(st)}
+          >
+            <StaffAvatar staff={st} size="sm" />
+            <span className="font-bold text-sm text-white hover:text-[var(--color-brand)] transition-colors">{st.name}</span>
+            <span className="text-sm text-[var(--color-brand)]">{st.platform || 'General'}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StaffGridView({ staff, onStaffClick }: { staff: any[]; onStaffClick: (st: any) => void }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" dir="rtl">
+      {staff.map((st) => (
+        <Card key={st._id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--color-brand)] transition-all cursor-pointer" onClick={() => onStaffClick(st)}>
+          <div className="p-6 flex flex-col items-center gap-4">
+            <StaffAvatar staff={st} />
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-white">{st.name}</h3>
+              <p className="text-xs text-[var(--color-brand)] bg-[var(--color-brand)]/10 px-2 py-1 rounded-full mt-2 inline-block">
+                {st.platform || 'General'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
 

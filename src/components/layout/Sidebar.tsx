@@ -23,7 +23,7 @@ export function Sidebar({ navItems, logo }: SidebarProps) {
     <motion.aside
       animate={{ width: isOpen ? 260 : 80 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="relative flex flex-col h-screen shrink-0 bg-[var(--bg-raised)] border-r border-[var(--border-subtle)] overflow-hidden z-20"
+      className="relative flex h-full shrink-0 flex-col bg-[var(--bg-raised)] border-r border-[var(--border-subtle)] overflow-hidden z-20"
     >
       {/* Premium Glass Header */}
       <div className="flex items-center justify-between h-20 px-4 border-b border-[var(--border-subtle)] bg-black/10 backdrop-blur-sm">
@@ -48,7 +48,7 @@ export function Sidebar({ navItems, logo }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-6 space-y-2 custom-scrollbar">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -92,7 +92,7 @@ export function Sidebar({ navItems, logo }: SidebarProps) {
       <ToolHelper isSidebarOpen={isOpen} />
 
       {/* User Section / Footer */}
-      <div className="p-4 border-t border-[var(--border-subtle)] bg-black/5">
+      <div className="shrink-0 border-t border-[var(--border-subtle)] bg-black/5 p-4">
         <div className={cn(
           "flex items-center gap-3 p-2 rounded-[var(--radius-xl)] transition-all duration-300",
           isOpen ? "bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]" : "justify-center"

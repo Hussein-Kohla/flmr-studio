@@ -1,11 +1,30 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { translations, type Language, type TranslationKey } from '@/lib/translations';
 
+export const APP_ZOOM_MIN = 0.5;
+export const APP_ZOOM_MAX = 1.25;
+const ZOOM_STEP = 0.05;
+const ZOOM_DEFAULT = 1;
+
+function clampZoom(value: number) {
+  return Math.min(APP_ZOOM_MAX, Math.max(APP_ZOOM_MIN, Math.round(value * 100) / 100));
+}
+
+function readStoredZoom(): number {
+  const stored = localStorage.getItem('flmr-zoom');
+  if (!stored) return ZOOM_DEFAULT;
+  const parsed = parseFloat(stored);
+  return Number.isNaN(parsed) ? ZOOM_DEFAULT : clampZoom(parsed);
+}
+
 interface SettingsContextType {
   theme: 'default' | 'emerald';
   setTheme: (theme: 'default' | 'emerald') => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  zoom: number;
+  zoomIn: () => void;
+  zoomOut: () => void;
   t: (key: TranslationKey) => string;
   dir: 'ltr' | 'rtl';
 }
@@ -20,6 +39,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     return (localStorage.getItem('flmr-lang') as Language) || 'en';
   });
+
+  const [zoom, setZoomState] = useState(readStoredZoom);
+
+  const zoomIn = () => {
+    setZoomState((prev) => {
+      const next = clampZoom(prev + ZOOM_STEP);
+      localStorage.setItem('flmr-zoom', String(next));
+      return next;
+    });
+  };
+
+  const zoomOut = () => {
+    setZoomState((prev) => {
+      const next = clampZoom(prev - ZOOM_STEP);
+      localStorage.setItem('flmr-zoom', String(next));
+      return next;
+    });
+  };
 
   const setTheme = (newTheme: 'default' | 'emerald') => {
     setThemeState(newTheme);
@@ -62,7 +99,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const dir = language === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <SettingsContext.Provider value={{ theme, setTheme, language, setLanguage, t, dir }}>
+    <SettingsContext.Provider value={{ theme, setTheme, language, setLanguage, zoom, zoomIn, zoomOut, t, dir }}>
       {children}
     </SettingsContext.Provider>
   );

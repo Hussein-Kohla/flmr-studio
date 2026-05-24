@@ -17,6 +17,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/components/ui/Toast'
 import { Plus, Calendar, Tag, User, CheckCircle2, Trash2, MoreHorizontal, Search, Clock, AlertCircle, CheckSquare, ListTodo } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
+import { TASK_PRIORITIES } from './taskOptions'
 
 const PRIORITY_COLORS = {
   low: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
@@ -64,7 +65,7 @@ export default function TasksPage() {
   const stats = useMemo(() => ({
     total: tasks.length,
     todo: tasks.filter(t => t.status === 'todo').length,
-    inProgress: tasks.filter(t => t.status === 'in-progress').length,
+    inProgress: tasks.filter(t => t.status === 'doing' || t.status === 'in-progress').length,
     done: tasks.filter(t => t.status === 'done').length,
     overdue: tasks.filter(t => {
       if (!t.dueDate || t.status === 'done') return false
@@ -150,7 +151,7 @@ export default function TasksPage() {
   return (
     <PageWrapper
       title={t("taskBoard")}
-      subtitle="{t('organizeTasks')}"
+      subtitle={t('organizeTasks')}
       actions={
         <Button size="sm" onClick={() => handleAddCard('todo')}>
           <Plus size={16} className="mr-2" /> New Task
@@ -237,10 +238,9 @@ export default function TasksPage() {
             className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-sm text-[var(--text-secondary)] focus:outline-none"
           >
             <option value="all">{t('allPriorities')}</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">{t("urgent")}</option>
+            {TASK_PRIORITIES.map((p) => (
+              <option key={p} value={p}>{t(p)}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -340,7 +340,7 @@ export default function TasksPage() {
                                       {/* Header */}
                                       <div className="flex justify-between items-start mb-2">
                                         <Badge className={cn("text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-md border", PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || PRIORITY_COLORS.low)}>
-                                          {task.priority}
+                                          {t(task.priority as 'low' | 'medium' | 'high' | 'urgent')}
                                         </Badge>
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                           {task.status !== 'done' && (

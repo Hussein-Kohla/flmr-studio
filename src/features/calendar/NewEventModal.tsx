@@ -1,5 +1,5 @@
 import { useSettings } from "@/hooks/useSettings";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Trash2, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,22 +10,51 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '../../lib/utils';
 import { SmartDropdown } from '@/components/ui/SmartDropdown';
 import { NewClientModal } from '../clients/NewClientModal';
+import { TASK_PRIORITIES } from '../tasks/taskOptions';
+
+export type EntryCategory = 'calendar' | 'project' | 'task' | 'publishing';
+
+const ALL_CATEGORIES: EntryCategory[] = ['calendar', 'project', 'task', 'publishing'];
+
+const CATEGORY_TAB_KEYS: Record<EntryCategory, 'eventTab' | 'projectTab' | 'taskTab' | 'publishingTab'> = {
+  calendar: 'eventTab',
+  project: 'projectTab',
+  task: 'taskTab',
+  publishing: 'publishingTab',
+};
 
 interface NewEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   eventToEdit?: any | null;
-  initialCategory?: 'calendar' | 'project' | 'task' | 'publishing';
+  initialCategory?: EntryCategory;
   initialClientId?: string;
+  /** When set, only these entry types are shown (e.g. calendar page: project + task only). */
+  allowedCategories?: EntryCategory[];
 }
 
-export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, initialClientId }: NewEventModalProps) {
+export function NewEventModal({
+  isOpen,
+  onClose,
+  eventToEdit,
+  initialCategory,
+  initialClientId,
+  allowedCategories,
+}: NewEventModalProps) {
+  const categoryKey = allowedCategories?.join(',') ?? 'all';
+  const categories = useMemo(
+    () => allowedCategories ?? ALL_CATEGORIES,
+    [categoryKey],
+  );
+  const defaultCategory = categories[0];
   const { t } = useSettings();
   const { token } = useAuth();
   
   // Queries
   const clients = useQuery(api.clients.getAllClients, token ? { token } : 'skip') || [];
   const projects = useQuery(api.projects.getAllProjects, token ? { token } : 'skip') || [];
+  const taskStages = useQuery(api.task_stages.getStages, token ? { token } : 'skip');
+  const initializeStages = useMutation(api.task_stages.initializeDefaultStages);
 
   // Mutations - Calendar
   const createEvent = useMutation(api.calendar.createEvent);
@@ -47,7 +76,12 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
   const deletePost = useMutation(api.publishing.deletePost);
 
   // States
-  const [itemCategory, setItemCategory] = useState<'calendar' | 'project' | 'task' | 'publishing'>(initialCategory || 'calendar');
+  const resolveCategory = (cat?: EntryCategory) =>
+    cat && categories.includes(cat) ? cat : defaultCategory;
+
+  const [itemCategory, setItemCategory] = useState<EntryCategory>(
+    resolveCategory(initialCategory),
+  );
   const [title, setTitle] = useState('');
   const [startAt, setStartAt] = useState('');
   const [notes, setNotes] = useState('');
@@ -79,7 +113,7 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
   useEffect(() => {
     if (eventToEdit && isOpen) {
       setTitle(eventToEdit.title || '');
-      setItemCategory(eventToEdit.eventSource || 'calendar');
+      setItemCategory(resolveCategory(eventToEdit.eventSource));
       setStartAt(eventToEdit.startAt ? new Date(eventToEdit.startAt).toISOString().slice(0, 16) : '');
       setNotes(eventToEdit.notes || '');
       setType(eventToEdit.type || 'other');
@@ -94,7 +128,7 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
       setPlatform(eventToEdit.platform || 'facebook');
     } else if (!eventToEdit && isOpen) {
       setTitle('');
-      setItemCategory(initialCategory || 'calendar');
+      setItemCategory(resolveCategory(initialCategory));
       setStartAt(new Date().toISOString().slice(0, 16));
       setNotes('');
       setType('other');
@@ -108,7 +142,20 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
       setProjectColor('bg-emerald-500');
       setPlatform('facebook');
     }
-  }, [eventToEdit, isOpen, initialCategory, initialClientId]);
+  }, [eventToEdit, isOpen, initialCategory, initialClientId, categoryKey]);
+
+  useEffect(() => {
+    if (token && taskStages && taskStages.length === 0 && isOpen) {
+      initializeStages({ token }).catch(console.error);
+    }
+  }, [token, taskStages, isOpen, initializeStages]);
+
+  useEffect(() => {
+    if (!taskStages?.length || itemCategory !== 'task') return;
+    if (!taskStages.some((s) => s.slug === status)) {
+      setStatus(taskStages[0].slug);
+    }
+  }, [taskStages, itemCategory, status]);
 
   if (!isOpen) return null;
 
@@ -259,23 +306,25 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
           {!eventToEdit && (
             <div>
               <label className="form-label">{t("categoryHeader")} *</label>
-              <div className="grid grid-cols-4 gap-2 bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]">
-                {(['calendar', 'project', 'task', 'publishing'] as const).map((cat) => (
+              <div
+                className={cn(
+                  'grid gap-2 bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-subtle)]',
+                  categories.length === 2 ? 'grid-cols-2' : 'grid-cols-4',
+                )}
+              >
+                {categories.map((cat) => (
                   <button
                     key={cat}
                     type="button"
-                    onClick={() => {
-                      setItemCategory(cat);
-                      // Clear type/platform/priority values if transitioning
-                    }}
+                    onClick={() => setItemCategory(cat)}
                     className={cn(
-                      "py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                      itemCategory === cat 
-                        ? "bg-brand text-white shadow" 
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      'py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all',
+                      itemCategory === cat
+                        ? 'bg-brand text-white shadow'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
                     )}
                   >
-                    {cat === 'calendar' ? 'Event' : cat}
+                    {t(CATEGORY_TAB_KEYS[cat])}
                   </button>
                 ))}
               </div>
@@ -383,15 +432,17 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
 
             {itemCategory === 'task' && (
               <div>
-                <label className="form-label">{t("priorityLabel")}</label>
+                <label className="form-label">{t('priorityLabel')}</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
                   className="input-field select-field"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  {TASK_PRIORITIES.map((p) => (
+                    <option key={p} value={p}>
+                      {t(p)}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
@@ -416,6 +467,23 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
               </div>
             )}
           </div>
+
+          {itemCategory === 'task' && (
+            <div>
+              <label className="form-label">{t('taskColumnLabel')}</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="input-field select-field"
+              >
+                {(taskStages || []).map((stage) => (
+                  <option key={stage._id} value={stage.slug}>
+                    {stage.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Conditional CRM options */}
           {itemCategory !== 'project' && (
@@ -508,22 +576,6 @@ export function NewEventModal({ isOpen, onClose, eventToEdit, initialCategory, i
                 {clients.map((c) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
-              </select>
-            </div>
-          )}
-
-          {/* Task Status field if editing */}
-          {eventToEdit && itemCategory === 'task' && (
-            <div>
-              <label className="form-label">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="input-field select-field"
-              >
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Completed</option>
               </select>
             </div>
           )}

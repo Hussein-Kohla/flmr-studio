@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useState, useMemo } from 'react'
-import { NewEventModal } from './NewEventModal'
+import { NewEventModal, type EntryCategory } from './NewEventModal'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ListTodo, Clock, Check, X as XIcon, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const CALENDAR_ENTRY_CATEGORIES: EntryCategory[] = ['project', 'task']
 
 const TYPE_VARIANT: Record<string, "muted" | "brand" | "warning" | "danger" | "success" | "info" | "default"> = {
   meeting:    'brand',
@@ -25,6 +27,7 @@ const TYPE_VARIANT: Record<string, "muted" | "brand" | "warning" | "danger" | "s
   collection: 'success',
   send_money: 'success',
   task:       'info',
+  project:    'brand',
   publishing: 'warning',
   other:      'muted',
 }
@@ -49,7 +52,6 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [editingEvent, setEditingEvent] = useState<any | null>(null)
 
-  const updateStatus = useMutation(api.calendar.updateEventStatus)
   const updateTask = useMutation(api.tasks.updateTask)
   const updateProjectStatus = useMutation(api.projects.updateProjectStatus)
 
@@ -57,54 +59,38 @@ export default function CalendarPage() {
     if (!eventsData) return null
     const all: any[] = []
 
-    // 1. Calendar Events
-    ;(eventsData.calendarEvents || []).forEach((e) => {
-      all.push({
-        ...e,
-        eventSource: 'calendar',
-      })
-    })
-
-    // 2. Projects
+    // Projects (synced with /projects)
     ;(eventsData.projects || []).forEach((p) => {
+      if (!p.deadline) return
       all.push({
         _id: p._id,
         title: p.title,
-        type: 'deadline',
-        startAt: p.deadline!,
+        type: 'project',
+        startAt: p.deadline,
         status: p.status,
         notes: p.description,
         clientId: p.clientId,
         eventSource: 'project',
+        budgetCents: p.budgetCents,
+        projectType: p.projectType,
+        color: p.color,
       })
     })
 
-    // 3. Tasks
-    ;(eventsData.tasks || []).forEach((t) => {
+    // Tasks (synced with /tasks)
+    ;(eventsData.tasks || []).forEach((task) => {
+      if (!task.dueDate) return
       all.push({
-        _id: t._id,
-        title: t.title,
+        _id: task._id,
+        title: task.title,
         type: 'task',
-        startAt: t.dueDate!,
-        status: t.status,
-        notes: t.description,
-        clientId: t.clientId,
-        projectId: t.projectId,
+        startAt: task.dueDate,
+        status: task.status,
+        notes: task.description,
+        clientId: task.clientId,
+        projectId: task.projectId,
+        priority: task.priority,
         eventSource: 'task',
-      })
-    })
-
-    // 4. Publishing Posts
-    ;(eventsData.publishingPosts || []).forEach((p) => {
-      all.push({
-        _id: p._id,
-        title: `[${p.platform.toUpperCase()}] ${p.title}`,
-        type: 'publishing',
-        startAt: p.publishDate!,
-        status: p.status,
-        clientId: p.clientId,
-        projectId: p.projectId,
-        eventSource: 'publishing',
       })
     })
 
@@ -122,9 +108,7 @@ export default function CalendarPage() {
   const handleUpdateStatus = async (ev: any, newStatus: string) => {
     if (!token) return
     try {
-      if (ev.eventSource === 'calendar') {
-        await updateStatus({ token, eventId: ev._id, status: newStatus })
-      } else if (ev.eventSource === 'task') {
+      if (ev.eventSource === 'task') {
         await updateTask({ token, taskId: ev._id, status: newStatus })
       } else if (ev.eventSource === 'project') {
         const projectStatus = newStatus === 'done' ? 'completed' : newStatus === 'cancelled' ? 'suspended' : newStatus
@@ -145,7 +129,6 @@ export default function CalendarPage() {
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
   const handleToday = () => {
-  const { t } = useSettings();
     setCurrentDate(new Date())
     setSelectedDate(new Date())
   }
@@ -351,28 +334,30 @@ export default function CalendarPage() {
                           >
                             <div className="flex justify-between items-start mb-2">
                               <Badge variant={isCompleted ? 'success' : isCancelled ? 'danger' : TYPE_VARIANT[ev.type]}>
-                                {isCompleted ? 'Completed' : isCancelled ? 'Cancelled' : ev.type}
+                                {isCompleted
+                                  ? (language === 'ar' ? 'مكتمل' : 'Completed')
+                                  : isCancelled
+                                    ? (language === 'ar' ? 'ملغى' : 'Cancelled')
+                                    : ev.eventSource === 'project'
+                                      ? (language === 'ar' ? 'مشروع' : 'Project')
+                                      : (language === 'ar' ? 'مهمة' : 'Task')}
                               </Badge>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-[var(--text-muted)] mr-2">{formatTime(ev.startAt)}</span>
                                 
                                 <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                                  {ev.eventSource !== 'publishing' && (
-                                    <>
-                                      <button 
-                                        onClick={() => handleUpdateStatus(ev, 'done')}
-                                        className={cn("p-1.5 rounded-lg transition-all", isCompleted ? "bg-emerald-500 text-white" : "bg-white/5 text-white/40 hover:bg-emerald-500/20 hover:text-emerald-500")}
-                                      >
-                                        <Check size={14} />
-                                      </button>
-                                      <button 
-                                        onClick={() => handleUpdateStatus(ev, 'cancelled')}
-                                        className={cn("p-1.5 rounded-lg transition-all", isCancelled ? "bg-red-500 text-white" : "bg-white/5 text-white/40 hover:bg-red-500/20 hover:text-red-500")}
-                                      >
-                                        <XIcon size={14} />
-                                      </button>
-                                    </>
-                                  )}
+                                  <button 
+                                    onClick={() => handleUpdateStatus(ev, 'done')}
+                                    className={cn("p-1.5 rounded-lg transition-all", isCompleted ? "bg-emerald-500 text-white" : "bg-white/5 text-white/40 hover:bg-emerald-500/20 hover:text-emerald-500")}
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleUpdateStatus(ev, 'cancelled')}
+                                    className={cn("p-1.5 rounded-lg transition-all", isCancelled ? "bg-red-500 text-white" : "bg-white/5 text-white/40 hover:bg-red-500/20 hover:text-red-500")}
+                                  >
+                                    <XIcon size={14} />
+                                  </button>
                                   <button 
                                     onClick={() => setEditingEvent(ev)}
                                     className="p-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all"
@@ -461,6 +446,8 @@ export default function CalendarPage() {
           setEditingEvent(null);
         }} 
         eventToEdit={editingEvent}
+        allowedCategories={CALENDAR_ENTRY_CATEGORIES}
+        initialCategory="task"
       />
     </PageWrapper>
   )

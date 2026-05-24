@@ -11,6 +11,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { SmartDropdown } from '@/components/ui/SmartDropdown'
 import { NewClientModal } from '../clients/NewClientModal'
+import { TASK_PRIORITIES, type TaskPriority } from './taskOptions'
 
 interface NewTaskModalProps {
   isOpen: boolean
@@ -30,7 +31,7 @@ export function NewTaskModal({ isOpen, onClose, status = 'todo' }: NewTaskModalP
   const [formData, setFormData] = useLocalStorage('draft-task-form', {
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
+    priority: 'medium' as TaskPriority,
     clientId: '',
     dueDate: '',
   })
@@ -89,15 +90,15 @@ export function NewTaskModal({ isOpen, onClose, status = 'todo' }: NewTaskModalP
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Priority</label>
+                  <label className="form-label">{t('priorityLabel')}</label>
                   <select 
                     value={formData.priority}
-                    onChange={e => setFormData({...formData, priority: e.target.value as any})}
+                    onChange={e => setFormData({...formData, priority: e.target.value as TaskPriority})}
                     className="input-field select-field"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">{t("medium")}</option>
-                    <option value="high">High</option>
+                    {TASK_PRIORITIES.map((p) => (
+                      <option key={p} value={p}>{t(p)}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

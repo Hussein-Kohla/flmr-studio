@@ -196,6 +196,8 @@ export const translations = {
     english: 'English',
     arabic: 'العربية',
     saveChanges: 'Save Changes',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
 
     // Clients Page
     addNewClient: 'Add New Client',
@@ -329,6 +331,7 @@ export const translations = {
     addIncome: 'ADD INCOME',
     addExpense: 'ADD EXPENSE',
     taskBoard: 'Task Board',
+    taskColumnLabel: 'Column',
     taskBoardSubtitle: 'Manage tasks and track progress',
     listAdded: 'List added.',
     listAddFailed: 'Failed to add list.',
@@ -552,6 +555,8 @@ export const translations = {
     english: 'English',
     arabic: 'العربية',
     saveChanges: 'حفظ التغييرات',
+    zoomIn: 'تكبير',
+    zoomOut: 'تصغير',
 
     // Clients Page
     addNewClient: 'إضافة عميل جديد',
@@ -685,6 +690,7 @@ export const translations = {
     addIncome: 'إضافة دخل',
     addExpense: 'إضافة مصروف',
     taskBoard: 'لوحة المهام',
+    taskColumnLabel: 'القائمة',
     taskBoardSubtitle: 'إدارة المهام وتتبع التقدم',
     listAdded: 'تمت إضافة القائمة.',
     listAddFailed: 'فشل إضافة القائمة.',
