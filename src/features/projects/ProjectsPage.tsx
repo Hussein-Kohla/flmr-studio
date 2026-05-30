@@ -8,6 +8,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { Folder, Plus, Printer, DollarSign, Target, Monitor, CalendarDays, Loader2, CheckCircle2, Trash2, TrendingUp, Presentation, BarChart2 } from 'lucide-react';
 import { ProjectDetailsDrawer } from './ProjectDetailsDrawer';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -124,7 +125,15 @@ function MultiAutocompleteInput({ value, onChange, onBlur, onKeyDown, placeholde
             setShowOptions(false);
           }, 200);
         }}
-        onKeyDown={onKeyDown}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && currentTrimmed !== '') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSelect(currentTrimmed);
+          } else if (onKeyDown) {
+            onKeyDown(e);
+          }
+        }}
         placeholder={isFocused ? "" : placeholder}
         className={cn(
           "w-full bg-white/5 border border-white/10 hover:border-white/30 focus:bg-[var(--bg-surface)] rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-[var(--color-brand)] transition-colors text-center shadow-sm placeholder-[var(--text-muted)] text-white"
@@ -852,17 +861,16 @@ export default function ProjectsPage() {
         {/* 1. Client Selection */}
         <div className="bg-[var(--bg-surface)] p-6 rounded-3xl border border-[var(--border-default)] shadow-sm">
           <label className="block text-sm font-bold text-[var(--text-muted)] mb-3">اختر العميل</label>
-          <select
+          <CustomSelect
             value={selectedClientId}
-            onChange={e => setSelectedClientId(e.target.value)}
-            className="w-full bg-[var(--bg-muted)] border-2 border-[var(--border-default)] rounded-xl text-lg font-black text-white focus:outline-none focus:border-[var(--color-brand)] px-5 py-3 transition-colors"
-          >
-            <option value="" disabled>-- الرجاء اختيار عميل --</option>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {clients.map((c: any) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedClientId(val as string)}
+            options={[
+              { label: '-- الرجاء اختيار عميل --', value: '' },
+              ...clients.map((c: any) => ({ label: c.name, value: c._id }))
+            ]}
+            placeholder="-- الرجاء اختيار عميل --"
+            className="w-full text-lg font-black"
+          />
         </div>
 
         {/* 2. Year & Month Selection */}

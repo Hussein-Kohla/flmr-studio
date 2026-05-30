@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { CustomSelect } from '@/components/ui/CustomSelect'
 
 import { NewClientModal } from '../clients/NewClientModal'
 
@@ -116,13 +117,11 @@ export function NewTaskModal({ isOpen, onClose, status = 'todo', taskToEdit }: N
             {!taskToEdit && stages.length > 0 && (
               <div>
                 <label className="form-label">القائمة</label>
-                <select 
+                <CustomSelect 
                   value={formData.status}
-                  onChange={e => setFormData({...formData, status: e.target.value})}
-                  className="input-field select-field"
-                >
-                  {stages.map(s => <option key={s._id} value={s.slug}>{s.name}</option>)}
-                </select>
+                  onChange={(val) => setFormData({...formData, status: val as string})}
+                  options={stages.map((s: any) => ({ label: s.name, value: s.slug }))}
+                />
               </div>
             )}
             
@@ -131,35 +130,33 @@ export function NewTaskModal({ isOpen, onClose, status = 'todo', taskToEdit }: N
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="form-label">{t("clientRelationship") || "العميل"}</label>
-                <select 
+                <CustomSelect 
                   value={formData.clientId}
-                  onChange={e => {
-                    if (e.target.value === 'NEW_CLIENT') {
+                  onChange={(val) => {
+                    if (val === 'NEW_CLIENT') {
                       setIsNewClientModalOpen(true);
                       setFormData({...formData, clientId: '', projectId: ''});
                     } else {
-                      setFormData({...formData, clientId: e.target.value, projectId: ''});
+                      setFormData({...formData, clientId: val as string, projectId: ''});
                     }
                   }}
-                  className="input-field select-field"
-                >
-                  <option value="">{t("noClientAssoc") || "بدون عميل"}</option>
-                  <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
-                    + إضافة عميل جديد...
-                  </option>
-                  {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
+                  options={[
+                    { label: t("noClientAssoc") || "بدون عميل", value: '' },
+                    { label: <span className="font-bold text-[var(--color-brand)] bg-brand/10">+ إضافة عميل جديد...</span>, value: 'NEW_CLIENT' },
+                    ...clients.map((c: any) => ({ label: c.name, value: c._id }))
+                  ]}
+                />
               </div>
               <div className="flex-1">
                 <label className="form-label">{t("associatedProject") || "المشروع"}</label>
-                <select 
+                <CustomSelect 
                   value={formData.projectId}
-                  onChange={e => setFormData({...formData, projectId: e.target.value})}
-                  className="input-field select-field"
-                >
-                  <option value="">{t("noProjectAssoc") || "بدون مشروع"}</option>
-                  {projects.map(p => <option key={p._id} value={p._id}>{p.title}</option>)}
-                </select>
+                  onChange={(val) => setFormData({...formData, projectId: val as string})}
+                  options={[
+                    { label: t("noProjectAssoc") || "بدون مشروع", value: '' },
+                    ...projects.map((p: any) => ({ label: p.title, value: p._id }))
+                  ]}
+                />
               </div>
             </div>
             

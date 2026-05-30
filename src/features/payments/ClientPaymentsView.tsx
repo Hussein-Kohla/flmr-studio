@@ -5,6 +5,7 @@ import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Users, Calendar, DollarSign, Wallet, Target, Search, BarChart3, TrendingUp, Scissors, Megaphone, PenTool, Briefcase, Filter } from 'lucide-react';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 const ARABIC_MONTHS = [
   "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -232,35 +233,34 @@ export default function ClientPaymentsView({ filter = 'all' }: { filter?: 'all' 
                 {filter === 'all' && (
                   <div className="flex items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/10">
                     <Filter size={18} className="text-white/50" />
-                    <select
+                    <CustomSelect
                       value={periodType}
-                      onChange={(e) => setPeriodType(e.target.value as any)}
-                      className="bg-transparent text-white font-bold text-sm focus:outline-none appearance-none"
-                    >
-                      <option value="all" className="bg-[#0a0a0b]">كل الأوقات</option>
-                      <option value="yearly" className="bg-[#0a0a0b]">حسب السنة</option>
-                      <option value="monthly" className="bg-[#0a0a0b]">حسب الشهر</option>
-                    </select>
+                      onChange={(val) => setPeriodType(val as any)}
+                      className="w-32"
+                      dropdownClassName="min-w-[150px]"
+                      options={[
+                        { label: 'كل الأوقات', value: 'all' },
+                        { label: 'حسب السنة', value: 'yearly' },
+                        { label: 'حسب الشهر', value: 'monthly' }
+                      ]}
+                    />
                     
                     {periodType !== 'all' && (
-                      <select
+                      <CustomSelect
                         value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="bg-white/10 border border-white/20 text-white font-bold text-sm rounded-xl px-3 py-1.5 focus:outline-none"
-                      >
-                        {availableYears.map(y => <option key={y} value={y} className="bg-[#0a0a0b]">{y}</option>)}
-                      </select>
+                        onChange={(val) => setSelectedYear(Number(val))}
+                        className="w-24"
+                        options={availableYears.map(y => ({ label: String(y), value: y }))}
+                      />
                     )}
 
                     {periodType === 'monthly' && (
-                      <select
+                      <CustomSelect
                         value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                        className="bg-white/10 border border-white/20 text-white font-bold text-sm rounded-xl px-3 py-1.5 focus:outline-none"
-                        dir="rtl"
-                      >
-                        {ARABIC_MONTHS.map((m, i) => <option key={i} value={i} className="bg-[#0a0a0b]">{m}</option>)}
-                      </select>
+                        onChange={(val) => setSelectedMonth(Number(val))}
+                        className="w-32"
+                        options={ARABIC_MONTHS.map((m, i) => ({ label: m, value: i }))}
+                      />
                     )}
                   </div>
                 )}
@@ -342,21 +342,18 @@ export default function ClientPaymentsView({ filter = 'all' }: { filter?: 'all' 
                         </h3>
                         
                         <div className="flex gap-3">
-                          <select
+                          <CustomSelect
                             value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="bg-white/10 border border-white/20 text-white font-bold rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-400"
-                            dir="rtl"
-                          >
-                            {ARABIC_MONTHS.map((m, i) => <option key={i} value={i} className="bg-[var(--bg-surface)]">{m}</option>)}
-                          </select>
-                          <select
+                            onChange={(val) => setSelectedMonth(Number(val))}
+                            className="w-32"
+                            options={ARABIC_MONTHS.map((m, i) => ({ label: m, value: i }))}
+                          />
+                          <CustomSelect
                             value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="bg-white/10 border border-white/20 text-white font-bold rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-400"
-                          >
-                            {availableYears.map(y => <option key={y} value={y} className="bg-[var(--bg-surface)]">{y}</option>)}
-                          </select>
+                            onChange={(val) => setSelectedYear(Number(val))}
+                            className="w-24"
+                            options={availableYears.map(y => ({ label: String(y), value: y }))}
+                          />
                         </div>
                       </div>
 

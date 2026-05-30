@@ -8,6 +8,7 @@ import { formatCurrency, cn } from '@/lib/utils'
 import { User, CheckCircle2, AlertCircle, Calendar, Search, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react'
 import { useState } from 'react'
 import { useToast } from '@/components/ui/Toast'
+import { CustomSelect } from '@/components/ui/CustomSelect'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -394,32 +395,22 @@ export default function RecurringCollectionsView() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Month</label>
                   <div className="relative">
-                    <select
+                    <CustomSelect
                       value={paymentMonth}
-                      onChange={(e) => setPaymentMonth(Number(e.target.value))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-brand appearance-none cursor-pointer"
-                    >
-                      {MONTHS.map((month, i) => (
-                        <option key={month} value={i} className="bg-[#121214]">{month}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                      onChange={(val) => setPaymentMonth(Number(val))}
+                      options={MONTHS.map((month, i) => ({ label: month, value: i }))}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Year</label>
                   <div className="relative">
-                    <select
+                    <CustomSelect
                       value={paymentYear}
-                      onChange={(e) => setPaymentYear(Number(e.target.value))}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-brand appearance-none cursor-pointer"
-                    >
-                      {[2024, 2025, 2026, 2027].map((year) => (
-                        <option key={year} value={year} className="bg-[#121214]">{year}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                      onChange={(val) => setPaymentYear(Number(val))}
+                      options={[2024, 2025, 2026, 2027].map((year) => ({ label: year, value: year }))}
+                    />
                   </div>
                 </div>
 

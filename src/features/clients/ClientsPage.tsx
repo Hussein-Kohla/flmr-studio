@@ -16,9 +16,10 @@ import {
   BarChart2, Phone, Mail, CheckCircle2, AlertTriangle, 
   Clock, XCircle, FileText, Wallet
 } from 'lucide-react';
-import { NewClientModal } from './NewClientModal';
 import { NewStaffModal } from './NewStaffModal';
+import { NewClientModal } from './NewClientModal';
 import { NewEventModal } from '../calendar/NewEventModal';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -175,16 +176,15 @@ export default function ClientsPage() {
           />
         </div>
         <div className="flex gap-2 items-center flex-wrap">
-          <select 
+          <CustomSelect 
             value={selectedTag}
-            onChange={(e) => setSelectedTag(e.target.value)}
-            className="h-10 px-4 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl text-sm text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-brand)]"
-          >
-            <option value="all">{t('allTags') || 'كل التصنيفات'} ▼</option>
-            {allTags.map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedTag(val as string)}
+            className="w-48"
+            options={[
+              { label: (t('allTags') || 'كل التصنيفات') + ' ▼', value: 'all' },
+              ...allTags.map(tag => ({ label: tag, value: tag }))
+            ]}
+          />
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { X, Calendar, Clock, DollarSign, Flag, Tag as TagIcon, LayoutGrid, Check
 import { Button } from '@/components/ui/Button';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -235,12 +236,15 @@ export function ProjectDetailsDrawer({ project, isOpen, onClose }: ProjectDetail
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs text-[var(--text-muted)] block mb-1">العميل</label>
-                      <select value={editForm.clientId} onChange={e => setEditForm({...editForm, clientId: e.target.value})} className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded-xl px-4 py-2.5 text-white outline-none focus:border-[var(--color-brand)]">
-                        <option value="">اختر العميل</option>
-                        {clients.map((c: any) => (
-                          <option key={c._id} value={c._id}>{c.name}</option>
-                        ))}
-                      </select>
+                      <CustomSelect 
+                        value={editForm.clientId} 
+                        onChange={(val) => setEditForm({...editForm, clientId: val as string})} 
+                        options={[
+                          { label: 'اختر العميل', value: '' },
+                          ...clients.map((c: any) => ({ label: c.name, value: c._id }))
+                        ]}
+                        className="w-full"
+                      />
                     </div>
                     <div>
                       <label className="text-xs text-[var(--text-muted)] block mb-1">لون المشروع</label>
@@ -255,22 +259,32 @@ export function ProjectDetailsDrawer({ project, isOpen, onClose }: ProjectDetail
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs text-[var(--text-muted)] block mb-1">النوع</label>
-                      <select value={editForm.projectType} onChange={e => setEditForm({...editForm, projectType: e.target.value})} className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded-xl px-4 py-2.5 text-white outline-none focus:border-[var(--color-brand)]">
-                        <option value="editing">مونتاج</option>
-                        <option value="financing">تمويل</option>
-                        <option value="photography">تصوير</option>
-                        <option value="publishing">نشر</option>
-                        <option value="other">أخرى</option>
-                      </select>
+                      <CustomSelect 
+                        value={editForm.projectType} 
+                        onChange={(val) => setEditForm({...editForm, projectType: val as string})} 
+                        options={[
+                          { label: 'مونتاج', value: 'editing' },
+                          { label: 'تمويل', value: 'financing' },
+                          { label: 'تصوير', value: 'photography' },
+                          { label: 'نشر', value: 'publishing' },
+                          { label: 'أخرى', value: 'other' }
+                        ]}
+                        className="w-full"
+                      />
                     </div>
                     <div>
                       <label className="text-xs text-[var(--text-muted)] block mb-1">الحالة</label>
-                      <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})} className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded-xl px-4 py-2.5 text-white outline-none focus:border-[var(--color-brand)]">
-                        <option value="current">حالي</option>
-                        <option value="future">مستقبلي</option>
-                        <option value="postponed">مؤجل</option>
-                        <option value="completed">مكتمل</option>
-                      </select>
+                      <CustomSelect 
+                        value={editForm.status} 
+                        onChange={(val) => setEditForm({...editForm, status: val as string})} 
+                        options={[
+                          { label: 'حالي', value: 'current' },
+                          { label: 'مستقبلي', value: 'future' },
+                          { label: 'مؤجل', value: 'postponed' },
+                          { label: 'مكتمل', value: 'completed' }
+                        ]}
+                        className="w-full"
+                      />
                     </div>
                   </div>
 

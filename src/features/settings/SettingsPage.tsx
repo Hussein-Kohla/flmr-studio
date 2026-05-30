@@ -2,7 +2,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { useSettings } from '@/hooks/useSettings'
 

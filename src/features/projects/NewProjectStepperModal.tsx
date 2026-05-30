@@ -4,7 +4,7 @@ import { X, Plus, ChevronRight, ChevronLeft, Calendar, Video, Share2, DollarSign
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { Textarea } from '@/components/ui/Textarea';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { useQuery, useMutation } from 'convex/react';
@@ -166,22 +166,23 @@ export function NewProjectStepperModal({ isOpen, onClose, defaultDate, defaultCl
               <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">👤 {t('selectClient')} <span className="text-red-500">*</span></label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Select
+                  <CustomSelect
                     value={clientId}
                     className={cn(showErrors && !clientId && "border-red-500 ring-1 ring-red-500")}
-                    onChange={(e) => {
-                      if (e.target.value === 'NEW_CLIENT') {
+                    onChange={(val) => {
+                      if (val === 'NEW_CLIENT') {
                         setIsNewClientModalOpen(true);
                         setClientId('');
                       } else {
-                        setClientId(e.target.value);
+                        setClientId(val as string);
                       }
                     }}
-                  >
-                    <option value="" disabled>{t('selectClient')}...</option>
-                    <option value="NEW_CLIENT" className="font-bold text-brand bg-brand/10">+ {t('addNewClient')}</option>
-                    {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                  </Select>
+                    options={[
+                      { label: t('selectClient') + '...', value: '' },
+                      { label: <span className="font-bold text-brand bg-brand/10">+ {t('addNewClient')}</span>, value: 'NEW_CLIENT' },
+                      ...clients.map((c: any) => ({ label: c.name, value: c._id }))
+                    ]}
+                  />
                 </div>
               </div>
               {showErrors && !clientId && <p className="text-red-500 text-xs mt-1">يرجى اختيار العميل للمتابعة</p>}
@@ -289,14 +290,15 @@ export function NewProjectStepperModal({ isOpen, onClose, defaultDate, defaultCl
                         onChange={e => handleUpdateTask(task.id, 'title', e.target.value)}
                         className="flex-1 h-8 text-sm"
                       />
-                      <select
+                      <CustomSelect
                         value={task.assignedTo}
-                        onChange={e => handleUpdateTask(task.id, 'assignedTo', e.target.value)}
-                        className="h-8 bg-transparent border-none text-xs text-[var(--text-secondary)] w-24 outline-none"
-                      >
-                        <option value="">👤 {t('assignee')}</option>
-                        {staffList.map((emp: any) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
-                      </select>
+                        onChange={(val) => handleUpdateTask(task.id, 'assignedTo', val as string)}
+                        className="w-32 text-xs"
+                        options={[
+                          { label: '👤 ' + t('assignee'), value: '' },
+                          ...staffList.map((emp: any) => ({ label: emp.name, value: emp._id }))
+                        ]}
+                      />
                       <button type="button" onClick={() => handleRemoveTask(task.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
                         <X size={14} />
                       </button>

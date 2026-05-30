@@ -15,8 +15,8 @@ import { PromptDialog } from '@/components/ui/PromptDialog';
 import { motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSettings } from '@/hooks/useSettings';
-import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { ExportClientPDF } from '@/components/ExportClientPDF';
 import { ExportClientExcel } from '@/components/ExportClientExcel';
 
@@ -895,23 +895,17 @@ const PRESET_AVATARS = [
                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">
                       {language === 'ar' ? 'حالة العميل' : 'Client Status'}
                     </p>
-                    {isEditing ? (
-                      <select 
-                        value={formData.status} 
-                        onChange={e => setFormData({...formData, status: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
-                      >
-                        <option value="lead">{language === 'ar' ? 'عميل محتمل (Lead)' : 'Lead'}</option>
-                        <option value="active">{language === 'ar' ? 'نشط (Active)' : 'Active'}</option>
-                        <option value="at_risk">{language === 'ar' ? 'معرض للفقد (At Risk)' : 'At Risk'}</option>
-                        <option value="suspended">{language === 'ar' ? 'معلق (Suspended)' : 'Suspended'}</option>
-                        <option value="archived">{language === 'ar' ? 'مؤرشف (Archived)' : 'Archived'}</option>
-                      </select>
-                    ) : (
-                      <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border", getStatusLabel(formData.status).color)}>
-                        {language === 'ar' ? getStatusLabel(formData.status).ar : getStatusLabel(formData.status).en}
-                      </span>
-                    )}
+                    <CustomSelect 
+                      value={formData.status} 
+                      onChange={(val) => setFormData({...formData, status: val as string})}
+                      options={[
+                        { label: language === 'ar' ? 'عميل محتمل (Lead)' : 'Lead', value: 'lead' },
+                        { label: language === 'ar' ? 'نشط (Active)' : 'Active', value: 'active' },
+                        { label: language === 'ar' ? 'معرض للفقد (At Risk)' : 'At Risk', value: 'at_risk' },
+                        { label: language === 'ar' ? 'معلق (Suspended)' : 'Suspended', value: 'suspended' },
+                        { label: language === 'ar' ? 'مؤرشف (Archived)' : 'Archived', value: 'archived' }
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

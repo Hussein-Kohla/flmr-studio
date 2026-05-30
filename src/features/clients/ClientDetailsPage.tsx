@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, X, Phone, MapPin, CheckCircle2, MessageSquare, TrendingUp, 
-User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar, Printer, Wallet, Target, DollarSign, Video, Layout, Layers, Megaphone, Activity } from 'lucide-react';
+User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar, Printer, Wallet, Target, DollarSign, Video, Layout, Layers, Megaphone, Activity, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { CustomSelect } from '@/components/ui/CustomSelect';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
@@ -15,7 +17,6 @@ import { PromptDialog } from '@/components/ui/PromptDialog';
 import { motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSettings } from '@/hooks/useSettings';
-import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { ExportClientPDF } from '@/components/ExportClientPDF';
 import { ExportClientExcel } from '@/components/ExportClientExcel';
@@ -71,7 +72,7 @@ export default function ClientDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'finance' | 'monthly'>('finance');
   const [noteSavingStatus, setNoteSavingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [newPayment, setNewPayment] = useState({ amount: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid' as 'paid' | 'pending', category: 'أخرى' });
+  const [newPayment, setNewPayment] = useState({ paid: '', remaining: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid' as 'paid' | 'pending', category: '' });
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [editingPaymentData, setEditingPaymentData] = useState({ amount: '' as string | number, description: '', date: '', status: 'paid' as 'paid' | 'pending' });
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null);
@@ -206,36 +207,32 @@ export default function ClientDetailsPage() {
   const clientPayments = transactions?.filter(p => p.clientId === client._id) || [];
 
   const allMoneyStats = useMemo(() => {
-    let stats = {
-      videoEditing: 0,
-      funding: 0,
-      advertising: 0,
-      design: 0,
-      management: 0,
-      other: 0,
-      totalIncome: 0,
-    };
+    let totalIncome = 0;
+    let funding = 0;
+    const catStats: Record<string, number> = {};
 
     clientPayments.forEach(t => {
       if (t.status !== 'paid' && t.status !== 'posted') return;
       if (t.type !== 'income') return;
       
       const amount = t.amountCents || 0;
-      const cat = t.category || '';
+      const cat = t.category || 'أخرى';
       
-      stats.totalIncome += amount;
+      totalIncome += amount;
 
-      if (cat.includes('مونتاج')) stats.videoEditing += amount;
-      else if (cat.includes('تمويل')) stats.funding += amount;
-      else if (cat.includes('دعاية')) stats.advertising += amount;
-      else if (cat.includes('تصميم')) stats.design += amount;
-      else if (cat.includes('إدارة')) stats.management += amount;
-      else stats.other += amount;
+      if (cat.includes('تمويل')) funding += amount;
+
+      if (!catStats[cat]) catStats[cat] = 0;
+      catStats[cat] += amount;
     });
 
+    const categories = Object.entries(catStats).sort((a, b) => b[1] - a[1]);
+
     return {
-      ...stats,
-      netProfit: stats.totalIncome - stats.funding
+      totalIncome,
+      funding,
+      categories,
+      netProfit: totalIncome - funding
     };
   }, [clientPayments]);
   const totalPaid = clientPayments
@@ -245,21 +242,27 @@ export default function ClientDetailsPage() {
 
   const filteredPayments = [...clientPayments].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
+  const uniqueCategories = useMemo(() => {
+    return Array.from(new Set(transactions.map((t: any) => t.category).filter(Boolean)));
+  }, [transactions]);
+
   const handleAddPayment = async () => {
-    if (!token || !newPayment.amount || isAddingPayment) return;
+    if (!token || (!newPayment.paid && !newPayment.remaining) || isAddingPayment) return;
     setIsAddingPayment(true);
     try {
-      await createPayment({
-        token,
-        clientId: client._id,
-        type: 'income',
-        amount: Number(newPayment.amount),
-        description: newPayment.description || 'Manual Payment',
-        category: newPayment.category,
-        status: newPayment.status,
-        date: new Date(newPayment.date).getTime(),
-        source: 'Manual',
-      });
+      if (Number(newPayment.paid) > 0) {
+        await createPayment({
+          token,
+          clientId: client._id,
+          type: 'income',
+          amount: Number(newPayment.paid),
+          description: newPayment.description || 'Manual Payment',
+          category: newPayment.category,
+          status: newPayment.status,
+          date: new Date(newPayment.date).getTime(),
+          source: 'Manual',
+        });
+      }
       
       // Auto-create a linked project for the timeline
       await createProject({
@@ -267,16 +270,16 @@ export default function ClientDetailsPage() {
         title: newPayment.description || (language === 'ar' ? 'دفعة جديدة' : 'New Payment'),
         clientId: client._id,
         status: 'current',
-        projectType: newPayment.category,
-        revenue: Number(newPayment.amount),
-        budget: Number(newPayment.amount),
+        projectType: newPayment.category || '',
+        revenue: Number(newPayment.paid || 0),
+        budget: Number(newPayment.paid || 0) + Number(newPayment.remaining || 0),
         startDate: new Date(newPayment.date).getTime(),
-        platform: 'أخرى',
+        platform: '',
         tags: []
       });
 
       // Reset the form completely - each addition is independent
-      setNewPayment({ amount: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid', category: 'أخرى' });
+      setNewPayment({ paid: '', remaining: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid', category: '' });
       toast("Payment added successfully", "success");
     } catch (e) {
       toast("Failed to add payment", "error");
@@ -955,17 +958,17 @@ const PRESET_AVATARS = [
                       {language === 'ar' ? 'حالة العميل' : 'Client Status'}
                     </p>
                     {isEditing ? (
-                      <select 
+                      <CustomSelect 
                         value={formData.status} 
-                        onChange={e => setFormData({...formData, status: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)]"
-                      >
-                        <option value="lead">{language === 'ar' ? 'عميل محتمل (Lead)' : 'Lead'}</option>
-                        <option value="active">{language === 'ar' ? 'نشط (Active)' : 'Active'}</option>
-                        <option value="at_risk">{language === 'ar' ? 'معرض للفقد (At Risk)' : 'At Risk'}</option>
-                        <option value="suspended">{language === 'ar' ? 'معلق (Suspended)' : 'Suspended'}</option>
-                        <option value="archived">{language === 'ar' ? 'مؤرشف (Archived)' : 'Archived'}</option>
-                      </select>
+                        onChange={(val) => setFormData({...formData, status: val as string})}
+                        options={[
+                          { label: language === 'ar' ? 'عميل محتمل (Lead)' : 'Lead', value: 'lead' },
+                          { label: language === 'ar' ? 'نشط (Active)' : 'Active', value: 'active' },
+                          { label: language === 'ar' ? 'معرض للفقد (At Risk)' : 'At Risk', value: 'at_risk' },
+                          { label: language === 'ar' ? 'معلق (Suspended)' : 'Suspended', value: 'suspended' },
+                          { label: language === 'ar' ? 'مؤرشف (Archived)' : 'Archived', value: 'archived' }
+                        ]}
+                      />
                     ) : (
                       <span className={cn("px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border", getStatusLabel(formData.status).color)}>
                         {language === 'ar' ? getStatusLabel(formData.status).ar : getStatusLabel(formData.status).en}
@@ -1081,82 +1084,76 @@ const PRESET_AVATARS = [
                 </div>
 
                 {/* Categories Stats */}
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">{language === 'ar' ? 'إحصائيات الأقسام' : 'Category Breakdown'}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <StatCard title={language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'} amount={allMoneyStats.videoEditing} icon={<Video size={24} />} color="indigo" />
-                  <StatCard title={language === 'ar' ? 'تصميم' : 'Design'} amount={allMoneyStats.design} icon={<Layout size={24} />} color="orange" />
-                  <StatCard title={language === 'ar' ? 'دعاية وتمويل' : 'Advertising'} amount={allMoneyStats.advertising || 0} icon={<Megaphone size={24} />} color="rose" />
-                  <StatCard title={language === 'ar' ? 'أخرى' : 'Other'} amount={allMoneyStats.other || 0} icon={<Layers size={24} />} color="emerald" />
-                </div>
-
-                {/* Active Projects Summary */}
-                {(() => {
-                  const clientProjects = allProjects.filter((p: any) => p.clientId === client._id && p.status !== 'done' && p.status !== 'archived');
-                  if (clientProjects.length === 0) return null;
-                  
-                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                      {clientProjects.map((proj: any) => {
-                        const pTotalTasks = proj.steps?.length || 0;
-                        const pCompletedTasks = proj.steps?.filter((s:any) => s.isCompleted).length || 0;
-                        const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;
-                        
+                {allMoneyStats.categories.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">{language === 'ar' ? 'إحصائيات الأقسام' : 'Category Breakdown'}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                      {allMoneyStats.categories.map(([cat, amount], idx) => {
+                        const icons = [<Video size={24} />, <Layout size={24} />, <Megaphone size={24} />, <Layers size={24} />, <Target size={24} />];
+                        const colors: ('indigo' | 'orange' | 'rose' | 'emerald' | 'brand')[] = ['indigo', 'orange', 'rose', 'emerald', 'brand'];
                         return (
-                          <div key={proj._id} className="bg-black/20 p-5 rounded-3xl border border-white/5">
-                            <h4 className="text-sm font-bold text-white mb-3 truncate">{proj.title}</h4>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-[10px] uppercase font-black text-[var(--text-muted)] tracking-widest">{pRatio}% Completed</span>
-                              <span className="text-[10px] uppercase font-black text-brand tracking-widest">{pCompletedTasks}/{pTotalTasks} Tasks</span>
-                            </div>
-                            <div className="w-full h-2 rounded-full bg-[var(--border-default)] overflow-hidden">
-                              <div className="h-full bg-[var(--color-brand)] transition-all" style={{ width: `${pRatio}%` }} />
-                            </div>
-                            {proj.deadline && (
-                              <div className="mt-3 text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-2">
-                                <Calendar size={12} /> Deadline: {new Date(proj.deadline).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
+                          <StatCard 
+                            key={cat} 
+                            title={cat} 
+                            amount={amount} 
+                            icon={icons[idx % icons.length]} 
+                            color={colors[idx % colors.length]} 
+                          />
                         );
                       })}
                     </div>
-                  );
-                })()}
+                  </>
+                )}
 
                 {/* Add Payment Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 p-6 bg-white/5 rounded-3xl border border-white/5 mb-8">
                    <div className="space-y-1">
-                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Amount</p>
-                     <input 
-                       type="number" 
-                       value={newPayment.amount}
-                       onChange={e => setNewPayment({...newPayment, amount: e.target.value})}
-                       placeholder="0.00"
-                       className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-12 py-3 text-white outline-none focus:border-[var(--color-brand)]"
-                     />
+                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">{language === 'ar' ? 'المدفوع' : 'Paid'}</p>
+                     <div className="relative">
+                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-black">$</span>
+                       <input 
+                         type="number" 
+                         value={newPayment.paid}
+                         onChange={e => setNewPayment({...newPayment, paid: e.target.value})}
+                         placeholder="0.00"
+                         className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-8 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] placeholder:text-white/20 transition-colors"
+                       />
+                     </div>
                    </div>
                    <div className="space-y-1">
-                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Description</p>
-                     <input 
-                       type="text" 
-                       value={newPayment.description}
-                       onChange={e => setNewPayment({...newPayment, description: e.target.value})}
-                       placeholder="e.g. Logo Design"
+                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">{language === 'ar' ? 'المتبقي' : 'Remaining'}</p>
+                     <div className="relative">
+                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-black">$</span>
+                       <input 
+                         type="number" 
+                         value={newPayment.remaining}
+                         onChange={e => setNewPayment({...newPayment, remaining: e.target.value})}
+                         placeholder="0.00"
+                         className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-8 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] placeholder:text-white/20 transition-colors"
+                       />
+                     </div>
+                   </div>
+                   <div className="space-y-1 lg:col-span-2">
+                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Description / Project</p>
+                     <div className="relative">
+                       <FileText size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+                       <input 
+                         type="text" 
+                         value={newPayment.description}
+                         onChange={e => setNewPayment({...newPayment, description: e.target.value})}
+                         placeholder="e.g. Logo Design"
                           className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-12 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] placeholder:text-white/20 transition-colors"
-                     />
+                       />
+                     </div>
                    </div>
                    <div className="space-y-1">
                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">{language === 'ar' ? 'القسم' : 'Category'}</p>
-                     <select 
+                     <AutocompleteInput 
                        value={newPayment.category}
-                       onChange={e => setNewPayment({...newPayment, category: e.target.value})}
-                       className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] transition-colors h-[50px] appearance-none"
-                     >
-                       <option value="تصميم" className="bg-[#1f2937]">{language === 'ar' ? 'تصميم' : 'Design'}</option>
-                       <option value="مونتاج" className="bg-[#1f2937]">{language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'}</option>
-                       <option value="دعاية" className="bg-[#1f2937]">{language === 'ar' ? 'دعاية وتمويل' : 'Advertising'}</option>
-                       <option value="أخرى" className="bg-[#1f2937]">{language === 'ar' ? 'أخرى' : 'Other'}</option>
-                     </select>
+                       onChange={(val) => setNewPayment({...newPayment, category: val})}
+                       options={uniqueCategories}
+                       placeholder={language === 'ar' ? "اختر أو اكتب قسماً جديداً..." : "Select or type category..."}
+                     />
                    </div>
                    <div className="space-y-1">
                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Date</p>
@@ -1165,175 +1162,79 @@ const PRESET_AVATARS = [
                         onChange={(date) => setNewPayment(prev => ({...prev, date}))}
                       />
                    </div>
-                   <div className="space-y-1">
-                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Status</p>
-                      <div className="flex gap-2 p-1 bg-black/20 border border-white/10 rounded-xl h-[50px]">
-                        <button 
-                          onClick={() => setNewPayment({...newPayment, status: 'paid'})}
-                          className={cn(
-                            "flex-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                            newPayment.status === 'paid' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-white/20 hover:text-white/40"
-                          )}
-                        >
-                          Paid
-                        </button>
-                        <button 
-                          onClick={() => setNewPayment({...newPayment, status: 'pending'})}
-                          className={cn(
-                            "flex-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                            newPayment.status === 'pending' ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-white/20 hover:text-white/40"
-                          )}
-                        >
-                          Pending
-                        </button>
-                      </div>
-                   </div>
-                   <div className="flex items-end lg:col-span-2">
+                   <div className="flex items-end">
                      <Button 
                        className="w-full h-[50px] rounded-xl font-bold bg-[#5850ec] hover:bg-[#4840cc]" 
                        onClick={handleAddPayment}
                        loading={isAddingPayment}
-                       disabled={!newPayment.amount}
+                       disabled={!newPayment.paid && !newPayment.remaining}
                      >
                        Add Record
                      </Button>
                    </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="text-[10px] font-black text-white/30 uppercase tracking-widest border-b border-white/5">
-                        <th className="py-6 px-4">Date</th>
-                        <th className="py-6 px-4">Description</th>
-                        <th className="py-6 px-4">Category</th>
-                        <th className="py-6 px-4 text-right">Amount</th>
-                        <th className="py-6 px-4 text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {filteredPayments.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-12 text-center text-white/20 font-bold uppercase tracking-widest">No financial records found</td>
-                        </tr>
-                      ) : (
-                        filteredPayments.map((p) => (
-                          <tr key={p._id} className="group hover:bg-white/[0.02] transition-all">
-                            <td className="py-6 px-4">
-                              {editingPaymentId === p._id ? (
-                                <DatePicker 
-                                  value={editingPaymentData.date}
-                                  onChange={date => setEditingPaymentData({...editingPaymentData, date})}
-                                />
-                              ) : (
-                                <span className="text-white/80 font-bold text-sm">{formatDate(p.date || p.createdAt)}</span>
-                              )}
-                            </td>
-                            <td className="py-6 px-4">
-                              {editingPaymentId === p._id ? (
-                                <input 
-                                  type="text"
-                                  value={editingPaymentData.description}
-                                  onChange={e => setEditingPaymentData({...editingPaymentData, description: e.target.value})}
-                                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 w-full text-white outline-none focus:border-indigo-500"
-                                />
-                              ) : (
-                                <div className="flex flex-col">
-                                  <span className="text-white font-bold text-sm">{p.description || 'Manual Payment'}</span>
-                                  <span className="text-white/40 text-[10px] uppercase font-black mt-0.5 tracking-wider">Ref: {p._id.slice(-6)}</span>
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-6 px-4">
-                               <span className="text-white/60 font-bold text-xs px-3 py-1 bg-white/5 rounded-full border border-white/10">{p.category || 'أخرى'}</span>
-                            </td>
-                            <td className="py-6 px-4 text-right">
-                              {editingPaymentId === p._id ? (
-                                <input 
-                                  type="number"
-                                  value={editingPaymentData.amount}
-                                  onChange={e => setEditingPaymentData({...editingPaymentData, amount: e.target.value === '' ? '' : Number(e.target.value)})}
-                                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 w-24 text-right text-white outline-none focus:border-indigo-500"
-                                />
-                              ) : (
-                                <span className="text-white font-bold text-sm">
-                                  {formatCurrency(p.amountCents || 0)}
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-6 px-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {editingPaymentId === p._id ? (
-                                  <div className="flex gap-1 p-1 bg-black/40 border border-white/10 rounded-xl">
-                                    <button 
-                                      onClick={() => setEditingPaymentData({...editingPaymentData, status: 'paid'})}
-                                      className={cn(
-                                        "px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all",
-                                        editingPaymentData.status === 'paid' ? "bg-emerald-500 text-white" : "text-white/20"
-                                      )}
-                                    >
-                                      Paid
-                                    </button>
-                                    <button 
-                                      onClick={() => setEditingPaymentData({...editingPaymentData, status: 'pending'})}
-                                      className={cn(
-                                        "px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all",
-                                        editingPaymentData.status === 'pending' ? "bg-orange-500 text-white" : "text-white/20"
-                                      )}
-                                    >
-                                      Pending
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button 
-                                    onClick={() => handleToggleStatus(p._id, p.status || 'posted')}
-                                    disabled={false}
-                                  >
-                                    <Badge 
-                                      variant={(p.status === 'paid' || p.status === 'posted') ? 'success' : 'warning'} 
-                                      className={cn(
-                                        "uppercase text-[10px] font-black px-4 py-1 rounded-xl border-none transition-all",
-                                        (p.status !== 'paid' && p.status !== 'posted') && "cursor-pointer hover:scale-105 active:scale-95"
-                                      )}
-                                    >
-                                      {(p.status === 'paid' || p.status === 'posted') ? 'PAID' : 'PENDING'}
-                                    </Badge>
-                                  </button>
-                                )}
-                                
-                                {editingPaymentId === p._id ? (
-                                  <button 
-                                    onClick={() => handleSaveEdit(p._id)}
-                                    className="p-2 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all"
-                                  >
-                                    <Check size={14} />
-                                  </button>
-                                ) : (
-                                <div className="flex items-center gap-1">
-                                  <button 
-                                    onClick={() => handleStartEdit(p)}
-                                    className="p-2 bg-white/5 text-white/40 hover:bg-white/10 hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                    title="Edit"
-                                  >
-                                    <Pencil size={14} />
-                                  </button>
-                                  <button 
-                                    onClick={() => setDeleteConfirmId(p._id)}
-                                    className="p-2 bg-red-500/10 text-red-500/40 hover:bg-red-500 hover:text-white rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                    title="Delete"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                {/* Active Projects Summary / Combined List */}
+                {(() => {
+                  const clientProjects = allProjects.filter((p: any) => p.clientId === client._id && p.status !== 'archived').sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+                  if (clientProjects.length === 0) return null;
+                  
+                  return (
+                    <div className="mb-10">
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">{language === 'ar' ? 'المشاريع' : 'Projects'}</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="text-[10px] font-black text-white/30 uppercase tracking-widest border-b border-white/5">
+                              <th className="py-6 px-4">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                              <th className="py-6 px-4">{language === 'ar' ? 'المشروع' : 'Project Name'}</th>
+                              <th className="py-6 px-4">{language === 'ar' ? 'المنصة / النوع' : 'Platform / Type'}</th>
+                              <th className="py-6 px-4 text-right">{language === 'ar' ? 'المدفوع' : 'Paid'}</th>
+                              <th className="py-6 px-4 text-right">{language === 'ar' ? 'المتبقي' : 'Remaining'}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {clientProjects.map((proj: any) => {
+                              return (
+                                <tr key={proj._id} className="group hover:bg-white/[0.02] transition-all">
+                                  <td className="py-6 px-4">
+                                    <span className="text-white/80 font-bold text-sm">{formatDate(proj.createdAt || Date.now())}</span>
+                                  </td>
+                                  <td className="py-6 px-4">
+                                    <div className="flex flex-col">
+                                      <span className="text-white font-bold text-sm">{proj.title}</span>
+                                      <span className="text-white/40 text-[10px] uppercase font-black mt-0.5 tracking-wider">Ref: {proj._id.slice(-6)}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-6 px-4">
+                                    <div className="flex flex-wrap gap-1">
+                                      {proj.platform && proj.platform.split(',').filter(Boolean).map((plat: string, i: number) => (
+                                        <span key={`plat-${i}`} className="text-emerald-400/80 font-bold text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">{plat.trim()}</span>
+                                      ))}
+                                      {proj.projectType && proj.projectType.split(',').filter(Boolean).map((type: string, i: number) => (
+                                        <span key={`type-${i}`} className="text-indigo-400/80 font-bold text-xs px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">{type.trim()}</span>
+                                      ))}
+                                    </div>
+                                  </td>
+                                  <td className="py-6 px-4 text-right">
+                                    <span className="text-emerald-400 font-bold text-sm">
+                                      {formatCurrency(proj.revenueCents || 0)}
+                                    </span>
+                                  </td>
+                                  <td className="py-6 px-4 text-right">
+                                    <span className="text-orange-400 font-bold text-sm">
+                                      {formatCurrency(Math.max(0, (proj.budgetCents || 0) - (proj.revenueCents || 0)))}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { Textarea } from '@/components/ui/Textarea';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
@@ -89,28 +89,23 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
                 <Plus size={10} /> جديد
               </button>
             </div>
-            <Select
-              label="Client *"
-              required
+            <CustomSelect
               value={clientId}
-              onChange={(e) => {
-                if (e.target.value === 'NEW_CLIENT') {
+              onChange={(val) => {
+                if (val === 'NEW_CLIENT') {
                   setIsNewClientModalOpen(true);
                   // Reset select value to empty string so 'Create New Client...' isn't actually selected
                   setClientId('');
                 } else {
-                  setClientId(e.target.value);
+                  setClientId(val as string);
                 }
               }}
-            >
-              <option value="" disabled>Select a client...</option>
-              <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
-                + Create New Client...
-              </option>
-              {clients?.map((client) => (
-                <option key={client._id} value={client._id}>{client.name}</option>
-              ))}
-            </Select>
+              options={[
+                { label: 'Select a client...', value: '' },
+                { label: <span className="font-bold text-[var(--color-brand)] bg-brand/10">+ Create New Client...</span>, value: 'NEW_CLIENT' },
+                ...clients?.map((client) => ({ label: client.name, value: client._id })) || []
+              ]}
+            />
           </div>
 
           <SmartDropdown label="Advanced Options (Description & Deadline)">

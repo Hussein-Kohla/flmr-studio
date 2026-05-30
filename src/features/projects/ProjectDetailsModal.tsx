@@ -4,6 +4,7 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { formatDate, cn, calculateProjectProgress } from '@/lib/utils';
@@ -365,13 +366,18 @@ export function ProjectDetailsModal({ isOpen, onClose, project }: ProjectDetails
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-[var(--text-muted)]">Current Stage</p>
                     {isEditing ? (
-                      <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full text-sm font-medium bg-[var(--bg-surface)] border border-[var(--border-subtle)] focus:border-[var(--color-brand)] rounded-lg px-3 py-2 outline-none mt-2 transition-colors">
-                        <option value="draft">Draft</option>
-                        <option value="in_review">In Review</option>
-                        <option value="revision">Revision</option>
-                        <option value="approved">Approved</option>
-                        <option value="done">Done</option>
-                      </select>
+                      <CustomSelect
+                        value={formData.status}
+                        onChange={(val) => setFormData({...formData, status: val as string})}
+                        options={[
+                          { label: 'Draft', value: 'draft' },
+                          { label: 'In Review', value: 'in_review' },
+                          { label: 'Revision', value: 'revision' },
+                          { label: 'Approved', value: 'approved' },
+                          { label: 'Done', value: 'done' },
+                        ]}
+                        className="w-full mt-2"
+                      />
                     ) : (
                       <div className="mt-1">
                         <Badge variant={meta.variant}>{meta.label}</Badge>

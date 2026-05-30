@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '../../lib/utils';
 import { SmartDropdown } from '@/components/ui/SmartDropdown';
 import { NewClientModal } from '../clients/NewClientModal';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import { TASK_PRIORITIES } from '../tasks/taskOptions';
 
 export type EntryCategory = 'calendar' | 'project' | 'task' | 'publishing';
@@ -367,23 +368,23 @@ export function NewEventModal({
             {itemCategory === 'calendar' && (
               <div>
                 <label className="form-label">{t("eventTypeLabel")} *</label>
-                <select
-                  required
+                <CustomSelect
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="input-field select-field"
-                >
-                  <option value="montage">مونتاج</option>
-                  <option value="dish_ad">اعلان دش</option>
-                  <option value="match_ad">اعلان مباريات</option>
-                  <option value="fb_image">صورة فيس</option>
-                  <option value="collection">تحصيل</option>
-                  <option value="send_money">ابعت فلوس</option>
-                  <option value="meeting">Meeting</option>
-                  <option value="deadline">Deadline</option>
-                  <option value="booking">Booking</option>
-                  <option value="other">Other</option>
-                </select>
+                  onChange={(val) => setType(val as string)}
+                  options={[
+                    { label: 'مونتاج', value: 'montage' },
+                    { label: 'اعلان دش', value: 'dish_ad' },
+                    { label: 'اعلان مباريات', value: 'match_ad' },
+                    { label: 'صورة فيس', value: 'fb_image' },
+                    { label: 'تحصيل', value: 'collection' },
+                    { label: 'ابعت فلوس', value: 'send_money' },
+                    { label: 'Meeting', value: 'meeting' },
+                    { label: 'Deadline', value: 'deadline' },
+                    { label: 'Booking', value: 'booking' },
+                    { label: 'Other', value: 'other' }
+                  ]}
+                  className="w-full"
+                />
               </div>
             )}
 
@@ -401,23 +402,31 @@ export function NewEventModal({
                   />
                 </div>
                 <div>
-                  <label className="form-label">النوع</label>
-                  <select value={projectType} onChange={e => setProjectType(e.target.value)} className="input-field select-field">
-                    <option value="editing">مونتاج</option>
-                    <option value="financing">تمويل</option>
-                    <option value="photography">تصوير</option>
-                    <option value="publishing">نشر</option>
-                    <option value="other">أخرى</option>
-                  </select>
+                  <CustomSelect 
+                    value={projectType} 
+                    onChange={(val) => setProjectType(val as string)} 
+                    className="w-full"
+                    options={[
+                      { label: 'مونتاج', value: 'editing' },
+                      { label: 'تمويل', value: 'financing' },
+                      { label: 'تصوير', value: 'photography' },
+                      { label: 'نشر', value: 'publishing' },
+                      { label: 'أخرى', value: 'other' }
+                    ]}
+                  />
                 </div>
                 <div>
-                  <label className="form-label">الحالة</label>
-                  <select value={projectStatus} onChange={e => setProjectStatus(e.target.value)} className="input-field select-field">
-                    <option value="current">حالي</option>
-                    <option value="future">مستقبلي</option>
-                    <option value="postponed">مؤجل</option>
-                    <option value="completed">مكتمل</option>
-                  </select>
+                  <CustomSelect 
+                    value={projectStatus} 
+                    onChange={(val) => setProjectStatus(val as string)} 
+                    className="w-full"
+                    options={[
+                      { label: 'حالي', value: 'current' },
+                      { label: 'مستقبلي', value: 'future' },
+                      { label: 'مؤجل', value: 'postponed' },
+                      { label: 'مكتمل', value: 'completed' }
+                    ]}
+                  />
                 </div>
                 <div className="col-span-2">
                   <label className="form-label">لون المشروع</label>
@@ -433,20 +442,20 @@ export function NewEventModal({
             {itemCategory === 'publishing' && (
               <div>
                 <label className="form-label">{t("platformLabel")} *</label>
-                <select
-                  required
+                <CustomSelect
                   value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  className="input-field select-field"
-                >
-                  <option value="facebook">Facebook</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="twitter">Twitter</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="other">Other</option>
-                </select>
+                  onChange={(val) => setPlatform(val as string)}
+                  className="w-full"
+                  options={[
+                    { label: 'Facebook', value: 'facebook' },
+                    { label: 'Instagram', value: 'instagram' },
+                    { label: 'YouTube', value: 'youtube' },
+                    { label: 'TikTok', value: 'tiktok' },
+                    { label: 'Twitter', value: 'twitter' },
+                    { label: 'LinkedIn', value: 'linkedin' },
+                    { label: 'Other', value: 'other' }
+                  ]}
+                />
               </div>
             )}
           </div>
@@ -454,17 +463,15 @@ export function NewEventModal({
           {itemCategory === 'task' && (
             <div>
               <label className="form-label">{t('taskColumnLabel')}</label>
-              <select
+              <CustomSelect
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="input-field select-field"
-              >
-                {(taskStages || []).map((stage) => (
-                  <option key={stage._id} value={stage.slug}>
-                    {stage.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setStatus(val as string)}
+                className="w-full"
+                options={(taskStages || []).map((stage) => ({
+                  label: stage.name,
+                  value: stage.slug || stage._id
+                }))}
+              />
             </div>
           )}
 
@@ -483,42 +490,38 @@ export function NewEventModal({
                     </button>
                   </div>
                   <label className="form-label">{t("clientRelationship")}</label>
-                  <select
+                  <CustomSelect
                     value={clientId}
-                    onChange={(e) => {
-                      if (e.target.value === 'NEW_CLIENT') {
+                    onChange={(val) => {
+                      if (val === 'NEW_CLIENT') {
                         setIsNewClientModalOpen(true);
                         setClientId('');
                         setProjectId('');
                       } else {
-                        setClientId(e.target.value);
+                        setClientId(val as string);
                         setProjectId(''); // reset project on client change
                       }
                     }}
-                    className="input-field select-field"
-                  >
-                    <option value="">{t("noClientAssoc")}</option>
-                    <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
-                      + Create New Client...
-                    </option>
-                    {clients.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+                    className="w-full"
+                    options={[
+                      { label: t("noClientAssoc") || 'No Client', value: '' },
+                      { label: '+ Create New Client...', value: 'NEW_CLIENT' },
+                      ...clients.map((c) => ({ label: c.name, value: c._id }))
+                    ]}
+                  />
                 </div>
 
                 <div>
                   <label className="form-label">{t("associatedProject")}</label>
-                  <select
+                  <CustomSelect
                     value={projectId}
-                    onChange={(e) => setProjectId(e.target.value)}
-                    className="input-field select-field"
-                  >
-                    <option value="">{t("noProjectAssoc")}</option>
-                    {projects.map((p) => (
-                      <option key={p._id} value={p._id}>{p.title}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setProjectId(val as string)}
+                    className="w-full"
+                    options={[
+                      { label: t("noProjectAssoc") || 'No Project', value: '' },
+                      ...projects.map((p) => ({ label: p.title, value: p._id }))
+                    ]}
+                  />
                 </div>
               </div>
             </SmartDropdown>
@@ -537,28 +540,24 @@ export function NewEventModal({
                 </button>
               </div>
               <label className="form-label">{t("clientNameLabel")} *</label>
-              <select
-                required
+              <CustomSelect
                 value={clientId}
-                onChange={(e) => {
-                  if (e.target.value === 'NEW_CLIENT') {
+                onChange={(val) => {
+                  if (val === 'NEW_CLIENT') {
                     setIsNewClientModalOpen(true);
                     setClientId('');
                   } else {
-                    setClientId(e.target.value);
+                    setClientId(val as string);
                   }
                 }}
-                className="input-field select-field"
-                disabled={!!eventToEdit} // cannot change client of existing project here
-              >
-                <option value="" disabled>Select Client...</option>
-                <option value="NEW_CLIENT" className="font-bold text-[var(--color-brand)] bg-brand/10">
-                  + Create New Client...
-                </option>
-                {clients.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
+                disabled={!!eventToEdit}
+                className="w-full"
+                options={[
+                  { label: 'Select Client...', value: '' },
+                  { label: '+ Create New Client...', value: 'NEW_CLIENT' },
+                  ...clients.map((c) => ({ label: c.name, value: c._id }))
+                ]}
+              />
             </div>
           )}
 

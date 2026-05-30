@@ -10,7 +10,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/Toast';
-import { Select } from '@/components/ui/Select';
 
 interface NewClientModalProps {
   isOpen: boolean;
