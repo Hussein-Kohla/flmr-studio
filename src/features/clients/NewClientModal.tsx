@@ -269,7 +269,7 @@ const PRESET_AVATARS = [
                      value={tagInput}
                      onChange={(e) => setTagInput(e.target.value)}
                      placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
-                     className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--color-brand)] placeholder:text-[var(--text-muted)] transition-colors shadow-inner"
+                     className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-xl pr-4 pl-12 py-3 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--color-brand)] placeholder:text-[var(--text-muted)] transition-colors shadow-inner"
                      onKeyDown={e => {
                        if (e.key === 'Enter') {
                          e.preventDefault();

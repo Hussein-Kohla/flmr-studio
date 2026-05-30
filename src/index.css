@@ -2,6 +2,7 @@
    FLMR Studio — index.css
    ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 @import "tailwindcss";
 @source "./components";
 @source "./features";
@@ -158,8 +159,6 @@
 .animate-slide-left { animation: slideInLeft var(--transition-normal) var(--ease-out) both; }
 .animate-spin       { animation: spin 1s linear infinite; }
 .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
 /* Geist Mono — numeric font (clients page stat cards) */
 @font-face {

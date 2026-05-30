@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const CALENDAR_ENTRY_CATEGORIES: EntryCategory[] = ['project', 'task']
+const CALENDAR_ENTRY_CATEGORIES: EntryCategory[] = ['task']
 
 const TYPE_VARIANT: Record<string, "muted" | "brand" | "warning" | "danger" | "success" | "info" | "default"> = {
   meeting:    'brand',

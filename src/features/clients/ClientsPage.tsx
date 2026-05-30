@@ -14,11 +14,10 @@ import {
   Users, LayoutGrid, List as ListIcon, Plus, Search, 
   ChevronDown, ChevronRight, Folder, MoreHorizontal, 
   BarChart2, Phone, Mail, CheckCircle2, AlertTriangle, 
-  Clock, XCircle, FileText
+  Clock, XCircle, FileText, Wallet
 } from 'lucide-react';
 import { NewClientModal } from './NewClientModal';
 import { NewStaffModal } from './NewStaffModal';
-import { ClientDetailsModal } from './ClientDetailsModal';
 import { NewEventModal } from '../calendar/NewEventModal';
 
 const ITEMS_PER_PAGE = 20;
@@ -50,7 +49,6 @@ export default function ClientsPage() {
   const [isNewClientOpen, setIsNewClientOpen] = useState(false);
   const [isNewStaffOpen, setIsNewStaffOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'clients' | 'staff'>('clients');
-  const [selectedClientForDetails, setSelectedClientForDetails] = useState<any | null>(null);
 
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
   const [eventInitialClientId, setEventInitialClientId] = useState('');
@@ -205,7 +203,7 @@ export default function ClientsPage() {
             clients={filteredClients} 
             getProjects={getClientProjects} 
             getFinancials={getClientFinancials} 
-            onClientClick={setSelectedClientForDetails}
+            onClientClick={(client: any) => navigate(`/clients/${client._id}`)}
             onProjectClick={(pId: any) => navigate('/projects')}
           />
         ) : (
@@ -213,7 +211,7 @@ export default function ClientsPage() {
             clients={filteredClients} 
             getProjects={getClientProjects} 
             getFinancials={getClientFinancials} 
-            onClientClick={setSelectedClientForDetails}
+            onClientClick={(client: any) => navigate(`/clients/${client._id}`)}
             onProjectClick={(pId: any) => navigate('/projects')}
             onAddProject={(cId: string) => {
               setEventInitialClientId(cId);
@@ -259,13 +257,6 @@ export default function ClientsPage() {
         initialClientId={eventInitialClientId}
         allowedCategories={['project']}
       />
-      {selectedClientForDetails && (
-        <ClientDetailsModal 
-          isOpen={true} 
-          onClose={() => setSelectedClientForDetails(null)} 
-          client={selectedClientForDetails} 
-        />
-      )}
     </PageWrapper>
   );
 }
@@ -637,7 +628,8 @@ function GridView({ clients, getProjects, getFinancials, onClientClick, onProjec
 
 function GridCard({ client, projects, financials, onClientClick, onProjectClick, onAddProject }: any) {
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
-  const { t } = useSettings();
+  const { t, language } = useSettings();
+  const navigate = useNavigate();
 
   const getStatusTranslationKey = (status: string) => {
     const mapping: Record<string, string> = {
@@ -767,15 +759,36 @@ function GridCard({ client, projects, financials, onClientClick, onProjectClick,
         )}
       </AnimatePresence>
 
-      <div className="h-px bg-[var(--border-default)] w-full my-4" />
+      <div className="flex flex-col mt-auto gap-4">
+        {/* Financial Status Indicator */}
+        <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest uppercase">{t('totalRevenue') || 'إجمالي الدخل'}</span>
+            <span className="text-lg font-black text-emerald-400">{formatCurrency(financials.total)}</span>
+          </div>
+          <div className="h-8 w-px bg-white/10 mx-2" />
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest uppercase">{t('balance') || 'الرصيد'}</span>
+            <span className={cn("text-lg font-black", (client.balanceCents || 0) >= 0 ? "text-emerald-400" : "text-orange-400")}>
+              {formatCurrency(client.balanceCents || 0)}
+            </span>
+          </div>
+        </div>
 
-      <div className="flex flex-col mt-auto">
-        <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest mb-1 uppercase">{t('average')}</span>
-        <div className="flex justify-between items-end">
-          <span className="text-xl font-black text-[var(--color-brand)]">{formatCurrency(financials.avg)}</span>
-          <span className="text-[10px] bg-[var(--color-brand)]/10 text-[var(--color-brand)] px-2 py-1 rounded border border-[var(--color-brand)]/20 flex items-center gap-1 font-bold">
-            <CheckCircle2 size={10} /> {t('avgMonthlyIncome')}
-          </span>
+        {/* Quick Actions */}
+        <div className="flex gap-2 w-full">
+          <button 
+            onClick={(e) => { e.stopPropagation(); navigate(`/clients/${client._id}?tab=finance`); }}
+            className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white py-2 rounded-xl text-xs font-bold transition-all border border-emerald-500/20"
+          >
+            <Wallet size={14} /> {language === 'ar' ? 'إضافة دفعة' : 'Add Payment'}
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onClientClick(); }}
+            className="flex items-center justify-center bg-white/5 hover:bg-white/10 text-white w-10 py-2 rounded-xl transition-all border border-white/5"
+          >
+            <ChevronRight size={16} className="rotate-180" />
+          </button>
         </div>
       </div>
     </div>

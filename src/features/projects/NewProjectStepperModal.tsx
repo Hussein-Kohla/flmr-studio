@@ -17,6 +17,8 @@ import { NewClientModal } from '../clients/NewClientModal';
 interface NewProjectStepperModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultDate?: string;
+  defaultClientId?: string;
 }
 
 const PROJECT_TYPES = [
@@ -39,7 +41,7 @@ const MOCK_EMPLOYEES = [
   { id: 'emp_4', name: 'عمر', avatar: '👨‍🔧' },
 ];
 
-export function NewProjectStepperModal({ isOpen, onClose }: NewProjectStepperModalProps) {
+export function NewProjectStepperModal({ isOpen, onClose, defaultDate, defaultClientId }: NewProjectStepperModalProps) {
   const { token } = useAuth();
   const { t } = useSettings();
   const clientsData = useQuery(api.clients.getClients, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip');
@@ -67,20 +69,20 @@ export function NewProjectStepperModal({ isOpen, onClose }: NewProjectStepperMod
   React.useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setClientId('');
+      setClientId(defaultClientId || '');
       setAssignedTo('');
       setProjectType('');
       setTitle('');
       setDescription('');
-      setStartDate('');
-      setDeadline('');
+      setStartDate(defaultDate || '');
+      setDeadline(defaultDate || '');
       setTasks([]);
       setBudget('');
       setColor(COLORS[0]);
       setStatus('current');
       setShowErrors(false);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultDate, defaultClientId]);
 
   if (!isOpen) return null;
 

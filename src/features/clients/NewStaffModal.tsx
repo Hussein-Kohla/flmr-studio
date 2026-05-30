@@ -212,7 +212,7 @@ export function NewStaffModal({ isOpen, onClose, onSuccess, staffToEdit }: NewSt
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 pr-12 text-sm font-bold text-white outline-none focus:border-emerald-500 placeholder:text-white/20 transition-colors shadow-inner"
+                      className="w-full bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-xl pr-4 pl-12 py-3 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[var(--color-brand)] placeholder:text-[var(--text-muted)] transition-colors shadow-inner"
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
                           e.preventDefault();

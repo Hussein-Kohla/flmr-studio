@@ -11,6 +11,7 @@ const Login      = lazy(() => import('@/features/auth/LoginPage'))
 const Dashboard  = lazy(() => import('@/features/dashboard/DashboardPage'))
 const Analytics  = lazy(() => import('@/features/analytics/AnalyticsPage'))
 const Clients    = lazy(() => import('@/features/clients/ClientsPage'))
+const ClientDetails = lazy(() => import('@/features/clients/ClientDetailsPage'))
 const ClientAnalytics = lazy(() => import('@/features/clients/ClientAnalyticsPage'))
 const Projects   = lazy(() => import('@/features/projects/ProjectsPage'))
 const Calendar   = lazy(() => import('@/features/calendar/CalendarPage'))
@@ -56,6 +57,7 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientDetails />} />
                 <Route path="/clients/analytics" element={<ClientAnalytics />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/calendar" element={<Calendar />} />

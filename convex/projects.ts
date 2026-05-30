@@ -28,6 +28,7 @@ export const createProject = mutation({
     deadline: v.optional(v.number()),
     startDate: v.optional(v.number()),
     budget: v.optional(v.number()),
+    revenue: v.optional(v.number()),
     projectType: v.optional(v.string()),
     platform: v.optional(v.string()),
     color: v.optional(v.string()),
@@ -60,6 +61,7 @@ export const createProject = mutation({
       status: args.status || "draft",
       deadline: args.deadline,
       budgetCents: args.budget !== undefined ? toCents(args.budget) : undefined,
+      revenueCents: args.revenue !== undefined ? toCents(args.revenue) : undefined,
       startDate: args.startDate,
       projectType: args.projectType,
       platform: args.platform,
@@ -107,6 +109,7 @@ export const updateProject = mutation({
     deadline: v.optional(v.number()),
     startDate: v.optional(v.number()),
     budget: v.optional(v.number()),
+    revenue: v.optional(v.number()),
     projectType: v.optional(v.string()),
     platform: v.optional(v.string()),
     color: v.optional(v.string()),
@@ -127,6 +130,7 @@ export const updateProject = mutation({
     if (args.deadline !== undefined) updates.deadline = args.deadline;
     if (args.startDate !== undefined) updates.startDate = args.startDate;
     if (args.budget !== undefined) updates.budgetCents = toCents(args.budget);
+    if (args.revenue !== undefined) updates.revenueCents = toCents(args.revenue);
     if (args.projectType !== undefined) updates.projectType = args.projectType;
     if (args.platform !== undefined) updates.platform = args.platform;
     if (args.color !== undefined) updates.color = args.color;

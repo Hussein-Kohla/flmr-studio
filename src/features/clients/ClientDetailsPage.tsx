@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, X, Phone, MapPin, CheckCircle2, MessageSquare, TrendingUp, 
-User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar, Printer } from 'lucide-react';
+User, Edit2, Mail, Briefcase, Pencil, Check, Trash2, Calendar, Printer, Wallet, Target, DollarSign, Video, Layout, Layers, Megaphone, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -20,11 +20,9 @@ import { Input } from '@/components/ui/Input';
 import { ExportClientPDF } from '@/components/ExportClientPDF';
 import { ExportClientExcel } from '@/components/ExportClientExcel';
 
-interface ClientDetailsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  client: any | null;
-}
+import { useParams, useNavigate } from 'react-router-dom';
+import { PageWrapper } from '@/components/layout/PageWrapper';
+import { ChevronRight } from 'lucide-react';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -36,10 +34,15 @@ const TABS = [
   { id: 'monthly', label: 'Monthly Payments' },
 ] as const;
 
-export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
+export default function ClientDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { token } = useAuth();
   const { toast } = useToast();
   const { language } = useSettings();
+
+  const allClients = useQuery(api.clients.getAllClients, token ? { token } : 'skip');
+  const client = allClients?.find((c: any) => c._id === id);
   
   const getStatusLabel = (status: string) => {
     const mapping: Record<string, { en: string, ar: string, color: string }> = {
@@ -76,11 +79,12 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   const [monthEditData, setMonthEditData] = useState({ amount: '' as string | number, status: 'pending', updateGlobal: false, year: new Date().getFullYear() });
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   
-  // Use transactions instead of payments for subscription tracking
   const transactionsData = useQuery(api.transactions.getTransactions, token ? { token, paginationOpts: { numItems: 1000, cursor: null } } : 'skip');
   const transactions = transactionsData?.page || [];
   
-  const allClients = useQuery(api.clients.getAllClients, token ? { token } : 'skip');
+  const projectsData = useQuery(api.projects.getProjects, token ? { token, paginationOpts: { numItems: 100, cursor: null } } : 'skip');
+  const allProjects = projectsData?.page || [];
+
   const allTags = Array.from(new Set((allClients || []).flatMap(c => c.tags || [])));
   
   const updateClient = useMutation(api.clients.updateClient);
@@ -88,6 +92,7 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   const createPayment = useMutation(api.transactions.createTransaction);
   const updatePayment = useMutation(api.transactions.updateTransaction);
   const deletePayment = useMutation(api.transactions.deleteTransaction);
+  const createProject = useMutation(api.projects.createProject);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -191,11 +196,48 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
     }
   }, [debouncedNotes, client?._id, token]);
 
-  if (!isOpen || !client) return null;
+  if (!client) return (
+    <PageWrapper title="Loading...">
+      <div className="p-10 text-center text-white/50">Loading client data...</div>
+    </PageWrapper>
+  );
 
   // Client-specific payments using transactions
   const clientPayments = transactions?.filter(p => p.clientId === client._id) || [];
 
+  const allMoneyStats = useMemo(() => {
+    let stats = {
+      videoEditing: 0,
+      funding: 0,
+      advertising: 0,
+      design: 0,
+      management: 0,
+      other: 0,
+      totalIncome: 0,
+    };
+
+    clientPayments.forEach(t => {
+      if (t.status !== 'paid' && t.status !== 'posted') return;
+      if (t.type !== 'income') return;
+      
+      const amount = t.amountCents || 0;
+      const cat = t.category || '';
+      
+      stats.totalIncome += amount;
+
+      if (cat.includes('مونتاج')) stats.videoEditing += amount;
+      else if (cat.includes('تمويل')) stats.funding += amount;
+      else if (cat.includes('دعاية')) stats.advertising += amount;
+      else if (cat.includes('تصميم')) stats.design += amount;
+      else if (cat.includes('إدارة')) stats.management += amount;
+      else stats.other += amount;
+    });
+
+    return {
+      ...stats,
+      netProfit: stats.totalIncome - stats.funding
+    };
+  }, [clientPayments]);
   const totalPaid = clientPayments
     .filter(p => p.status === 'posted' || p.status === 'paid')
     .reduce((acc, p) => acc + (p.amountCents || 0), 0);
@@ -218,6 +260,21 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
         date: new Date(newPayment.date).getTime(),
         source: 'Manual',
       });
+      
+      // Auto-create a linked project for the timeline
+      await createProject({
+        token,
+        title: newPayment.description || (language === 'ar' ? 'دفعة جديدة' : 'New Payment'),
+        clientId: client._id,
+        status: 'current',
+        projectType: newPayment.category,
+        revenue: Number(newPayment.amount),
+        budget: Number(newPayment.amount),
+        startDate: new Date(newPayment.date).getTime(),
+        platform: 'أخرى',
+        tags: []
+      });
+
       // Reset the form completely - each addition is independent
       setNewPayment({ amount: '', description: '', date: new Date().toISOString().split('T')[0], status: 'paid', category: 'أخرى' });
       toast("Payment added successfully", "success");
@@ -471,18 +528,27 @@ const PRESET_AVATARS = [
   const phoneNumbers = formData.phone.split(/[,/\s]+/).filter(p => p.trim().length > 0);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 md:p-10 animate-in fade-in duration-300">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-6xl bg-[#0a0a0b] rounded-[40px] shadow-2xl overflow-hidden border border-white/5 flex flex-col max-h-full relative"
-      >
-        {/* Close & Edit Buttons */}
-        <div className="absolute top-8 right-8 z-50 flex gap-3">
+    <PageWrapper
+      title={
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/clients')}
+            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all border border-white/5 mr-2"
+          >
+            <ChevronRight size={20} className="rotate-180" />
+          </button>
+          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[var(--color-brand)] font-bold">
+            <User size={16} />
+          </div>
+          <h1 className="text-2xl font-black text-white">{client.name}</h1>
+        </div>
+      }
+      actions={
+        <div className="flex gap-3">
           {isEditing ? (
             <Button 
               size="sm" 
-              className="rounded-full px-6 bg-emerald-500 hover:bg-emerald-600 h-10 font-bold shadow-lg shadow-emerald-500/20"
+              className="rounded-xl px-6 bg-emerald-500 hover:bg-emerald-600 h-10 font-bold shadow-lg shadow-emerald-500/20"
               onClick={handleSave}
               loading={isSaving}
             >
@@ -495,29 +561,22 @@ const PRESET_AVATARS = [
               <Button 
                 size="sm" 
                 variant="secondary"
-                className="rounded-full w-10 h-10 p-0 bg-white/5 border-white/5 hover:bg-white/10"
+                className="rounded-xl w-10 h-10 p-0 bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--color-brand)]"
                 onClick={() => setIsEditing(true)}
               >
                 <Edit2 size={18} />
               </Button>
             </div>
           )}
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all border border-white/5"
-          >
-            <X size={20} />
-          </button>
         </div>
-
-        <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar">
-          {/* Top Branding/Header */}
-          <div className="flex items-center gap-3 mb-10 flex-wrap">
-            <h2 className="text-4xl font-black text-white tracking-tight">Clients</h2>
-            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40">
-              <User size={18} />
-            </div>
-          </div>
+      }
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full flex flex-col relative"
+      >
+        <div className="pb-12">
 
           {/* Top Grid: 3 Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -668,7 +727,7 @@ const PRESET_AVATARS = [
                              value={tagInput}
                              onChange={(e) => setTagInput(e.target.value)}
                              placeholder="اكتب تصنيفاً واضغط Enter أو اختر من القائمة" 
-                             className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-12 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] placeholder:text-white/20 transition-colors shadow-inner"
+                             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 pr-12 text-sm font-bold text-white outline-none focus:border-emerald-500 placeholder:text-white/20 transition-colors shadow-inner"
                              onKeyDown={e => {
                                if (e.key === 'Enter') {
                                  e.preventDefault();
@@ -1014,8 +1073,58 @@ const PRESET_AVATARS = [
 
             {activeTab === 'finance' ? (
               <div className="space-y-8">
+                {/* Main Financial Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <StatCard title={language === 'ar' ? 'إجمالي المحصل' : 'Total Income'} amount={allMoneyStats.totalIncome} icon={<Wallet size={24} />} color="emerald" variant="solid" />
+                  <StatCard title={language === 'ar' ? 'المتبقي' : 'Outstanding'} amount={(client.balanceCents || 0) > 0 ? (client.balanceCents || 0) : 0} icon={<DollarSign size={24} />} color="rose" variant="solid" />
+                  <StatCard title={language === 'ar' ? 'إجمالي الحساب' : 'Total Budget'} amount={allMoneyStats.totalIncome + ((client.balanceCents || 0) > 0 ? (client.balanceCents || 0) : 0)} icon={<Briefcase size={24} />} color="indigo" variant="solid" />
+                </div>
+
+                {/* Categories Stats */}
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">{language === 'ar' ? 'إحصائيات الأقسام' : 'Category Breakdown'}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <StatCard title={language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'} amount={allMoneyStats.videoEditing} icon={<Video size={24} />} color="indigo" />
+                  <StatCard title={language === 'ar' ? 'تصميم' : 'Design'} amount={allMoneyStats.design} icon={<Layout size={24} />} color="orange" />
+                  <StatCard title={language === 'ar' ? 'دعاية وتمويل' : 'Advertising'} amount={allMoneyStats.advertising || 0} icon={<Megaphone size={24} />} color="rose" />
+                  <StatCard title={language === 'ar' ? 'أخرى' : 'Other'} amount={allMoneyStats.other || 0} icon={<Layers size={24} />} color="emerald" />
+                </div>
+
+                {/* Active Projects Summary */}
+                {(() => {
+                  const clientProjects = allProjects.filter((p: any) => p.clientId === client._id && p.status !== 'done' && p.status !== 'archived');
+                  if (clientProjects.length === 0) return null;
+                  
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                      {clientProjects.map((proj: any) => {
+                        const pTotalTasks = proj.steps?.length || 0;
+                        const pCompletedTasks = proj.steps?.filter((s:any) => s.isCompleted).length || 0;
+                        const pRatio = pTotalTasks > 0 ? Math.round((pCompletedTasks / pTotalTasks) * 100) : 0;
+                        
+                        return (
+                          <div key={proj._id} className="bg-black/20 p-5 rounded-3xl border border-white/5">
+                            <h4 className="text-sm font-bold text-white mb-3 truncate">{proj.title}</h4>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-[10px] uppercase font-black text-[var(--text-muted)] tracking-widest">{pRatio}% Completed</span>
+                              <span className="text-[10px] uppercase font-black text-brand tracking-widest">{pCompletedTasks}/{pTotalTasks} Tasks</span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-[var(--border-default)] overflow-hidden">
+                              <div className="h-full bg-[var(--color-brand)] transition-all" style={{ width: `${pRatio}%` }} />
+                            </div>
+                            {proj.deadline && (
+                              <div className="mt-3 text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-2">
+                                <Calendar size={12} /> Deadline: {new Date(proj.deadline).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
                 {/* Add Payment Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
                    <div className="space-y-1">
                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Amount</p>
                      <input 
@@ -1023,7 +1132,7 @@ const PRESET_AVATARS = [
                        value={newPayment.amount}
                        onChange={e => setNewPayment({...newPayment, amount: e.target.value})}
                        placeholder="0.00"
-                       className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[var(--color-brand)]"
+                       className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-12 py-3 text-white outline-none focus:border-[var(--color-brand)]"
                      />
                    </div>
                    <div className="space-y-1">
@@ -1033,8 +1142,21 @@ const PRESET_AVATARS = [
                        value={newPayment.description}
                        onChange={e => setNewPayment({...newPayment, description: e.target.value})}
                        placeholder="e.g. Logo Design"
-                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[var(--color-brand)]"
+                          className="w-full bg-black/20 border border-white/10 rounded-xl pr-4 pl-12 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] placeholder:text-white/20 transition-colors"
                      />
+                   </div>
+                   <div className="space-y-1">
+                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">{language === 'ar' ? 'القسم' : 'Category'}</p>
+                     <select 
+                       value={newPayment.category}
+                       onChange={e => setNewPayment({...newPayment, category: e.target.value})}
+                       className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-brand)] transition-colors h-[50px] appearance-none"
+                     >
+                       <option value="تصميم" className="bg-[#1f2937]">{language === 'ar' ? 'تصميم' : 'Design'}</option>
+                       <option value="مونتاج" className="bg-[#1f2937]">{language === 'ar' ? 'مونتاج فيديو' : 'Video Editing'}</option>
+                       <option value="دعاية" className="bg-[#1f2937]">{language === 'ar' ? 'دعاية وتمويل' : 'Advertising'}</option>
+                       <option value="أخرى" className="bg-[#1f2937]">{language === 'ar' ? 'أخرى' : 'Other'}</option>
+                     </select>
                    </div>
                    <div className="space-y-1">
                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2">Date</p>
@@ -1066,7 +1188,7 @@ const PRESET_AVATARS = [
                         </button>
                       </div>
                    </div>
-                   <div className="flex items-end">
+                   <div className="flex items-end lg:col-span-2">
                      <Button 
                        className="w-full h-[50px] rounded-xl font-bold bg-[#5850ec] hover:bg-[#4840cc]" 
                        onClick={handleAddPayment}
@@ -1084,6 +1206,7 @@ const PRESET_AVATARS = [
                       <tr className="text-[10px] font-black text-white/30 uppercase tracking-widest border-b border-white/5">
                         <th className="py-6 px-4">Date</th>
                         <th className="py-6 px-4">Description</th>
+                        <th className="py-6 px-4">Category</th>
                         <th className="py-6 px-4 text-right">Amount</th>
                         <th className="py-6 px-4 text-center">Status</th>
                       </tr>
@@ -1091,7 +1214,7 @@ const PRESET_AVATARS = [
                     <tbody className="divide-y divide-white/5">
                       {filteredPayments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-12 text-center text-white/20 font-bold uppercase tracking-widest">No financial records found</td>
+                          <td colSpan={5} className="py-12 text-center text-white/20 font-bold uppercase tracking-widest">No financial records found</td>
                         </tr>
                       ) : (
                         filteredPayments.map((p) => (
@@ -1120,6 +1243,9 @@ const PRESET_AVATARS = [
                                   <span className="text-white/40 text-[10px] uppercase font-black mt-0.5 tracking-wider">Ref: {p._id.slice(-6)}</span>
                                 </div>
                               )}
+                            </td>
+                            <td className="py-6 px-4">
+                               <span className="text-white/60 font-bold text-xs px-3 py-1 bg-white/5 rounded-full border border-white/10">{p.category || 'أخرى'}</span>
                             </td>
                             <td className="py-6 px-4 text-right">
                               {editingPaymentId === p._id ? (
@@ -1628,7 +1754,7 @@ const PRESET_AVATARS = [
                 <div className="border-t border-slate-200 pt-2 mt-2">
                   <p className="text-base font-extrabold text-slate-900">
                     {language === 'ar' ? 'صافي رصيد الحساب:' : 'Net Account Balance:'}{' '}
-                    <span className={client.balanceCents >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                    <span className={(client.balanceCents || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
                       {formatCurrency(client.balanceCents || 0)}
                     </span>
                   </p>
@@ -1702,6 +1828,49 @@ const PRESET_AVATARS = [
           </div>
         </div>
       </motion.div>
+    </PageWrapper>
+  );
+}
+
+function StatCard({ title, amount, icon, color, variant = "outline" }: { title: string, amount: number, icon: React.ReactNode, color: 'indigo' | 'emerald' | 'orange' | 'brand' | 'rose', variant?: 'outline' | 'solid' }) {
+  const colors = {
+    indigo: { text: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', solidBg: 'bg-gradient-to-br from-indigo-500 to-purple-600', solidBorder: 'border-indigo-400/50' },
+    emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', solidBg: 'bg-gradient-to-br from-emerald-500 to-teal-600', solidBorder: 'border-emerald-400/50' },
+    orange: { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', solidBg: 'bg-gradient-to-br from-orange-500 to-amber-600', solidBorder: 'border-orange-400/50' },
+    brand: { text: 'text-brand', bg: 'bg-brand/10', border: 'border-brand/20', solidBg: 'bg-gradient-to-br from-brand to-indigo-600', solidBorder: 'border-brand/50' },
+    rose: { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', solidBg: 'bg-gradient-to-br from-rose-500 to-red-600', solidBorder: 'border-rose-400/50' },
+  };
+
+  const style = colors[color];
+  const isSolid = variant === 'solid';
+
+  return (
+    <div className={cn(
+      "rounded-3xl p-6 relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
+      isSolid ? style.solidBg : "bg-black/20",
+      "border",
+      isSolid ? style.solidBorder : style.border
+    )}>
+      {!isSolid && (
+        <div className={cn("absolute -top-4 -right-4 w-24 h-24 rounded-full blur-2xl opacity-50", style.bg)} />
+      )}
+      
+      <div className="relative z-10">
+        <div className={cn(
+          "w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-lg",
+          isSolid ? "bg-black/20 text-white backdrop-blur-md" : cn(style.bg, style.text)
+        )}>
+          {icon}
+        </div>
+        
+        <div className={cn("text-sm font-bold uppercase tracking-widest mb-2", isSolid ? "text-white/80" : "text-white/40")}>
+          {title}
+        </div>
+        
+        <div className={cn("text-3xl font-black", isSolid ? "text-white" : style.text)}>
+          {formatCurrency(amount)}
+        </div>
+      </div>
     </div>
   );
 }

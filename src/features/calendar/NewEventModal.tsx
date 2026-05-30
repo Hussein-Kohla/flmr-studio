@@ -302,8 +302,8 @@ export function NewEventModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Category Select (only visible when creating) */}
-          {!eventToEdit && (
+          {/* Category Select (only visible when creating and multiple options exist) */}
+          {!eventToEdit && categories.length > 1 && (
             <div>
               <label className="form-label">{t("categoryHeader")} *</label>
               <div
